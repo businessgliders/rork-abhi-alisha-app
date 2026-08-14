@@ -1,0 +1,13 @@
+{
+  "$schema": "https://rork.com/schema/rork.json",
+  "apps": [
+    {
+      "name": "Abhi & Alisha",
+      "path": "ios-abhi-alisha",
+      "framework": "swift",
+      "settings": {
+        "iosBundleId": "com.businessgliders.abhialisha"
+      }
+    }
+  ]
+}
