@@ -26,6 +26,9 @@ enum BrandPalette {
     static let embossShadow = adaptive(light: 0x9C8862, dark: 0x000000)
     static let embossLight = adaptive(light: 0xFFFFFF, dark: 0x6C6152)
 
+    /// A muted, dusty red for things that have slipped past their day.
+    static let overdue = adaptive(light: 0xA65A4E, dark: 0xD68B7E)
+
     static let sikhAmber = adaptive(light: 0xD79A2B, dark: 0xE3A93C)
     static let hinduGarnet = adaptive(light: 0x8E2C3B, dark: 0xB9455A)
 

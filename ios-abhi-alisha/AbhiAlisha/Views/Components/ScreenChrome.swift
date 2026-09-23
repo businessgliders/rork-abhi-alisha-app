@@ -16,7 +16,7 @@ struct ScreenChrome: View {
             Spacer(minLength: 0)
 
             if showsCrest {
-                CrestWatermark(finish: .lit)
+                CoupleCrest(finish: .lit)
             }
         }
         .padding(.horizontal, 16)
@@ -28,9 +28,13 @@ struct ScreenChrome: View {
 extension View {
     /// Sets the crest into the page's own top-right corner, so it belongs to the header
     /// and leaves with it rather than sitting on the glass while the page slides past.
-    func crestCorner(width: CGFloat = 116, surface: Color = BrandPalette.background) -> some View {
+    func crestCorner(
+        width: CGFloat = 116,
+        surface: Color = BrandPalette.background,
+        isHoldable: Bool = true
+    ) -> some View {
         overlay(alignment: .topTrailing) {
-            CrestWatermark(width: width, finish: .pressed(surface))
+            CoupleCrest(width: width, finish: .pressed(surface), isHoldable: isHoldable)
                 .padding(.top, 2)
                 .padding(.trailing, 16)
         }

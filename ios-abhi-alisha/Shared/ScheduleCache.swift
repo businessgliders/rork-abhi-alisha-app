@@ -35,6 +35,12 @@ nonisolated struct ScheduleCache: Sendable {
         }
     }
 
+    /// The cached payload exactly as the API sent it, for the couple's editor.
+    func loadRaw() -> Data? {
+        guard let url = readableURL else { return nil }
+        return try? Data(contentsOf: url)
+    }
+
     var lastUpdated: Date? {
         guard let url = readableURL else { return nil }
         return try? FileManager.default.attributesOfItem(atPath: url.path)[.modificationDate] as? Date

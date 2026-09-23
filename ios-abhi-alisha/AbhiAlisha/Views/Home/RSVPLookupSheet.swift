@@ -75,7 +75,7 @@ struct RSVPLookupSheet: View {
             GoldRule(width: 44, alignment: .leading)
                 .padding(.top, 6)
 
-            Text("Enter the name on your invitation — or the code printed on it — and we'll find your reply.")
+            Text("Enter your name as it appears on your invitation, and we'll find your reply.")
                 .brandFont(.bodyItalic)
                 .foregroundStyle(BrandPalette.body)
                 .fixedSize(horizontal: false, vertical: true)
@@ -91,7 +91,8 @@ struct RSVPLookupSheet: View {
                 .font(.system(size: 13, weight: .light))
                 .foregroundStyle(BrandPalette.gold)
 
-            TextField("Name or invite code", text: $name)
+            TextField("Your name", text: $name)
+                .textContentType(.name)
                 .brandFont(.bodyText)
                 .foregroundStyle(BrandPalette.ink)
                 .tint(BrandPalette.goldDeep)
@@ -171,11 +172,10 @@ struct RSVPLookupSheet: View {
                 BrandHaptics.tick()
             case .notFound:
                 match = nil
-                RSVPService.shared.forgetLastMatch()
-                message = "We couldn't find that name on the list. Try the spelling exactly as it appears on your invitation, or send Abhi & Alisha a message and they'll sort it out."
+                message = "We couldn't find that name just yet. Try the spelling exactly as it appears on your invitation, or send Abhi & Alisha a note and they'll gladly sort it out."
             case .offline:
                 match = nil
-                message = "We couldn't reach the guest list just now. Try again once you're back online."
+                message = "We couldn't reach the guest list just now. Try again in a moment, once you're back online."
             }
         }
     }

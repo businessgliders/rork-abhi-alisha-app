@@ -106,6 +106,11 @@ nonisolated struct RSVPRecord: Codable, Identifiable, Hashable, Sendable {
 
     // MARK: - Presentation
 
+    /// The party's full name, as the couple wrote it.
+    var displayName: String? {
+        guestName ?? guestNames?.first
+    }
+
     /// The name to greet them with.
     var firstName: String? {
         guard let guestName else { return guestNames?.first }

@@ -6,7 +6,8 @@ import Foundation
 /// If the App Group is ever unavailable (an unsigned build, a misconfigured profile) the
 /// app quietly falls back to its own caches folder and simply keeps working alone.
 nonisolated enum WeddingGroup: Sendable {
-    static let identifier = "group.app.rork.z6akv7onms9gcj3bblx69"
+    /// Must match the group named in both targets' entitlements.
+    static let identifier = "group.com.businessgliders.abhialisha"
 
     /// The shared folder, when the App Group is actually granted.
     static var containerURL: URL? {

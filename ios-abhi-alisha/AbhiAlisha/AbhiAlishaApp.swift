@@ -9,6 +9,8 @@ import SwiftUI
 
 @main
 struct AbhiAlishaApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
+
     init() {
         BrandFont.registerIfNeeded()
     }

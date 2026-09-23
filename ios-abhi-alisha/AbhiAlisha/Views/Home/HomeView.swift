@@ -43,6 +43,8 @@ struct HomeView: View {
 
             rsvpBlock
 
+            NotifyUpdatesCard()
+
             if let next = store.nextEvent {
                 NextEventCard(event: next)
             }
@@ -103,8 +105,14 @@ struct HomeView: View {
     }
 
     private func syncMatch() {
+        let latest = RSVPService.shared.lastMatch
+        let changed = latest?.id != rsvpMatch?.id
         withAnimation(.calm) {
-            rsvpMatch = RSVPService.shared.lastMatch
+            rsvpMatch = latest
+        }
+        if changed {
+            // So the couple's list knows whose phone this is.
+            PushRegistrar.shared.guestNameMayHaveChanged()
         }
     }
 
@@ -113,6 +121,7 @@ struct HomeView: View {
         withAnimation(.calm) {
             rsvpMatch = nil
         }
+        PushRegistrar.shared.guestNameMayHaveChanged()
     }
 
     private var rsvpBar: some View {
