@@ -10,6 +10,9 @@ nonisolated struct RSVPService: Sendable {
 
     nonisolated enum Outcome: Sendable {
         case found(RSVPRecord)
+        /// More than one guest shares the name typed (usually a first name alone).
+        /// Nobody's details are shown; the guest is asked to add their last name.
+        case ambiguous
         case notFound
         case offline
     }
@@ -32,6 +35,7 @@ nonisolated struct RSVPService: Sendable {
             guard (200..<300).contains(reply.status) else {
                 return cachedMatch(for: needle) ?? .offline
             }
+            if Self.isAmbiguous(reply.body) { return .ambiguous }
             guard let record = Self.record(in: reply.body) else { return .notFound }
             if let data = try? JSONEncoder().encode([record]) {
                 cache.save(data)
@@ -51,6 +55,21 @@ nonisolated struct RSVPService: Sendable {
     private func cachedMatch(for needle: String) -> Outcome? {
         guard let cached = lastMatch, cached.matches(needle) else { return nil }
         return .found(cached)
+    }
+
+    /// Several guests matched. Accepts an explicit flag or a list of more than one party,
+    /// and in either case never picks one: showing the wrong person's reply is worse than asking.
+    private static func isAmbiguous(_ body: JSONValue?) -> Bool {
+        guard let body else { return false }
+        if body["ambiguous"]?.boolValue == true || body["multiple"]?.boolValue == true {
+            return true
+        }
+        if let count = body["match_count"]?.doubleValue, count > 1 { return true }
+        if let rows = body.arrayValue, rows.count > 1 { return true }
+        for key in ["matches", "rsvps", "results"] {
+            if let rows = body[key]?.arrayValue, rows.count > 1 { return true }
+        }
+        return false
     }
 
     /// Reads the one record out of the reply — sent bare, or wrapped under a key —

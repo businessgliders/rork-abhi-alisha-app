@@ -75,7 +75,7 @@ struct RSVPLookupSheet: View {
             GoldRule(width: 44, alignment: .leading)
                 .padding(.top, 6)
 
-            Text("Enter your name as it appears on your invitation, and we'll find your reply.")
+            Text("Enter your first name, or your full name as it appears on your invitation, and we'll find your reply.")
                 .brandFont(.bodyItalic)
                 .foregroundStyle(BrandPalette.body)
                 .fixedSize(horizontal: false, vertical: true)
@@ -91,7 +91,7 @@ struct RSVPLookupSheet: View {
                 .font(.system(size: 13, weight: .light))
                 .foregroundStyle(BrandPalette.gold)
 
-            TextField("Your name", text: $name)
+            TextField("First name or full name", text: $name)
                 .textContentType(.name)
                 .brandFont(.bodyText)
                 .foregroundStyle(BrandPalette.ink)
@@ -170,6 +170,9 @@ struct RSVPLookupSheet: View {
                 match = record
                 message = nil
                 BrandHaptics.tick()
+            case .ambiguous:
+                match = nil
+                message = "A few of our guests share that name. Add your last name so we find the right reply."
             case .notFound:
                 match = nil
                 message = "We couldn't find that name just yet. Try the spelling exactly as it appears on your invitation, or send Abhi & Alisha a note and they'll gladly sort it out."
