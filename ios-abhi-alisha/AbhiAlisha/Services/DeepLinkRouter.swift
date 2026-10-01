@@ -41,7 +41,13 @@ final class DeepLinkRouter {
     /// Reads the payload's `screen` value without ever assuming it is there. A missing,
     /// mangled, or unrecognised value always falls back to Home — never a crash.
     static func landing(fromPayload payload: [AnyHashable: Any]) -> Landing {
-        guard let screen = screenValue(in: payload)?
+        landing(forScreen: screenValue(in: payload))
+    }
+
+    /// Turns an already-extracted `screen` value into a landing. Missing, blank, or
+    /// unrecognised values fall back to Home.
+    static func landing(forScreen rawScreen: String?) -> Landing {
+        guard let screen = rawScreen?
             .trimmingCharacters(in: .whitespacesAndNewlines)
             .lowercased(), !screen.isEmpty else { return .tab(.home) }
         if screen == "notifications" { return .notifications }
@@ -51,7 +57,9 @@ final class DeepLinkRouter {
 
     /// Custom keys ride beside `aps`; some senders tuck them inside it. Only a real
     /// String counts — numbers, booleans, and dictionaries are treated as absent.
-    private static func screenValue(in payload: [AnyHashable: Any]) -> String? {
+    /// Safe to call from any thread, so the notification delegate can read the payload
+    /// where the system hands it over and pass only a plain String to the main thread.
+    nonisolated static func screenValue(in payload: [AnyHashable: Any]) -> String? {
         if let screen = payload["screen"] as? String { return screen }
         if let aps = payload["aps"] as? [AnyHashable: Any],
            let screen = aps["screen"] as? String { return screen }

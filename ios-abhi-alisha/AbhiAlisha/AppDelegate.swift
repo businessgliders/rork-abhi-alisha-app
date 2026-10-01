@@ -26,24 +26,60 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         print("[Push] registration unavailable on this device")
     }
 
+    // The completion-handler forms are used on purpose. The `async` forms finish on a
+    // background thread, and UIKit aborts the app when a notification tap is completed
+    // off the main thread — which is exactly the crash build 3 had.
+
     /// A note that arrives while the app is open still shows as a banner.
     nonisolated func userNotificationCenter(
         _ center: UNUserNotificationCenter,
-        willPresent notification: UNNotification
-    ) async -> UNNotificationPresentationOptions {
-        [.banner, .list, .sound]
+        willPresent notification: UNNotification,
+        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+    ) {
+        let finish = PresentationCompletion(completionHandler)
+        Self.onMainThread {
+            finish.call([.banner, .list, .sound])
+        }
     }
 
     /// Tapping a wedding update opens the screen the payload names — the updates screen
     /// for "notifications", otherwise Home. The value is read defensively, so a missing
     /// or mangled payload can never crash, and the landing waits for the app to load.
+    /// The landing is recorded first, then the system is told the tap is handled.
     nonisolated func userNotificationCenter(
         _ center: UNUserNotificationCenter,
-        didReceive response: UNNotificationResponse
-    ) async {
-        let payload = response.notification.request.content.userInfo
-        await MainActor.run {
-            DeepLinkRouter.shared.open(DeepLinkRouter.landing(fromPayload: payload))
+        didReceive response: UNNotificationResponse,
+        withCompletionHandler completionHandler: @escaping () -> Void
+    ) {
+        let screen = DeepLinkRouter.screenValue(in: response.notification.request.content.userInfo)
+        let finish = TapCompletion(completionHandler)
+        Self.onMainThread {
+            DeepLinkRouter.shared.open(DeepLinkRouter.landing(forScreen: screen))
+            finish.call()
         }
     }
+
+    /// Runs straight away when already on the main thread (a cold-start tap), otherwise
+    /// hops there first.
+    private nonisolated static func onMainThread(_ work: @escaping @MainActor @Sendable () -> Void) {
+        if Thread.isMainThread {
+            MainActor.assumeIsolated { work() }
+        } else {
+            DispatchQueue.main.async { MainActor.assumeIsolated { work() } }
+        }
+    }
+}
+
+/// Carries the system's completion handler to the main thread. The system hands it over
+/// without a Sendable annotation; it is only ever called once, on the main thread.
+private nonisolated final class TapCompletion: @unchecked Sendable {
+    private let handler: () -> Void
+    init(_ handler: @escaping () -> Void) { self.handler = handler }
+    func call() { handler() }
+}
+
+private nonisolated final class PresentationCompletion: @unchecked Sendable {
+    private let handler: (UNNotificationPresentationOptions) -> Void
+    init(_ handler: @escaping (UNNotificationPresentationOptions) -> Void) { self.handler = handler }
+    func call(_ options: UNNotificationPresentationOptions) { handler(options) }
 }
