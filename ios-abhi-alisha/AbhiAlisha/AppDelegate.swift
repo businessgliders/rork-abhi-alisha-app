@@ -34,13 +34,16 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         [.banner, .list, .sound]
     }
 
-    /// Tapping any wedding update opens the Schedule.
+    /// Tapping a wedding update opens the screen the payload names — the updates screen
+    /// for "notifications", otherwise Home. The value is read defensively, so a missing
+    /// or mangled payload can never crash, and the landing waits for the app to load.
     nonisolated func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         didReceive response: UNNotificationResponse
     ) async {
+        let payload = response.notification.request.content.userInfo
         await MainActor.run {
-            DeepLinkRouter.shared.open(.schedule)
+            DeepLinkRouter.shared.open(DeepLinkRouter.landing(fromPayload: payload))
         }
     }
 }

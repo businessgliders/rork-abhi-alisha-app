@@ -1,17 +1,28 @@
 import Foundation
 import Observation
 
+/// Where a notification tap wants to land once the app is up.
+enum Landing: Equatable {
+    /// One of the five tabs.
+    case tab(AppTab)
+    /// The screen of past updates, raised over whichever tab is showing.
+    case notifications
+}
+
 /// Where a tap on a widget, the Live Activity, or a notification wants the app to land.
 ///
-/// The tab is switched immediately; the celebration to open is left here for the
-/// Schedule to pick up and clear once it has arrived.
+/// Nothing navigates from here directly. A landing is held as pending and only consumed
+/// once the root view is alive, so a tap that wakes the app waits for it to finish
+/// loading before anything moves.
 @Observable
 final class DeepLinkRouter {
     static let shared = DeepLinkRouter()
 
     var pendingEventID: String?
-    /// A tab asked for from outside the view tree, e.g. by a notification tap.
-    var pendingTab: AppTab?
+    /// Where a notification tap wants to land, held until the root view can act on it.
+    var pending: Landing?
+    /// The screen of past updates, raised over whichever tab is showing.
+    var isNotificationsPresented = false
 
     /// Reads one of our own links. Returns the tab to show, if the link is ours.
     func handle(_ url: URL) -> AppTab? {
@@ -23,7 +34,27 @@ final class DeepLinkRouter {
         return .home
     }
 
-    func open(_ tab: AppTab) {
-        pendingTab = tab
+    func open(_ landing: Landing) {
+        pending = landing
+    }
+
+    /// Reads the payload's `screen` value without ever assuming it is there. A missing,
+    /// mangled, or unrecognised value always falls back to Home — never a crash.
+    static func landing(fromPayload payload: [AnyHashable: Any]) -> Landing {
+        guard let screen = screenValue(in: payload)?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased(), !screen.isEmpty else { return .tab(.home) }
+        if screen == "notifications" { return .notifications }
+        if let tab = AppTab(rawValue: screen) { return .tab(tab) }
+        return .tab(.home)
+    }
+
+    /// Custom keys ride beside `aps`; some senders tuck them inside it. Only a real
+    /// String counts — numbers, booleans, and dictionaries are treated as absent.
+    private static func screenValue(in payload: [AnyHashable: Any]) -> String? {
+        if let screen = payload["screen"] as? String { return screen }
+        if let aps = payload["aps"] as? [AnyHashable: Any],
+           let screen = aps["screen"] as? String { return screen }
+        return nil
     }
 }

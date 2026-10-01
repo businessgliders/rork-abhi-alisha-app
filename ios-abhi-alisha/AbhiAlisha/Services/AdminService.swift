@@ -48,18 +48,12 @@ nonisolated struct AdminService: Sendable {
     func notificationHistory() async throws -> [NotificationRecord] {
         let result = try await WeddingAPI.shared.fetch(NotificationRecord.self, entity: "Notification")
         historyCache.save(result.raw)
-        return Self.ordered(result.items)
+        return NotificationRecord.ordered(result.items)
     }
 
     /// The history as last seen, so the screen opens with something even offline.
     func cachedNotificationHistory() -> [NotificationRecord] {
-        Self.ordered(historyCache.load(NotificationRecord.self) ?? [])
-    }
-
-    private static func ordered(_ records: [NotificationRecord]) -> [NotificationRecord] {
-        records
-            .filter(\.hasContent)
-            .sorted { ($0.sentAt ?? .distantPast) > ($1.sentAt ?? .distantPast) }
+        NotificationRecord.ordered(historyCache.load(NotificationRecord.self) ?? [])
     }
 
     // MARK: - Checklist

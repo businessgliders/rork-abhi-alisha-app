@@ -41,4 +41,11 @@ nonisolated struct NotificationRecord: Decodable, Identifiable, Hashable, Sendab
     }
 
     var hasContent: Bool { title != nil || body != nil }
+
+    /// Newest first, dropping rows with nothing to read.
+    static func ordered(_ records: [NotificationRecord]) -> [NotificationRecord] {
+        records
+            .filter(\.hasContent)
+            .sorted { ($0.sentAt ?? .distantPast) > ($1.sentAt ?? .distantPast) }
+    }
 }

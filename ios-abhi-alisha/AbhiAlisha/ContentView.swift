@@ -10,6 +10,7 @@ import SwiftUI
 struct ContentView: View {
     @State private var store = ScheduleStore()
     @State private var content = ContentStore()
+    @State private var updates = NotificationsStore()
     @State private var router = DeepLinkRouter.shared
     @State private var push = PushRegistrar.shared
     @State private var admin: AdminSession
@@ -63,9 +64,14 @@ struct ContentView: View {
                 .environment(admin)
                 .environment(checklist)
         }
+        .fullScreenCover(isPresented: $router.isNotificationsPresented) {
+            NotificationsView()
+                .environment(updates)
+        }
         .tint(BrandPalette.goldDeep)
         .environment(store)
         .environment(content)
+        .environment(updates)
         .environment(router)
         .environment(push)
         .environment(admin)
@@ -74,28 +80,38 @@ struct ContentView: View {
             guard let tab = router.handle(url) else { return }
             withAnimation(.calm) { selection = tab }
         }
-        .onChange(of: router.pendingTab) { _, _ in
-            openPendingTab()
+        .onChange(of: router.pending) { _, _ in
+            openPendingLanding()
         }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {
                 push.applicationDidBecomeActive()
             }
         }
-        .onAppear(perform: openPendingTab)
+        .onAppear(perform: openPendingLanding)
         .task {
             store.startClock()
             await content.refreshIfNeeded()
         }
     }
 
-    /// A notification tap asked for a tab; any open couple's area steps aside for it.
-    private func openPendingTab() {
-        guard let tab = router.pendingTab else { return }
-        router.pendingTab = nil
+    /// A notification tap asked for a landing; it is only acted on once this root view
+    /// is alive, so a tap that wakes the app waits for it to finish loading. Any open
+    /// couple's area steps aside for it.
+    private func openPendingLanding() {
+        guard let landing = router.pending else { return }
+        router.pending = nil
         admin.isPromptPresented = false
         admin.isAdminPresented = false
-        withAnimation(.calm) { selection = tab }
+
+        switch landing {
+        case .tab(let tab):
+            router.isNotificationsPresented = false
+            withAnimation(.calm) { selection = tab }
+        case .notifications:
+            // Already open? Then the tap simply keeps it where it is.
+            router.isNotificationsPresented = true
+        }
     }
 
     @ViewBuilder
