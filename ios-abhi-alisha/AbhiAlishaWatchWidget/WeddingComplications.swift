@@ -9,6 +9,7 @@ nonisolated struct ComplicationEvent: Sendable, Hashable {
     let timeLine: String?
     let location: String?
     let iconKey: WatchIconKey
+    let startsAt: Date?
 
     init(_ event: WatchEvent) {
         id = event.id
@@ -16,6 +17,7 @@ nonisolated struct ComplicationEvent: Sendable, Hashable {
         timeLine = event.displayTime
         location = event.locationName
         iconKey = event.iconKey
+        startsAt = event.startsAt
     }
 }
 
@@ -155,10 +157,25 @@ struct WeddingComplicationView: View {
     }
 
     private var inlineText: String {
-        guard let event = entry.event else { return "The Celebrations" }
+        guard let event = entry.event else {
+            if let days = entry.daysRemaining, days > 0 { return Self.countdownLine(days) }
+            return "The Celebrations"
+        }
         if entry.isHappeningNow { return "\(event.title) · Now" }
+        // Close in, the celebration leads; farther out, the countdown does.
+        if let startsAt = event.startsAt,
+           startsAt.timeIntervalSince(entry.date) <= 24 * 3600,
+           let time = event.timeLine {
+            return "\(event.title) · \(time)"
+        }
+        if let days = entry.daysRemaining, days > 0 { return Self.countdownLine(days) }
         guard let time = event.timeLine else { return event.title }
         return "\(event.title) · \(time)"
+    }
+
+    /// The X-Large face renders this line in giant type — the countdown is its moment.
+    private static func countdownLine(_ days: Int) -> String {
+        days == 1 ? "1 DAY TO GO" : "\(days) DAYS TO GO"
     }
 
     /// Name, time and place — "Happening now" rides above the name while it's on.

@@ -41,6 +41,8 @@ struct WatchScheduleScreen: View {
                         } else {
                             emptyState
                         }
+
+                        guideRow
                     }
                     .padding(.horizontal, 4)
                     .padding(.bottom, 8)
@@ -107,6 +109,32 @@ struct WatchScheduleScreen: View {
             .font(.watchCormorant(14))
             .foregroundStyle(WatchTheme.creamDim)
             .padding(.top, 20)
+    }
+
+    /// A quiet way in: the guide for dressing an Apple face in the wedding's gold.
+    private var guideRow: some View {
+        NavigationLink {
+            WatchFaceGuideScreen()
+        } label: {
+            HStack(spacing: 6) {
+                Image("crest")
+                    .renderingMode(.template)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 11)
+                    .foregroundStyle(WatchTheme.gold.opacity(0.55))
+                    .accessibilityHidden(true)
+
+                Text("MAKE YOUR WEDDING FACE")
+                    .font(.system(size: 9, weight: .semibold))
+                    .tracking(1.4)
+                    .foregroundStyle(WatchTheme.gold.opacity(0.7))
+            }
+            .frame(maxWidth: .infinity, minHeight: 44)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .padding(.top, 4)
     }
 
     // MARK: - Days
