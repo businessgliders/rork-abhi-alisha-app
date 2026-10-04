@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		XX2F2D719C0EF179FE782EXX /* AbhiAlishaWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = XXFECD93F8CE8391DDF12EXX /* AbhiAlishaWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		XX2F454EBB60C27EB3313AXX /* AbhiAlishaWatchWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = XX9A918967852AE91A553EXX /* AbhiAlishaWatchWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		XX9F62D95E8263ACF0CA07XX /* AbhiAlishaWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = XX877ED8969F1802A998B6XX /* AbhiAlishaWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -25,6 +27,20 @@
 			remoteGlobalIDString = 105FC5792E9EAD3100EA8BCF;
 			remoteInfo = AbhiAlisha;
 		};
+		XX4CDA6802173918904B73XX /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 105FC5722E9EAD3100EA8BCF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = XX2A266D0DE95353D76097XX;
+			remoteInfo = AbhiAlishaWatch;
+		};
+		XX5747B1DA2DED004B3D52XX /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 105FC5722E9EAD3100EA8BCF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = XX5D98368F33E386823FB9XX;
+			remoteInfo = AbhiAlishaWatchWidget;
+		};
 		XXE35D517854BF800EC59CXX /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 105FC5722E9EAD3100EA8BCF /* Project object */;
@@ -35,11 +51,33 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		XX81FF245A222E3682268EXX /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				XX9F62D95E8263ACF0CA07XX /* AbhiAlishaWatch.app in Embed Watch Content */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			name = "Embed Watch Content";
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+		};
 		XX8618DA762832199DA68BXX /* Embed Foundation Extensions */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				XX2F2D719C0EF179FE782EXX /* AbhiAlishaWidget.appex in Embed Foundation Extensions */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			name = "Embed Foundation Extensions";
+			dstPath = "";
+			dstSubfolderSpec = 13;
+		};
+		FF7E4C2A91D4480FBA30C61B /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				XX2F454EBB60C27EB3313AXX /* AbhiAlishaWatchWidget.appex in Embed Foundation Extensions */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			name = "Embed Foundation Extensions";
@@ -52,10 +90,27 @@
 		105FC57A2E9EAD3100EA8BCF /* AbhiAlisha.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AbhiAlisha.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		105FC5892E9EAD3200EA8BCF /* AbhiAlishaTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AbhiAlishaTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		105FC5932E9EAD3200EA8BCF /* AbhiAlishaUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AbhiAlishaUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		XX877ED8969F1802A998B6XX /* AbhiAlishaWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AbhiAlishaWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		XX9A918967852AE91A553EXX /* AbhiAlishaWatchWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = AbhiAlishaWatchWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		XXFECD93F8CE8391DDF12EXX /* AbhiAlishaWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = AbhiAlishaWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		XX769B2448490ABDC44B32XX /* Exceptions for "AbhiAlishaWatchWidget" folder in "AbhiAlishaWatchWidget" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+				AbhiAlishaWatchWidget.entitlements,
+			);
+			target = XX5D98368F33E386823FB9XX /* AbhiAlishaWatchWidget */;
+		};
+		FF9E4C2A91D4480FBA30C63D /* Exceptions for "AbhiAlishaWatch" folder in "AbhiAlishaWatch" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				AbhiAlishaWatch.entitlements,
+			);
+			target = XX2A266D0DE95353D76097XX /* AbhiAlishaWatch */;
+		};
 		XX9E3459D161D25BA806C0XX /* Exceptions for "AbhiAlishaWidget" folder in "AbhiAlishaWidget" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -86,6 +141,27 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = Shared;
 			sourceTree = "<group>";
+		};
+		XX0E643F35DD50EB1BB2C2XX /* AbhiAlishaWatch */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = AbhiAlishaWatch;
+			sourceTree = "<group>";
+			exceptions = (
+				FF9E4C2A91D4480FBA30C63D /* Exceptions for "AbhiAlishaWatch" folder in "AbhiAlishaWatch" target */,
+			);
+		};
+		FF8E4C2A91D4480FBA30C62C /* WatchShared */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = WatchShared;
+			sourceTree = "<group>";
+		};
+		XX57B8A0AC90CE3D9AB644XX /* AbhiAlishaWatchWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = AbhiAlishaWatchWidget;
+			sourceTree = "<group>";
+			exceptions = (
+				XX769B2448490ABDC44B32XX /* Exceptions for "AbhiAlishaWatchWidget" folder in "AbhiAlishaWatchWidget" target */,
+			);
 		};
 		XXB04757A74359A174D6BEXX /* AbhiAlishaWidget */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
@@ -119,7 +195,21 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		XX7387B1691134468DE4D3XX /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		XXC42E8B73A8E96FAFE7CCXX /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		XXE1E171CED766A7EC6FFCXX /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -138,6 +228,9 @@
 				105FC5962E9EAD3200EA8BCF /* AbhiAlishaUITests */,
 				105FC57B2E9EAD3100EA8BCF /* Products */,
 				XXB04757A74359A174D6BEXX /* AbhiAlishaWidget */,
+				XX0E643F35DD50EB1BB2C2XX /* AbhiAlishaWatch */,
+				XX57B8A0AC90CE3D9AB644XX /* AbhiAlishaWatchWidget */,
+				FF8E4C2A91D4480FBA30C62C /* WatchShared */,
 			);
 			sourceTree = "<group>";
 		};
@@ -148,6 +241,8 @@
 				105FC5892E9EAD3200EA8BCF /* AbhiAlishaTests.xctest */,
 				105FC5932E9EAD3200EA8BCF /* AbhiAlishaUITests.xctest */,
 				XXFECD93F8CE8391DDF12EXX /* AbhiAlishaWidget.appex */,
+				XX877ED8969F1802A998B6XX /* AbhiAlishaWatch.app */,
+				XX9A918967852AE91A553EXX /* AbhiAlishaWatchWidget.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -163,11 +258,13 @@
 				105FC5772E9EAD3100EA8BCF /* Frameworks */,
 				105FC5782E9EAD3100EA8BCF /* Resources */,
 				XX8618DA762832199DA68BXX /* Embed Foundation Extensions */,
+				XX81FF245A222E3682268EXX /* Embed Watch Content */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 				XX6EB980879C0260862FABXX /* PBXTargetDependency */,
+				XX5733D1251AF51D5B0930XX /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				105FC57C2E9EAD3100EA8BCF /* AbhiAlisha */,
@@ -247,6 +344,50 @@
 				SHARED00CODE00GROUP00001 /* Shared */,
 			);
 		};
+		XX2A266D0DE95353D76097XX /* AbhiAlishaWatch */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = XXC58AAB310494ECFAA1E5XX /* Build configuration list for PBXNativeTarget "AbhiAlishaWatch" */;
+			buildPhases = (
+				XX395EFA1E9FE92318041CXX /* Sources */,
+				XX7387B1691134468DE4D3XX /* Frameworks */,
+				XXA38758DE108935308AA6XX /* Resources */,
+				FF7E4C2A91D4480FBA30C61B /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				XXEE6C5F1FD54F8336D547XX /* PBXTargetDependency */,
+			);
+			name = AbhiAlishaWatch;
+			productName = AbhiAlishaWatch;
+			productReference = XX877ED8969F1802A998B6XX /* AbhiAlishaWatch.app */;
+			productType = "com.apple.product-type.application";
+			fileSystemSynchronizedGroups = (
+				XX0E643F35DD50EB1BB2C2XX /* AbhiAlishaWatch */,
+				FF8E4C2A91D4480FBA30C62C /* WatchShared */,
+			);
+		};
+		XX5D98368F33E386823FB9XX /* AbhiAlishaWatchWidget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = XXDC97FCEEF922CADC0B65XX /* Build configuration list for PBXNativeTarget "AbhiAlishaWatchWidget" */;
+			buildPhases = (
+				XXE3CAB98CB31052CE0051XX /* Sources */,
+				XXE1E171CED766A7EC6FFCXX /* Frameworks */,
+				XX44EFCBE7FD2BD02E6DF5XX /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = AbhiAlishaWatchWidget;
+			productName = AbhiAlishaWatchWidget;
+			productReference = XX9A918967852AE91A553EXX /* AbhiAlishaWatchWidget.appex */;
+			productType = "com.apple.product-type.app-extension";
+			fileSystemSynchronizedGroups = (
+				XX57B8A0AC90CE3D9AB644XX /* AbhiAlishaWatchWidget */,
+				FF8E4C2A91D4480FBA30C62C /* WatchShared */,
+			);
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -288,6 +429,8 @@
 				105FC5882E9EAD3200EA8BCF /* AbhiAlishaTests */,
 				105FC5922E9EAD3200EA8BCF /* AbhiAlishaUITests */,
 				XX170BB40174A02606543BXX /* AbhiAlishaWidget */,
+				XX2A266D0DE95353D76097XX /* AbhiAlishaWatch */,
+				XX5D98368F33E386823FB9XX /* AbhiAlishaWatchWidget */,
 			);
 		};
 /* End PBXProject section */
@@ -308,6 +451,20 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		105FC5912E9EAD3200EA8BCF /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		XX44EFCBE7FD2BD02E6DF5XX /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		XXA38758DE108935308AA6XX /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -345,7 +502,21 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		XX395EFA1E9FE92318041CXX /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		XX9846A71882101663F647XX /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		XXE3CAB98CB31052CE0051XX /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -365,10 +536,20 @@
 			target = 105FC5792E9EAD3100EA8BCF /* AbhiAlisha */;
 			targetProxy = 105FC5942E9EAD3200EA8BCF /* PBXContainerItemProxy */;
 		};
+		XX5733D1251AF51D5B0930XX /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = XX2A266D0DE95353D76097XX /* AbhiAlishaWatch */;
+			targetProxy = XX4CDA6802173918904B73XX /* PBXContainerItemProxy */;
+		};
 		XX6EB980879C0260862FABXX /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = XX170BB40174A02606543BXX /* AbhiAlishaWidget */;
 			targetProxy = XXE35D517854BF800EC59CXX /* PBXContainerItemProxy */;
+		};
+		XXEE6C5F1FD54F8336D547XX /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = XX5D98368F33E386823FB9XX /* AbhiAlishaWatchWidget */;
+			targetProxy = XX5747B1DA2DED004B3D52XX /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -702,6 +883,116 @@
 			};
 			name = Release;
 		};
+		XX6DA9996569D17D463A14XX /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = AbhiAlishaWatchWidget/AbhiAlishaWatchWidget.entitlements;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.businessgliders.abhialisha.abhialishawatch.widgetextension;
+				SDKROOT = watchos;
+				WATCHOS_DEPLOYMENT_TARGET = 26.0;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = AbhiAlishaWatchWidget/Info.plist;
+				SWIFT_VERSION = 5.0;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				MARKETING_VERSION = 1.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
+				TARGETED_DEVICE_FAMILY = 4;
+				INFOPLIST_KEY_CFBundleDisplayName = "Abhi & Alisha";
+			};
+			name = Debug;
+		};
+		XX988B757A878EF48084D8XX /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = AbhiAlishaWatch/AbhiAlishaWatch.entitlements;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.businessgliders.abhialisha.abhialishawatch;
+				SDKROOT = watchos;
+				WATCHOS_DEPLOYMENT_TARGET = 26.0;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
+				GENERATE_INFOPLIST_FILE = YES;
+				SWIFT_VERSION = 5.0;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				MARKETING_VERSION = 1.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
+				TARGETED_DEVICE_FAMILY = 4;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				INFOPLIST_KEY_CFBundleDisplayName = "Abhi & Alisha";
+				INFOPLIST_KEY_WKRunsIndependentlyOfCompanionApp = YES;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				ENABLE_PREVIEWS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.businessgliders.abhialisha;
+			};
+			name = Debug;
+		};
+		XXA1960709A55A4C228466XX /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = AbhiAlishaWatch/AbhiAlishaWatch.entitlements;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.businessgliders.abhialisha.abhialishawatch;
+				SDKROOT = watchos;
+				WATCHOS_DEPLOYMENT_TARGET = 26.0;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
+				GENERATE_INFOPLIST_FILE = YES;
+				SWIFT_VERSION = 5.0;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				MARKETING_VERSION = 1.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
+				TARGETED_DEVICE_FAMILY = 4;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				INFOPLIST_KEY_CFBundleDisplayName = "Abhi & Alisha";
+				INFOPLIST_KEY_WKRunsIndependentlyOfCompanionApp = YES;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				ENABLE_PREVIEWS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.businessgliders.abhialisha;
+			};
+			name = Release;
+		};
+		XXA77AD6A2CED9779AB73DXX /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = AbhiAlishaWatchWidget/AbhiAlishaWatchWidget.entitlements;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.businessgliders.abhialisha.abhialishawatch.widgetextension;
+				SDKROOT = watchos;
+				WATCHOS_DEPLOYMENT_TARGET = 26.0;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = AbhiAlishaWatchWidget/Info.plist;
+				SWIFT_VERSION = 5.0;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				MARKETING_VERSION = 1.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
+				TARGETED_DEVICE_FAMILY = 4;
+				INFOPLIST_KEY_CFBundleDisplayName = "Abhi & Alisha";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -746,6 +1037,24 @@
 			buildConfigurations = (
 				XX063E4F6097F29D18815BXX /* Debug */,
 				XX4CC71F635D02DC74527AXX /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		XXC58AAB310494ECFAA1E5XX /* Build configuration list for PBXNativeTarget "AbhiAlishaWatch" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				XX988B757A878EF48084D8XX /* Debug */,
+				XXA1960709A55A4C228466XX /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		XXDC97FCEEF922CADC0B65XX /* Build configuration list for PBXNativeTarget "AbhiAlishaWatchWidget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				XX6DA9996569D17D463A14XX /* Debug */,
+				XXA77AD6A2CED9779AB73DXX /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

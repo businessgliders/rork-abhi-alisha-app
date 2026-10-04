@@ -29,6 +29,125 @@ enum AdminTab: String, CaseIterable, Identifiable {
 struct NotificationDraft: Equatable {
     var title: String = ""
     var body: String = ""
+    /// Where guests land when they tap the note.
+    var destination: NoteDestination = .updates
+}
+
+/// Where a note sends guests when they tap it: one of the app's screens, and for
+/// Schedule notes, optionally one celebration in particular.
+struct NoteDestination: Equatable {
+    /// One of the six values the app accepts on a tap: `notifications`, `home`,
+    /// `schedule`, `story`, `gallery` or `resort`. Anything else falls back to Home.
+    var screen: String
+    /// The celebration a Schedule note opens on; nil leaves Schedule on whatever's on now.
+    var eventID: String?
+
+    /// A note that lands on the updates screen — the default for every new note.
+    static let updates = NoteDestination(screen: "notifications", eventID: nil)
+
+    /// A Schedule note about one celebration; a nil id means "whatever's on now".
+    static func scheduleEvent(_ id: String?) -> NoteDestination {
+        NoteDestination(screen: AppTab.schedule.rawValue, eventID: id)
+    }
+
+    var isSchedule: Bool { screen == AppTab.schedule.rawValue }
+}
+
+/// A row of choice pills that wraps onto further lines, like words on a line.
+struct WrappingPillRow: Layout {
+    var spacing: CGFloat = 8
+    var lineSpacing: CGFloat = 10
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let maxWidth = proposal.width ?? .infinity
+        var x: CGFloat = 0
+        var y: CGFloat = 0
+        var rowHeight: CGFloat = 0
+        for subview in subviews {
+            let size = subview.sizeThatFits(.unspecified)
+            if x > 0, x + size.width > maxWidth {
+                x = 0
+                y += rowHeight + lineSpacing
+                rowHeight = 0
+            }
+            x += size.width + spacing
+            rowHeight = max(rowHeight, size.height)
+        }
+        return CGSize(width: maxWidth == .infinity ? max(0, x - spacing) : maxWidth, height: y + rowHeight)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        var x: CGFloat = 0
+        var y: CGFloat = 0
+        var rowHeight: CGFloat = 0
+        for subview in subviews {
+            let size = subview.sizeThatFits(.unspecified)
+            if x > 0, x + size.width > bounds.width {
+                x = 0
+                y += rowHeight + lineSpacing
+                rowHeight = 0
+            }
+            subview.place(at: CGPoint(x: bounds.minX + x, y: bounds.minY + y), proposal: .unspecified)
+            x += size.width + spacing
+            rowHeight = max(rowHeight, size.height)
+        }
+    }
+}
+
+/// A gold-outline choice pill for the couple's pickers — softly filled when selected.
+struct AdminChoicePill: View {
+    let title: String
+    var detail: String? = nil
+    var iconKey: EventIconKey? = nil
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                if let iconKey {
+                    LineArtIcon(key: iconKey)
+                        .stroke(
+                            isSelected ? BrandPalette.goldDeep : BrandPalette.body.opacity(0.75),
+                            style: StrokeStyle(lineWidth: 1.1, lineCap: .round, lineJoin: .round)
+                        )
+                        .frame(width: 18, height: 18)
+                }
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .brandFont(.bodyText)
+                        .foregroundStyle(isSelected ? BrandPalette.ink : BrandPalette.body)
+                        .lineLimit(1)
+
+                    if let detail {
+                        Text(detail.uppercased())
+                            .font(BrandLabel.font(size: 8.5, weight: .semibold))
+                            .tracking(1)
+                            .foregroundStyle(BrandPalette.goldDeep.opacity(isSelected ? 1 : 0.75))
+                            .lineLimit(1)
+                    }
+                }
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
+            .frame(minHeight: 44)
+            .background(
+                RoundedRectangle(cornerRadius: 15, style: .continuous)
+                    .fill(isSelected ? BrandPalette.gold.opacity(0.14) : BrandPalette.card)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 15, style: .continuous)
+                    .stroke(
+                        isSelected ? BrandPalette.gold.opacity(0.65) : BrandPalette.hairline,
+                        lineWidth: 1
+                    )
+            )
+            .animation(.calm, value: isSelected)
+        }
+        .buttonStyle(PressableStyle())
+        .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
+    }
 }
 
 /// Page header for the couple's screens: eyebrow, Playfair title, gold rule, and the

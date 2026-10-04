@@ -43,18 +43,26 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
     }
 
     /// Tapping a wedding update opens the screen the payload names — the updates screen
-    /// for "notifications", otherwise Home. The value is read defensively, so a missing
-    /// or mangled payload can never crash, and the landing waits for the app to load.
-    /// The landing is recorded first, then the system is told the tap is handled.
+    /// for "notifications", otherwise Home — and for Schedule notes, the celebration it
+    /// names. Both values are read defensively, so a missing or mangled payload can never
+    /// crash: an unknown celebration simply leaves Schedule on whatever is on now, and
+    /// the landing waits for the app to load. The landing is recorded first, then the
+    /// system is told the tap is handled.
     nonisolated func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         didReceive response: UNNotificationResponse,
         withCompletionHandler completionHandler: @escaping () -> Void
     ) {
-        let screen = DeepLinkRouter.screenValue(in: response.notification.request.content.userInfo)
+        let userInfo = response.notification.request.content.userInfo
+        let screen = DeepLinkRouter.screenValue(in: userInfo)
+        let eventID = DeepLinkRouter.eventIDValue(in: userInfo)
         let finish = TapCompletion(completionHandler)
         Self.onMainThread {
-            DeepLinkRouter.shared.open(DeepLinkRouter.landing(forScreen: screen))
+            let landing = DeepLinkRouter.landing(forScreen: screen)
+            if case .tab(.schedule) = landing, let eventID {
+                DeepLinkRouter.shared.pendingEventID = eventID
+            }
+            DeepLinkRouter.shared.open(landing)
             finish.call()
         }
     }

@@ -31,12 +31,19 @@ nonisolated struct AdminService: Sendable {
 
     // MARK: - Notifications
 
-    func sendToAll(title: String, body: String, code: String) async throws -> SendReceipt {
-        let reply = try await perform("sendPushToAll", [
+    /// `destination` rides along as `screen` — and `event_id` when a celebration is
+    /// chosen — so the backend can copy both into the notification it hands to Apple.
+    func sendToAll(title: String, body: String, code: String, destination: NoteDestination) async throws -> SendReceipt {
+        var payload: [String: JSONValue] = [
             "title": .string(title),
             "body": .string(body),
-            "sender_code": .string(code)
-        ])
+            "sender_code": .string(code),
+            "screen": .string(destination.screen)
+        ]
+        if let eventID = destination.eventID {
+            payload["event_id"] = .string(eventID)
+        }
+        let reply = try await perform("sendPushToAll", payload)
         let countKeys = ["delivered_count", "delivered", "sent_count", "sent", "success_count", "successCount", "count"]
         let count = countKeys.lazy.compactMap { reply?[$0]?.doubleValue }.first.map { Int($0) }
         return SendReceipt(deliveredCount: count)

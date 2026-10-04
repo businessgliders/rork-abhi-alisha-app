@@ -65,4 +65,14 @@ final class DeepLinkRouter {
            let screen = aps["screen"] as? String { return screen }
         return nil
     }
+
+    /// The celebration a Schedule note should open on, read with the same defensive
+    /// rules as `screen`: only a real, non-empty String counts. A nil here leaves the
+    /// Schedule on whatever is happening now.
+    nonisolated static func eventIDValue(in payload: [AnyHashable: Any]) -> String? {
+        if let id = payload["event_id"] as? String { return id.nonEmpty }
+        if let aps = payload["aps"] as? [AnyHashable: Any],
+           let id = aps["event_id"] as? String { return id.nonEmpty }
+        return nil
+    }
 }

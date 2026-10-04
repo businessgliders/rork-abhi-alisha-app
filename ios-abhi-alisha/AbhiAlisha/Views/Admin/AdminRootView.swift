@@ -41,12 +41,14 @@ struct AdminRootView: View {
         }
     }
 
-    /// After a timeline edit: a note is written for them, ready to review and send.
-    private func prepareChangeNotice(for eventName: String) {
-        let name = eventName.nonEmpty ?? "the schedule"
+    /// After a timeline edit: a note is written for them, already pointed at that
+    /// celebration, ready to review and send.
+    private func prepareChangeNotice(for entry: TimelineEntry) {
+        let name = entry.title?.nonEmpty ?? "the schedule"
         draft = NotificationDraft(
             title: "Update: \(name)",
-            body: "We've updated the details for \(name). Open the app to see the latest."
+            body: "We've updated the details for \(name). Open the app to see the latest.",
+            destination: .scheduleEvent(entry.id)
         )
         withAnimation(.calm) { selection = .send }
     }

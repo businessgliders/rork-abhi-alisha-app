@@ -8,6 +8,7 @@ struct AdminSendView: View {
     @Binding var draft: NotificationDraft
 
     @Environment(AdminSession.self) private var session
+    @Environment(ScheduleStore.self) private var store
 
     @State private var phase: Phase = .composing
     @State private var history: [NotificationRecord] = []
@@ -29,6 +30,13 @@ struct AdminSendView: View {
     private static let titleLimit = 60
     private static let bodyLimit = 240
 
+    /// The weekday a celebration sits on, so two similarly named ones are easy to tell apart.
+    private static let dayFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "EEEE"
+        return formatter
+    }()
+
     private var canSend: Bool {
         draft.title.nonEmpty != nil && draft.body.nonEmpty != nil
     }
@@ -41,10 +49,21 @@ struct AdminSendView: View {
                 fields
                     .padding(.top, 26)
 
+                destinationSection
+                    .padding(.top, 26)
+
                 Eyebrow(text: "On their Lock Screen", size: 9.5)
                     .padding(.top, 28)
 
                 LockScreenPreview(title: draft.title, message: draft.body)
+                    .padding(.top, 10)
+
+                Text(opensToLine)
+                    .font(BrandLabel.font(size: 10, weight: .semibold))
+                    .tracking(1.4)
+                    .textCase(.uppercase)
+                    .foregroundStyle(BrandPalette.goldDeep)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.top, 10)
 
                 action
@@ -114,6 +133,120 @@ struct AdminSendView: View {
         text.isEmpty ? nil : "\(text.count)/\(limit)"
     }
 
+    // MARK: - Destination
+
+    /// One of the six places a note can open. Updates first — the default.
+    private struct DestinationChoice: Identifiable {
+        let screen: String
+        let title: String
+        var id: String { screen }
+
+        static let all: [DestinationChoice] = [
+            .init(screen: "notifications", title: "Updates"),
+            .init(screen: AppTab.home.rawValue, title: "Home"),
+            .init(screen: AppTab.schedule.rawValue, title: "Schedule"),
+            .init(screen: AppTab.story.rawValue, title: "Story"),
+            .init(screen: AppTab.gallery.rawValue, title: "Gallery"),
+            .init(screen: AppTab.resort.rawValue, title: "Resort")
+        ]
+    }
+
+    private var destinationSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Eyebrow(text: "Opens to", size: 9.5)
+
+            WrappingPillRow {
+                ForEach(DestinationChoice.all) { choice in
+                    AdminChoicePill(
+                        title: choice.title,
+                        isSelected: draft.destination.screen == choice.screen
+                    ) {
+                        select(screen: choice.screen)
+                    }
+                }
+            }
+
+            if draft.destination.isSchedule {
+                celebrationPicker
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+        }
+        .animation(.calm, value: draft.destination)
+    }
+
+    /// Every celebration on the schedule, plus "whatever's on now" for a note that
+    /// should simply land on the live schedule.
+    private var celebrationPicker: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Eyebrow(text: "Which celebration?", size: 9.5)
+
+            WrappingPillRow {
+                AdminChoicePill(
+                    title: "Whatever's on now",
+                    iconKey: .sparkle,
+                    isSelected: draft.destination.eventID == nil
+                ) {
+                    select(celebrationID: nil)
+                }
+
+                ForEach(store.events) { event in
+                    AdminChoicePill(
+                        title: event.title,
+                        detail: dayCaption(for: event),
+                        iconKey: event.iconKey,
+                        isSelected: draft.destination.eventID == event.id
+                    ) {
+                        select(celebrationID: event.id)
+                    }
+                }
+            }
+        }
+    }
+
+    private func select(screen: String) {
+        guard screen != draft.destination.screen else { return }
+        BrandHaptics.tick()
+        withAnimation(.calm) {
+            // Leaving Schedule drops the celebration; coming back keeps the last choice.
+            draft.destination = NoteDestination(
+                screen: screen,
+                eventID: screen == AppTab.schedule.rawValue ? draft.destination.eventID : nil
+            )
+        }
+    }
+
+    private func select(celebrationID: String?) {
+        guard celebrationID != draft.destination.eventID else { return }
+        BrandHaptics.tick()
+        withAnimation(.calm) {
+            draft.destination.eventID = celebrationID
+        }
+    }
+
+    private func dayCaption(for event: ScheduleEvent) -> String? {
+        if let startsAt = event.startsAt {
+            return Self.dayFormatter.string(from: startsAt)
+        }
+        return event.displayDate?.nonEmpty
+    }
+
+    /// The small gold line under the preview: where this note sends guests.
+    private var opensToLine: String {
+        "Opens to " + destinationPhrase
+    }
+
+    private var destinationPhrase: String {
+        if draft.destination.screen == "notifications" { return "Updates" }
+        guard let tab = AppTab(rawValue: draft.destination.screen) else { return "Home" }
+        guard tab == .schedule, let celebration = selectedCelebration else { return tab.title }
+        return "\(tab.title) · \(celebration.title)"
+    }
+
+    private var selectedCelebration: ScheduleEvent? {
+        guard let id = draft.destination.eventID else { return nil }
+        return store.events.first { $0.id == id }
+    }
+
     private func limited(_ keyPath: WritableKeyPath<NotificationDraft, String>, _ limit: Int) -> Binding<String> {
         Binding(
             get: { draft[keyPath: keyPath] },
@@ -180,6 +313,12 @@ struct AdminSendView: View {
                     .multilineTextAlignment(.center)
                     .padding(.top, 6)
 
+                Text("Tapping it opens \(destinationPhrase).")
+                    .brandFont(.bodySmall)
+                    .foregroundStyle(BrandPalette.body)
+                    .multilineTextAlignment(.center)
+                    .padding(.top, 4)
+
                 GoldActionButton(
                     title: "Send to all guests",
                     isBusy: phase == .sending
@@ -215,7 +354,12 @@ struct AdminSendView: View {
 
         Task {
             do {
-                let receipt = try await AdminService.shared.sendToAll(title: title, body: body, code: code)
+                let receipt = try await AdminService.shared.sendToAll(
+                    title: title,
+                    body: body,
+                    code: code,
+                    destination: draft.destination
+                )
                 UINotificationFeedbackGenerator().notificationOccurred(.success)
                 isClearingDraft = true
                 draft = NotificationDraft()

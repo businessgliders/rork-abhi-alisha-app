@@ -4,7 +4,7 @@ import UIKit
 /// Every celebration, as stored. Tap one to change its details.
 struct AdminTimelineView: View {
     /// Asks the couple's area to prepare a note about a changed celebration.
-    let onNotify: (String) -> Void
+    let onNotify: (TimelineEntry) -> Void
 
     @State private var entries: [TimelineEntry] = []
     @State private var editing: TimelineEntry?
@@ -153,7 +153,7 @@ private struct EntryRow: View {
 private struct EventEditorSheet: View {
     let entry: TimelineEntry
     let onSaved: (TimelineEntry) -> Void
-    let onNotify: (String) -> Void
+    let onNotify: (TimelineEntry) -> Void
 
     @Environment(AdminSession.self) private var session
     @Environment(ScheduleStore.self) private var store
@@ -166,7 +166,7 @@ private struct EventEditorSheet: View {
     @State private var didSave = false
     @State private var errorMessage: String?
 
-    init(entry: TimelineEntry, onSaved: @escaping (TimelineEntry) -> Void, onNotify: @escaping (String) -> Void) {
+    init(entry: TimelineEntry, onSaved: @escaping (TimelineEntry) -> Void, onNotify: @escaping (TimelineEntry) -> Void) {
         self.entry = entry
         self.onSaved = onSaved
         self.onNotify = onNotify
@@ -324,9 +324,8 @@ private struct EventEditorSheet: View {
                 .padding(.top, 16)
 
             GoldActionButton(title: "Notify guests", systemImage: "paperplane") {
-                let name = draft.title.trimmed
                 dismiss()
-                onNotify(name)
+                onNotify(entry)
             }
             .padding(.top, 30)
 
