@@ -41,11 +41,16 @@ struct AdminChecklistView: View {
                 addButton
                     .padding(.top, 4)
 
-                if checklist.sections.isEmpty {
+                if canSuggest {
+                    suggestedButton
+                        .transition(.opacity)
+                }
+
+                // Offline before the list has ever loaded is the one case worth a word;
+                // otherwise the card above already says the list is empty.
+                if checklist.sections.isEmpty && checklist.loadFailed && !checklist.hasLoadedFromServer {
                     AdminNote(
-                        text: checklist.loadFailed && !checklist.hasLoadedFromServer
-                            ? "Your checklist will appear here once you're connected."
-                            : "Nothing on the list yet. Add the first task above.",
+                        text: "Your checklist will appear here once you're connected.",
                         symbol: "checklist"
                     )
                 }
@@ -89,10 +94,13 @@ struct AdminChecklistView: View {
                 .listSectionSeparator(.hidden)
             }
 
-            AdminLockFooter()
-                .padding(.top, 20)
-                .padding(.bottom, FloatingTabBar.contentReserve)
-                .plainRow()
+            Color.clear
+                .frame(height: 12)
+                .plainRow(vertical: 0)
+        }
+        .animation(.calm, value: canSuggest)
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            lockBar
         }
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
@@ -117,6 +125,53 @@ struct AdminChecklistView: View {
         .refreshable {
             await checklist.refresh()
         }
+    }
+
+    /// Only offered on an empty list the server has confirmed is empty, so a starter
+    /// list can never land on top of tasks that simply haven't loaded yet.
+    private var canSuggest: Bool {
+        checklist.totalCount == 0 && checklist.hasLoadedFromServer
+    }
+
+    /// The way out of the couple's area, resting just above the glass bar.
+    private var lockBar: some View {
+        AdminLockFooter()
+            .padding(.top, 18)
+            .padding(.bottom, FloatingTabBar.barHeight + FloatingTabBar.edgeInset + 2)
+            .frame(maxWidth: .infinity)
+            .background {
+                LinearGradient(
+                    stops: [
+                        .init(color: BrandPalette.background.opacity(0), location: 0),
+                        .init(color: BrandPalette.background, location: 0.3)
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .ignoresSafeArea(edges: .bottom)
+                .allowsHitTesting(false)
+            }
+    }
+
+    private var suggestedButton: some View {
+        Button {
+            BrandHaptics.soft()
+            withAnimation(.calm) { checklist.addAll(SuggestedChecklist.drafts) }
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: "text.badge.checkmark")
+                    .font(.system(size: 12, weight: .regular))
+                Text("Start from a suggested list")
+                    .font(BrandLabel.font(size: 11, weight: .semibold))
+                    .tracking(1.2)
+                    .textCase(.uppercase)
+            }
+            .foregroundStyle(BrandPalette.body)
+            .frame(maxWidth: .infinity, minHeight: 44)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(PressableStyle())
+        .accessibilityHint("Adds fifteen common wedding tasks, grouped by when they're due")
     }
 
     private var addButton: some View {

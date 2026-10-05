@@ -5,6 +5,13 @@ import SwiftUI
 /// Every other screen carries its own crest as part of the page itself — see
 /// `crestCorner()` — so it travels with the header instead of hovering over the words
 /// as they pass beneath it.
+/// The crest's size and strength wherever it marks a page: small and faint, so it
+/// signs the screen without competing with the title beside it.
+enum CrestMark {
+    static let width: CGFloat = 44
+    static let opacity: Double = 0.12
+}
+
 struct ScreenChrome: View {
     /// Space a screen's own header must leave clear at the top.
     static let contentReserve: CGFloat = 58
@@ -16,7 +23,8 @@ struct ScreenChrome: View {
             Spacer(minLength: 0)
 
             if showsCrest {
-                CoupleCrest(finish: .lit)
+                // The lit finish already draws at 40%, so this lands at the same ~12%.
+                CoupleCrest(width: CrestMark.width, finish: .lit, opacity: CrestMark.opacity / 0.4)
             }
         }
         .padding(.horizontal, 16)
@@ -29,12 +37,17 @@ extension View {
     /// Sets the crest into the page's own top-right corner, so it belongs to the header
     /// and leaves with it rather than sitting on the glass while the page slides past.
     func crestCorner(
-        width: CGFloat = 116,
+        width: CGFloat = CrestMark.width,
         surface: Color = BrandPalette.background,
         isHoldable: Bool = true
     ) -> some View {
         overlay(alignment: .topTrailing) {
-            CoupleCrest(width: width, finish: .pressed(surface), isHoldable: isHoldable)
+            CoupleCrest(
+                width: width,
+                finish: .pressed(surface),
+                isHoldable: isHoldable,
+                opacity: CrestMark.opacity
+            )
                 .padding(.top, 2)
                 .padding(.trailing, 16)
         }

@@ -234,14 +234,21 @@ extension String {
         return value.isEmpty ? nil : value
     }
 
-    /// Drops the em and en dashes used as connectors in hand-written copy, closing the
-    /// gap they leave behind so the sentence still reads cleanly.
+    /// Turns the em and en dashes used as connectors in hand-written copy into a comma,
+    /// so "celebrations — an elegant evening" reads "celebrations, an elegant evening".
+    /// An en dash between two numbers ("6–9 PM") is a range and is left alone.
     var withoutDashes: String {
-        replacingOccurrences(of: "—", with: " ")
-            .replacingOccurrences(of: "–", with: " ")
-            .replacingOccurrences(of: " ,", with: ",")
-            .replacingOccurrences(of: " .", with: ".")
-            .squeezingSpaces
+        let rangeMark = "\u{E000}"
+        var text = self
+        text = text.replacingOccurrences(of: #"(\d)\s*–\s*(\d)"#, with: "$1" + rangeMark + "$2", options: .regularExpression)
+        text = text.replacingOccurrences(of: #"\s*[—–]\s*"#, with: ", ", options: .regularExpression)
+        text = text.replacingOccurrences(of: rangeMark, with: "–")
+        // Tidy what a dash beside other punctuation leaves behind.
+        text = text.replacingOccurrences(of: #",\s*([,.;:!?])"#, with: "$1", options: .regularExpression)
+        text = text.replacingOccurrences(of: #"([,.;:!?])\s*,"#, with: "$1", options: .regularExpression)
+        text = text.replacingOccurrences(of: #"^\s*,\s*|\s*,\s*$"#, with: "", options: .regularExpression)
+        text = text.replacingOccurrences(of: #" +"#, with: " ", options: .regularExpression)
+        return text.trimmed
     }
 
     /// Collapses the double spaces that creep into hand-entered date strings.

@@ -47,11 +47,14 @@ struct EventCard: View {
                 maxHeight: fillsHeight ? .infinity : nil,
                 alignment: .topLeading
             )
-            .overlay(alignment: .bottomTrailing) {
+            // Faint, behind the title, tucked under the weather chip and well clear of
+            // the location row.
+            .background(alignment: .topTrailing) {
                 IconWatermark(key: event.iconKey, size: 96, opacity: 0.12)
-                    .padding(.bottom, 14)
-                    .padding(.trailing, 14)
+                    .padding(.top, weather == nil ? 18 : 58)
+                    .padding(.trailing, 16)
                     .allowsHitTesting(false)
+                    .accessibilityHidden(true)
             }
             .overlay(alignment: .topTrailing) {
                 if let weather {

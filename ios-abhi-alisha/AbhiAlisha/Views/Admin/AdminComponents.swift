@@ -173,9 +173,20 @@ struct AdminHeader: View {
 
             Spacer(minLength: 0)
 
-            CrestWatermark(width: 96, finish: .pressed(BrandPalette.background))
+            CrestWatermark(width: CrestMark.width, finish: .pressed(BrandPalette.background))
+                .opacity(CrestMark.opacity)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+/// An example shown in an empty field: lighter, italic, and prefixed "e.g.", so it can
+/// never be mistaken for words already typed.
+enum AdminExample {
+    static func prompt(_ example: String) -> Text {
+        Text("e.g. \(example)")
+            .font(BrandFontSpec.bodyItalic.resolved)
+            .foregroundStyle(BrandPalette.body.opacity(0.45))
     }
 }
 

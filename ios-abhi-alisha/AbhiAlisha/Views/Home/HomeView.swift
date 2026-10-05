@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// Home: full-bleed dusk hero with the couple's names and live countdown,
-/// then a content sheet that rises over the photograph.
+/// Home: full-bleed dusk hero with the couple's names and live countdown, held still,
+/// while the content sheet glides up over it like a layer laid on top.
 struct HomeView: View {
     @Environment(ScheduleStore.self) private var store
     @Environment(ContentStore.self) private var content
@@ -9,22 +9,50 @@ struct HomeView: View {
     @State private var isShowingRSVP = false
     /// The party this guest last found, remembered between launches.
     @State private var rsvpMatch: RSVPRecord?
+    /// How far the sheet has risen, 0 at rest to 1 once it covers the hero.
+    @State private var coverage: CGFloat = 0
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 0) {
+        GeometryReader { proxy in
+            let heroHeight = HeroHeader.height(for: proxy.size.height + proxy.safeAreaInsets.top)
+
+            ZStack(alignment: .top) {
+                // The photograph stays exactly where it is; only the sheet moves.
                 HeroHeader(
                     ceremonyDate: store.mainCeremony?.startsAt,
                     heroPhotos: content.heroPhotos
                 )
+                .frame(height: heroHeight)
+                .overlay {
+                    Color.black
+                        .opacity(Double(coverage) * 0.45)
+                        .allowsHitTesting(false)
+                }
+                .accessibilityElement(children: .contain)
 
-                contentSheet
-                    .offset(y: -HeroHeader.sheetOverlap)
+                ScrollView {
+                    VStack(spacing: 0) {
+                        Color.clear
+                            .frame(height: heroHeight - HeroHeader.sheetOverlap)
+                            .accessibilityHidden(true)
+
+                        contentSheet
+                    }
+                }
+                .scrollIndicators(.hidden)
+                .onScrollGeometryChange(for: CGFloat.self) { geometry in
+                    geometry.contentOffset.y + geometry.contentInsets.top
+                } action: { _, offset in
+                    let travel = max(heroHeight - HeroHeader.sheetOverlap, 1)
+                    let next = min(max(offset / travel, 0), 1)
+                    // Coarse steps keep the dimming smooth without redrawing every point.
+                    let stepped = (next * 40).rounded() / 40
+                    if stepped != coverage { coverage = stepped }
+                }
             }
+            .ignoresSafeArea(edges: .top)
         }
-        .scrollIndicators(.hidden)
-        .background(BrandPalette.background.ignoresSafeArea())
-        .ignoresSafeArea(edges: .top)
+        .background(BrandPalette.heroFallback.ignoresSafeArea())
         .sheet(isPresented: $isShowingRSVP, onDismiss: syncMatch) {
             RSVPLookupSheet()
         }
@@ -65,7 +93,9 @@ struct HomeView: View {
         .padding(.bottom, FloatingTabBar.contentReserve + 34)
         .readableWidth()
         .frame(maxWidth: .infinity)
-        .background(
+        .background(alignment: .top) {
+            // The sheet carries the page colour well past its end, so pulling up past the
+            // bottom never shows the photograph behind it.
             UnevenRoundedRectangle(
                 topLeadingRadius: 30,
                 bottomLeadingRadius: 0,
@@ -74,7 +104,9 @@ struct HomeView: View {
                 style: .continuous
             )
             .fill(BrandPalette.background)
-        )
+            .padding(.bottom, -600)
+            .shadow(color: Color.black.opacity(0.18), radius: 18, y: -4)
+        }
     }
 
     /// The quiet signature at the very bottom of the screen.
@@ -167,16 +199,17 @@ private struct HeroHeader: View {
     /// How far the content sheet rises over the photograph.
     static let sheetOverlap: CGFloat = 30
 
+    /// A shade shorter than full-bleed, so the RSVP bar and next event sit just above
+    /// the fold and only the signature waits below it.
+    static func height(for screenHeight: CGFloat) -> CGFloat {
+        min(max(screenHeight * 0.61, 400), 646)
+    }
+
     let ceremonyDate: Date?
     let heroPhotos: [GalleryPhoto]
 
     var body: some View {
-        // A shade shorter than full-bleed, so the RSVP bar and next event sit just above
-        // the fold and only the signature waits below it.
         Color(BrandPalette.heroFallback)
-            .containerRelativeFrame(.vertical) { length, _ in
-                min(max(length * 0.61, 400), 646)
-            }
             .overlay {
                 HeroSlideshow(photos: heroPhotos)
             }

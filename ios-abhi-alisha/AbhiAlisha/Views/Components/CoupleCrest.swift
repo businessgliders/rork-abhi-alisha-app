@@ -9,6 +9,8 @@ struct CoupleCrest: View {
     var width: CGFloat = 116
     var finish: CrestWatermark.Finish = .pressed(BrandPalette.background)
     var isHoldable: Bool = true
+    /// How strongly the mark itself reads. The gold hold ring always draws at full strength.
+    var opacity: Double = 1
 
     @Environment(AdminSession.self) private var session: AdminSession?
     @State private var isHolding = false
@@ -34,6 +36,7 @@ struct CoupleCrest: View {
 
     private var crest: some View {
         CrestWatermark(width: width, finish: finish)
+            .opacity(opacity)
     }
 
     private var holdRing: some View {

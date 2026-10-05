@@ -134,6 +134,30 @@ final class ChecklistStore {
         commit()
     }
 
+    /// Adds a whole starter list in one go, in the order given, each in its category.
+    /// Every task is queued exactly like one added by hand, so it works offline too.
+    func addAll(_ drafts: [ChecklistDraft]) {
+        guard !drafts.isEmpty else { return }
+        let start = (visibleItems.map(\.sortOrder).filter { $0 < .greatestFiniteMagnitude }.max() ?? 0) + 1
+        for (offset, draft) in drafts.enumerated() {
+            let id = ChecklistItem.localPrefix + UUID().uuidString
+            var data: [String: JSONValue] = [
+                "title": .string(draft.title),
+                "is_done": .bool(false),
+                "sort_order": .number(start + Double(offset))
+            ]
+            if let notes = draft.notes { data["notes"] = .string(notes) }
+            if let category = draft.category { data["category"] = .string(category) }
+            if let due = draft.dueDate { data["due_date"] = .string(ChecklistDates.string(from: due)) }
+
+            var fields = data
+            fields["id"] = .string(id)
+            items.append(ChecklistItem(id: id, fields: fields))
+            pending.append(ChecklistOperation(kind: .create, itemID: id, data: data))
+        }
+        commit()
+    }
+
     func edit(_ item: ChecklistItem, with draft: ChecklistDraft) {
         guard let index = items.firstIndex(where: { $0.id == item.id }) else { return }
         let current = items[index]

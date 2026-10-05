@@ -67,6 +67,18 @@ struct GallerySection: View {
         }
         .scrollIndicators(.hidden)
         .contentMargins(.horizontal, pageMargin, for: .scrollContent)
+        // The right edge dissolves into the page, so it's plain there's more to scroll to.
+        .mask {
+            HStack(spacing: 0) {
+                Color.black
+                LinearGradient(
+                    colors: [Color.black, Color.black.opacity(0)],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+                .frame(width: 56)
+            }
+        }
     }
 
     private func categoryButton(title: String, slug: String?) -> some View {

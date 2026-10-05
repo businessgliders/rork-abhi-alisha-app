@@ -109,7 +109,11 @@ struct AdminSendView: View {
     private var fields: some View {
         VStack(alignment: .leading, spacing: 18) {
             AdminField(label: "Title", hint: counter(draft.title, Self.titleLimit)) {
-                TextField("Shuttle to the Sangeet", text: limited(\.title, Self.titleLimit))
+                TextField(
+                    "Title",
+                    text: limited(\.title, Self.titleLimit),
+                    prompt: AdminExample.prompt("Shuttle to the Sangeet")
+                )
                     .textInputAutocapitalization(.sentences)
                     .submitLabel(.next)
                     .focused($focusedField, equals: .title)
@@ -118,8 +122,9 @@ struct AdminSendView: View {
 
             AdminField(label: "Message", hint: counter(draft.body, Self.bodyLimit)) {
                 TextField(
-                    "Shuttles leave the main lobby at 6:30 PM. See you there!",
+                    "Message",
                     text: limited(\.body, Self.bodyLimit),
+                    prompt: AdminExample.prompt("Shuttles leave the main lobby at 6:30 PM. See you there!"),
                     axis: .vertical
                 )
                 .lineLimit(3...7)

@@ -7,6 +7,9 @@ import SwiftUI
 struct FamilyRoster: View {
     let members: [FamilyMember]
 
+    /// The tallest tile's natural height; every tile is given at least this much.
+    @State private var tileHeight: CGFloat = 0
+
     private let columns = [
         GridItem(.flexible(), spacing: 12),
         GridItem(.flexible(), spacing: 12)
@@ -28,11 +31,30 @@ struct FamilyRoster: View {
                 LazyVGrid(columns: columns, spacing: 12) {
                     ForEach(members) { member in
                         FamilyTile(member: member)
+                            .frame(minHeight: tileHeight > 0 ? tileHeight : nil, alignment: .top)
+                            .background(tileBackground)
+                            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
+                                // Only ever grows, so the measurement settles in one pass.
+                                if height > tileHeight + 0.5 { tileHeight = height }
+                            }
                     }
                 }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+        .onChange(of: dynamicTypeSize) { _, _ in tileHeight = 0 }
+        .onChange(of: members.count) { _, _ in tileHeight = 0 }
+    }
+
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    private var tileBackground: some View {
+        RoundedRectangle(cornerRadius: 20, style: .continuous)
+            .fill(BrandPalette.card)
+            .overlay(
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .stroke(BrandPalette.hairline, lineWidth: 1)
+            )
     }
 }
 
@@ -53,11 +75,13 @@ private struct FamilyTile: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
+                // Wraps in full, never trailing off; the grid evens out the heights.
                 if let relationship = member.relationship {
                     Text(relationship)
                         .brandFont(.bodySmall)
                         .foregroundStyle(BrandPalette.body)
                         .multilineTextAlignment(.center)
+                        .lineLimit(nil)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
@@ -65,14 +89,6 @@ private struct FamilyTile: View {
         .padding(.horizontal, 14)
         .padding(.vertical, 20)
         .frame(maxWidth: .infinity, alignment: .top)
-        .background(
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(BrandPalette.card)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(BrandPalette.hairline, lineWidth: 1)
-        )
         .accessibilityElement(children: .combine)
     }
 
