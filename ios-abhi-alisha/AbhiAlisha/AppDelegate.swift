@@ -56,12 +56,12 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         }
     }
 
-    /// Tapping a wedding update opens the screen the payload names — the updates screen
-    /// for "notifications", otherwise Home — and for Schedule notes, the celebration it
-    /// names. Both values are read defensively, so a missing or mangled payload can never
-    /// crash: an unknown celebration simply leaves Schedule on whatever is on now, and
-    /// the landing waits for the app to load. The landing is recorded first, then the
-    /// system is told the tap is handled.
+    /// Tapping an announcement opens the screen its `screen` names (with `event_id` for a
+    /// celebration); no screen, or "notifications"/"announcements", opens the
+    /// Announcements chat. Both values are read defensively, so a missing or mangled
+    /// payload can never crash: an unknown celebration simply leaves Schedule on whatever
+    /// is on now, and the landing waits for the app to load. The landing is recorded
+    /// first, then the system is told the tap is handled.
     nonisolated func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         didReceive response: UNNotificationResponse,
@@ -78,7 +78,8 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         Self.onMainThread {
             // A new announcement brings the feed up to date on its way in.
             Task { await NotificationsStore.shared.refresh() }
-            if isAnnouncement {
+            // An older announcement marked only `"opens": "announcements"` opens the feed.
+            if isAnnouncement, screen?.nonEmpty == nil {
                 DeepLinkRouter.shared.pendingAnnouncements = true
                 DeepLinkRouter.shared.open(.tab(.chat))
                 finish.call()
@@ -86,17 +87,13 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
             }
             // A chat message ("opens": "chat") opens its conversation's thread. Without a
             // readable conversation it still lands on the Chat list, never somewhere else.
-            if isChat || conversationID != nil {
+            if !isAnnouncement, isChat || conversationID != nil {
                 DeepLinkRouter.shared.pendingConversationID = conversationID.flatMap { UUID(uuidString: $0) }
                 DeepLinkRouter.shared.open(.tab(.chat))
                 finish.call()
                 return
             }
-            let landing = DeepLinkRouter.landing(forScreen: screen)
-            if case .tab(.schedule) = landing, let eventID {
-                DeepLinkRouter.shared.pendingEventID = eventID
-            }
-            DeepLinkRouter.shared.open(landing)
+            DeepLinkRouter.shared.open(DeepLinkRouter.landing(forScreen: screen, eventID: eventID))
             finish.call()
         }
     }

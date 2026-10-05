@@ -5,6 +5,7 @@ import SwiftUI
 /// has answered, searchable. Published data only.
 struct ResortView: View {
     @Environment(ContentStore.self) private var content
+    @Environment(DeepLinkRouter.self) private var router
 
     @State private var expandedFaqID: String?
     @State private var expandedSections: Set<String> = []
@@ -12,10 +13,42 @@ struct ResortView: View {
     @State private var query = ""
 
     var body: some View {
+        ScrollViewReader { proxy in
+            page
+                .onChange(of: router.pendingResortSection) { _, _ in
+                    openSectionIfAsked(proxy)
+                }
+                .onAppear { openSectionIfAsked(proxy) }
+        }
+    }
+
+    /// An announcement asked for Travel & Stay (the top) or the FAQ (Questions).
+    private func openSectionIfAsked(_ proxy: ScrollViewProxy) {
+        guard let section = router.pendingResortSection else { return }
+        router.pendingResortSection = nil
+        Task {
+            // Let the tab finish appearing before the page moves.
+            try? await Task.sleep(for: .milliseconds(350))
+            withAnimation(.calm) {
+                switch section {
+                case .top:
+                    proxy.scrollTo(Self.topAnchor, anchor: .top)
+                case .questions:
+                    proxy.scrollTo(Self.questionsAnchor, anchor: .top)
+                }
+            }
+        }
+    }
+
+    private static let topAnchor = "resort.top"
+    private static let questionsAnchor = "resort.questions"
+
+    private var page: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 header
                     .padding(.horizontal, 22)
+                    .id(Self.topAnchor)
 
                 SectionHeading(text: "Photos & Maps")
                     .padding(.horizontal, 22)
@@ -36,6 +69,7 @@ struct ResortView: View {
 
                 questions
                     .padding(.top, 46)
+                    .id(Self.questionsAnchor)
             }
             .padding(.top, ScreenChrome.contentReserve)
             .padding(.bottom, FloatingTabBar.contentReserve + 24)

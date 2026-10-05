@@ -9,12 +9,9 @@ nonisolated enum AdminError: Error, Sendable {
     case unavailable
 }
 
-nonisolated struct SendReceipt: Sendable {
-    let deliveredCount: Int?
-}
-
-/// The couple's admin calls. Every function receives the Keychain code in its body —
-/// `code` everywhere, `sender_code` for sending — and never any device tokens back.
+/// The couple's admin calls. Every function receives the Keychain code in its body as
+/// `code`, and never any device tokens back. Announcements are sent from the
+/// Announcements chat through `AnnouncementService` instead.
 nonisolated struct AdminService: Sendable {
     static let shared = AdminService()
 
@@ -27,40 +24,6 @@ nonisolated struct AdminService: Sendable {
         } catch {
             return false
         }
-    }
-
-    // MARK: - Notifications
-
-    /// `destination` rides along as `screen` — and `event_id` when a celebration is
-    /// chosen — so the backend can copy both into the notification it hands to Apple.
-    func sendToAll(title: String, body: String, code: String, destination: NoteDestination) async throws -> SendReceipt {
-        var payload: [String: JSONValue] = [
-            "title": .string(title),
-            "body": .string(body),
-            "sender_code": .string(code),
-            "screen": .string(destination.screen)
-        ]
-        if let eventID = destination.eventID {
-            payload["event_id"] = .string(eventID)
-        }
-        let reply = try await perform("sendPushToAll", payload)
-        let countKeys = ["delivered_count", "delivered", "sent_count", "sent", "success_count", "successCount", "count"]
-        let count = countKeys.lazy.compactMap { reply?[$0]?.doubleValue }.first.map { Int($0) }
-        return SendReceipt(deliveredCount: count)
-    }
-
-    private let historyCache = JSONDiskCache(filename: "couple-notifications.json")
-
-    /// Newest first. Read from the public entity; tokens are never part of it.
-    func notificationHistory() async throws -> [NotificationRecord] {
-        let result = try await WeddingAPI.shared.fetch(NotificationRecord.self, entity: "Notification")
-        historyCache.save(result.raw)
-        return NotificationRecord.ordered(result.items)
-    }
-
-    /// The history as last seen, so the screen opens with something even offline.
-    func cachedNotificationHistory() -> [NotificationRecord] {
-        NotificationRecord.ordered(historyCache.load(NotificationRecord.self) ?? [])
     }
 
     // MARK: - Checklist

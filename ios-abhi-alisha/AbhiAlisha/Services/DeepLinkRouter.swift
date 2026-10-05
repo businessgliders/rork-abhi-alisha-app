@@ -7,6 +7,14 @@ enum Landing: Equatable {
     case tab(AppTab)
     /// The screen of past updates, raised over whichever tab is showing.
     case notifications
+    /// The Announcements chat, where a prepared note waits in the admin's composer.
+    case announcementsComposer
+}
+
+/// A part of the Resort page a notification can scroll to.
+enum ResortSection: Equatable {
+    case top
+    case questions
 }
 
 /// Where a tap on a widget, the Live Activity, or a notification wants the app to land.
@@ -25,6 +33,10 @@ final class DeepLinkRouter {
     var pendingConversationID: UUID?
     /// An announcement was tapped: open the Announcements feed in Chat.
     var pendingAnnouncements = false
+    /// An announcement asked for the RSVP lookup on Home.
+    var pendingRSVP = false
+    /// An announcement asked for a part of the Resort page.
+    var pendingResortSection: ResortSection?
     /// Where a notification tap wants to land, held until the root view can act on it.
     var pending: Landing?
     /// The screen of past updates, raised over whichever tab is showing.
@@ -44,30 +56,47 @@ final class DeepLinkRouter {
         pending = landing
     }
 
-    /// Reads the payload's `screen` value without ever assuming it is there. A missing,
-    /// mangled, or unrecognised value always falls back to Home — never a crash.
+    /// Reads the payload's `screen` and `event_id` without ever assuming they are there.
     static func landing(fromPayload payload: [AnyHashable: Any]) -> Landing {
-        landing(forScreen: screenValue(in: payload))
+        landing(forScreen: screenValue(in: payload), eventID: eventIDValue(in: payload))
     }
 
-    /// Turns an already-extracted `screen` value into a landing. Missing, blank, or
-    /// unrecognised values fall back to Home.
-    static func landing(forScreen rawScreen: String?) -> Landing {
-        guard let screen = rawScreen?
+    /// Turns a push's `screen` (and `event_id`) into a landing, setting whatever the
+    /// destination screen needs to open in the right place. No screen, or
+    /// "notifications" / "announcements", opens the Announcements chat; an unknown
+    /// value does too, so every announcement lands somewhere that shows it.
+    static func landing(forScreen rawScreen: String?, eventID: String? = nil) -> Landing {
+        let screen = rawScreen?
             .trimmingCharacters(in: .whitespacesAndNewlines)
-            .lowercased(), !screen.isEmpty else { return .tab(.home) }
-        // Announcements now live at the top of Chat, open to everyone.
-        if screen == "notifications" || screen == "announcements" {
-            shared.pendingAnnouncements = true
+            .lowercased() ?? ""
+        let router = shared
+
+        switch screen {
+        case "", "notifications", "notification", "announcements", "announcement":
+            router.pendingAnnouncements = true
+            return .tab(.chat)
+        case "event", "schedule", "itinerary":
+            if let eventID { router.pendingEventID = eventID }
+            return .tab(.schedule)
+        case "gallery", "photos":
+            router.pendingStoryGallery = true
+            return .tab(.story)
+        case "rsvp":
+            router.pendingRSVP = true
+            return .tab(.home)
+        case "travel", "travel_stay", "travel-stay", "stay", "resort":
+            router.pendingResortSection = .top
+            return .tab(.resort)
+        case "faq", "faqs", "questions":
+            router.pendingResortSection = .questions
+            return .tab(.resort)
+        case "chat", "message", "messages":
+            return .tab(.chat)
+        default:
+            if let tab = AppTab(rawValue: screen) { return .tab(tab) }
+            router.pendingAnnouncements = true
             return .tab(.chat)
         }
-        if screen == "gallery" {
-            shared.pendingStoryGallery = true
-            return .tab(.story)
-        }
-        if screen == "message" || screen == "messages" { return .tab(.chat) }
-        if let tab = AppTab(rawValue: screen) { return .tab(tab) }
-        return .tab(.home)
     }
 
     /// Custom keys ride beside `aps`; some senders tuck them inside it. Only a real

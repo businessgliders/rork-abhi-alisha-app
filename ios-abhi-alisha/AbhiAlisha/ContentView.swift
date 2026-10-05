@@ -14,6 +14,7 @@ struct ContentView: View {
     @State private var router = DeepLinkRouter.shared
     @State private var push = PushRegistrar.shared
     @State private var chat = ChatStore.shared
+    @State private var announcementDraft = AnnouncementDraft.shared
     @State private var admin: AdminSession
     @State private var checklist: ChecklistStore
     @State private var selection: AppTab = .home
@@ -115,15 +116,20 @@ struct ContentView: View {
         case .tab(let tab):
             router.isNotificationsPresented = false
             withAnimation(.calm) { selection = tab }
+        case .announcementsComposer:
+            router.isNotificationsPresented = false
+            router.pendingAnnouncements = true
+            withAnimation(.calm) { selection = .chat }
         case .notifications:
             // Already open? Then the tap simply keeps it where it is.
             router.isNotificationsPresented = true
         }
     }
 
-    /// A conversation fills the screen, composer and all, so the bar steps aside.
+    /// A conversation, or the admin's announcement composer, fills the screen to the
+    /// bottom edge, so the bar steps aside.
     private var isReadingThread: Bool {
-        selection == .chat && chat.activeThreadID != nil
+        selection == .chat && (chat.activeThreadID != nil || announcementDraft.isComposerOnScreen)
     }
 
     @ViewBuilder

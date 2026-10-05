@@ -11,8 +11,16 @@ import Observation
 final class NotificationsStore {
     static let shared = NotificationsStore()
 
-    /// Newest first.
-    private(set) var records: [NotificationRecord] = []
+    /// Newest first: the server's records plus anything just sent from this phone that
+    /// the server hasn't listed yet.
+    var records: [NotificationRecord] {
+        guard !justSent.isEmpty else { return serverRecords }
+        return NotificationRecord.ordered(serverRecords + justSent)
+    }
+
+    private var serverRecords: [NotificationRecord] = []
+    /// Announcements this admin just sent, held until the server's copy appears.
+    private var justSent: [NotificationRecord] = []
     private(set) var lastOpenedAt: Date?
 
     private let api: WeddingAPI
@@ -26,7 +34,7 @@ final class NotificationsStore {
     init(api: WeddingAPI = .shared) {
         self.api = api
         if let cached = cache.load(NotificationRecord.self) {
-            records = NotificationRecord.ordered(cached)
+            serverRecords = NotificationRecord.ordered(cached)
         }
         lastOpenedAt = defaults.object(forKey: Self.lastOpenedKey) as? Date
     }
@@ -50,6 +58,38 @@ final class NotificationsStore {
         defaults.set(stamp, forKey: Self.lastOpenedKey)
     }
 
+    /// Shows a just-sent announcement at the bottom of the feed straight away.
+    func addJustSent(title: String, body: String) {
+        let record = NotificationRecord(
+            id: "local-\(UUID().uuidString)",
+            title: title,
+            body: body,
+            sentAt: Date()
+        )
+        justSent.append(record)
+        markOpened()
+    }
+
+    /// Fetches again a few times after a send, so the server's copy replaces ours quickly.
+    func refreshAfterSend() async {
+        for delay in [0.8, 2.5, 6.0] {
+            try? await Task.sleep(for: .seconds(delay))
+            await refresh()
+            if justSent.isEmpty { break }
+        }
+        markOpened()
+    }
+
+    /// Drops local copies the server now lists, matched by their words.
+    private func reconcileJustSent() {
+        guard !justSent.isEmpty else { return }
+        let cutoff = Date().addingTimeInterval(-15 * 60)
+        justSent.removeAll { local in
+            if let sentAt = local.sentAt, sentAt < cutoff { return true }
+            return serverRecords.contains { $0.title == local.title && $0.body == local.body }
+        }
+    }
+
     /// Refreshes at most every few seconds, so returning to the screen stays quiet.
     func refreshIfNeeded() async {
         if let lastRefresh, Date().timeIntervalSince(lastRefresh) < 20 { return }
@@ -68,7 +108,8 @@ final class NotificationsStore {
             let fresh = NotificationRecord.ordered(result.items)
             guard !fresh.isEmpty else { return }
             cache.save(result.raw)
-            if fresh != records { records = fresh }
+            if fresh != serverRecords { serverRecords = fresh }
+            reconcileJustSent()
         } catch {
             print("[NotificationsStore] refresh failed")
         }

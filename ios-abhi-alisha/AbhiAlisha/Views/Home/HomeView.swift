@@ -5,6 +5,7 @@ import SwiftUI
 struct HomeView: View {
     @Environment(ScheduleStore.self) private var store
     @Environment(ContentStore.self) private var content
+    @Environment(DeepLinkRouter.self) private var router
 
     @State private var isShowingRSVP = false
     /// The party this guest last found, remembered between launches.
@@ -56,7 +57,13 @@ struct HomeView: View {
         .sheet(isPresented: $isShowingRSVP, onDismiss: syncMatch) {
             RSVPLookupSheet()
         }
-        .onAppear(perform: syncMatch)
+        .onAppear {
+            syncMatch()
+            openRSVPIfAsked()
+        }
+        .onChange(of: router.pendingRSVP) { _, _ in
+            openRSVPIfAsked()
+        }
         .task {
             await store.refresh()
         }
@@ -146,6 +153,13 @@ struct HomeView: View {
             // So the couple's list knows whose phone this is.
             PushRegistrar.shared.guestNameMayHaveChanged()
         }
+    }
+
+    /// An announcement asked for the RSVP: open the lookup straight away.
+    private func openRSVPIfAsked() {
+        guard router.pendingRSVP else { return }
+        router.pendingRSVP = false
+        isShowingRSVP = true
     }
 
     private func forgetMatch() {

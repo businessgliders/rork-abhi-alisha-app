@@ -1,8 +1,7 @@
 import SwiftUI
 
-/// The three rooms of the couple's area.
+/// The rooms of the couple's area. Announcements are sent from the Announcements chat.
 enum AdminTab: String, CaseIterable, Identifiable {
-    case send
     case checklist
     case timeline
 
@@ -10,7 +9,6 @@ enum AdminTab: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .send: return "Send"
         case .checklist: return "Checklist"
         case .timeline: return "Timeline"
         }
@@ -18,39 +16,10 @@ enum AdminTab: String, CaseIterable, Identifiable {
 
     var symbolName: String {
         switch self {
-        case .send: return "paperplane"
         case .checklist: return "checklist"
         case .timeline: return "calendar"
         }
     }
-}
-
-/// A note being written to every guest — shared so the Timeline can start one.
-struct NotificationDraft: Equatable {
-    var title: String = ""
-    var body: String = ""
-    /// Where guests land when they tap the note.
-    var destination: NoteDestination = .updates
-}
-
-/// Where a note sends guests when they tap it: one of the app's screens, and for
-/// Schedule notes, optionally one celebration in particular.
-struct NoteDestination: Equatable {
-    /// One of the values the app accepts on a tap: `notifications`, `home`, `schedule`,
-    /// `chat`, `story`, `gallery` or `resort`. Anything else falls back to Home.
-    var screen: String
-    /// The celebration a Schedule note opens on; nil leaves Schedule on whatever's on now.
-    var eventID: String?
-
-    /// A note that lands on the updates screen — the default for every new note.
-    static let updates = NoteDestination(screen: "notifications", eventID: nil)
-
-    /// A Schedule note about one celebration; a nil id means "whatever's on now".
-    static func scheduleEvent(_ id: String?) -> NoteDestination {
-        NoteDestination(screen: AppTab.schedule.rawValue, eventID: id)
-    }
-
-    var isSchedule: Bool { screen == AppTab.schedule.rawValue }
 }
 
 /// A row of choice pills that wraps onto further lines, like words on a line.

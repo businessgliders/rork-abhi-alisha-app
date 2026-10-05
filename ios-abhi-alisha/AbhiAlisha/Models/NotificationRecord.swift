@@ -18,6 +18,15 @@ nonisolated struct NotificationRecord: Decodable, Identifiable, Hashable, Sendab
         case deliveredCount = "delivered_count"
     }
 
+    /// A record made on this phone, shown until the server's copy arrives.
+    init(id: String, title: String?, body: String?, sentAt: Date?, deliveredCount: Int? = nil) {
+        self.id = id
+        self.title = title?.nonEmpty
+        self.body = body?.nonEmpty
+        self.sentAt = sentAt
+        self.deliveredCount = deliveredCount
+    }
+
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         id = (try? container.decodeIfPresent(String.self, forKey: .id)) ?? UUID().uuidString

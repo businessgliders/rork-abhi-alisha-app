@@ -1,10 +1,26 @@
 import SwiftUI
 
 /// Every announcement Abhi & Alisha have sent, oldest at the top like a chat, each in
-/// a gold bubble. Read-only and never muted: posting stays in the couple's area.
+/// a gold bubble. Guests only read; an admin (profile role = admin) gets a composer at
+/// the bottom that sends to every guest after a confirmation.
 /// Opens instantly from the saved copy, then refreshes quietly.
 struct AnnouncementsView: View {
     @State private var updates = NotificationsStore.shared
+    @State private var session = ChatSession.shared
+    @State private var draft = AnnouncementDraft.shared
+    @State private var pendingSend: PendingSend?
+    @State private var toast: String?
+    @State private var toastTask: Task<Void, Never>?
+
+    /// A snapshot of the note at the moment Send was tapped.
+    private struct PendingSend: Identifiable {
+        let id = UUID()
+        let title: String
+        let message: String
+        let destination: AnnouncementDestination
+    }
+
+    private var canCompose: Bool { session.isAdmin }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -12,7 +28,34 @@ struct AnnouncementsView: View {
             feed
         }
         .background(BrandPalette.background.ignoresSafeArea())
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            if canCompose {
+                AnnouncementComposer(onSend: prepareSend)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(.calm, value: canCompose)
+        .overlay(alignment: .top) {
+            if let toast {
+                ChatToast(text: toast)
+                    .padding(.top, 70)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+        }
+        .animation(.calm, value: toast)
+        .sheet(item: $pendingSend) { pending in
+            AnnouncementSendSheet(
+                title: pending.title,
+                message: pending.message,
+                destination: pending.destination
+            ) { count in
+                didSend(pending, count: count)
+            }
+        }
         .toolbar(.hidden, for: .navigationBar)
+        .onAppear { syncComposerPresence() }
+        .onChange(of: canCompose) { _, _ in syncComposerPresence() }
+        .onDisappear { draft.isComposerOnScreen = false }
         .task {
             updates.markOpened()
             await updates.refresh()
@@ -87,13 +130,49 @@ struct AnnouncementsView: View {
             }
             .padding(.horizontal, 14)
             .padding(.top, 6)
-            .padding(.bottom, FloatingTabBar.contentReserve + 16)
+            .padding(.bottom, canCompose ? 16 : FloatingTabBar.contentReserve + 16)
             .readableWidth(720)
         }
         .scrollIndicators(.hidden)
+        .scrollDismissesKeyboard(.interactively)
         .defaultScrollAnchor(.bottom)
         .refreshable { await updates.refresh() }
         .animation(.calm, value: updates.records)
+    }
+
+    // MARK: - Sending
+
+    private func prepareSend() {
+        guard let title = draft.title.nonEmpty, let message = draft.body.nonEmpty else { return }
+        BrandHaptics.soft()
+        pendingSend = PendingSend(title: title, message: message, destination: draft.destination)
+    }
+
+    private func didSend(_ pending: PendingSend, count: Int?) {
+        draft.clear()
+        updates.addJustSent(title: pending.title, body: pending.message)
+        if let count {
+            showToast(count == 1 ? "Sent to 1 guest" : "Sent to \(count) guests")
+        } else {
+            showToast("Sent to every guest")
+        }
+        Task { await updates.refreshAfterSend() }
+    }
+
+    private func showToast(_ text: String) {
+        toastTask?.cancel()
+        toast = text
+        toastTask = Task {
+            try? await Task.sleep(for: .seconds(2.6))
+            guard !Task.isCancelled else { return }
+            toast = nil
+        }
+    }
+
+    /// The composer fills the bottom edge, so the floating tab bar steps aside for it,
+    /// just as it does inside a conversation.
+    private func syncComposerPresence() {
+        draft.isComposerOnScreen = canCompose
     }
 
     private var emptyState: some View {
