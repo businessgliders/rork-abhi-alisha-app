@@ -65,11 +65,13 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         let screen = DeepLinkRouter.screenValue(in: userInfo)
         let eventID = DeepLinkRouter.eventIDValue(in: userInfo)
         let conversationID = DeepLinkRouter.conversationIDValue(in: userInfo)
+        let isChat = DeepLinkRouter.opensValue(in: userInfo) == "chat"
         let finish = TapCompletion(completionHandler)
         Self.onMainThread {
-            // A chat message names its conversation; it always opens in Chat.
-            if let conversationID {
-                DeepLinkRouter.shared.pendingConversationID = UUID(uuidString: conversationID)
+            // A chat message ("opens": "chat") opens its conversation's thread. Without a
+            // readable conversation it still lands on the Chat list, never somewhere else.
+            if isChat || conversationID != nil {
+                DeepLinkRouter.shared.pendingConversationID = conversationID.flatMap { UUID(uuidString: $0) }
                 DeepLinkRouter.shared.open(.tab(.chat))
                 finish.call()
                 return

@@ -85,12 +85,24 @@ final class DeepLinkRouter {
         return nil
     }
 
+    /// What a chat push asks to open: `"opens": "chat"` marks a family chat message.
+    /// Read with the same defensive rules; anything else is treated as absent.
+    nonisolated static func opensValue(in payload: [AnyHashable: Any]) -> String? {
+        if let opens = payload["opens"] as? String { return opens.nonEmpty?.lowercased() }
+        if let aps = payload["aps"] as? [AnyHashable: Any],
+           let opens = aps["opens"] as? String { return opens.nonEmpty?.lowercased() }
+        return nil
+    }
+
     /// The conversation a chat notification belongs to, read with the same defensive
     /// rules. A missing or mangled value simply opens the Chat tab's list.
     nonisolated static func conversationIDValue(in payload: [AnyHashable: Any]) -> String? {
         if let id = payload["conversation_id"] as? String { return id.nonEmpty }
-        if let aps = payload["aps"] as? [AnyHashable: Any],
-           let id = aps["conversation_id"] as? String { return id.nonEmpty }
+        if let aps = payload["aps"] as? [AnyHashable: Any] {
+            if let id = aps["conversation_id"] as? String { return id.nonEmpty }
+            // The chat sender also names the conversation as the notification's thread.
+            if opensValue(in: payload) == "chat", let id = aps["thread-id"] as? String { return id.nonEmpty }
+        }
         return nil
     }
 }

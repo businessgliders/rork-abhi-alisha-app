@@ -46,15 +46,11 @@ final class ChatSession {
     private var pushToken: String?
     private var waitingChannel: RealtimeChannelV2?
     private var waitingTask: Task<Void, Never>?
+    private var lateProfileTask: Task<Void, Never>?
 
     private let defaults = UserDefaults.standard
     private enum Key {
         static let pushRegistration = "chat.pushRegistration"
-    }
-
-    nonisolated private struct NewProfile: Encodable, Sendable {
-        let id: String
-        let display_name: String?
     }
 
     nonisolated private struct NameChange: Encodable, Sendable {
@@ -171,26 +167,42 @@ final class ChatSession {
 
     // MARK: - Profile
 
+    /// Reads this person's own profile. The row is created by the server the moment the
+    /// account is made, so the app only ever reads it. Straight after a first sign-in it
+    /// can lag by a beat, so a missing row is read again a couple of times before waiting
+    /// a little longer in the background.
     func refreshProfile() async {
         guard let userID else { return }
+        let delays: [Duration] = [.zero, .milliseconds(700), .milliseconds(1500)]
         do {
-            if let profile = try await fetchProfile(userID) {
-                apply(profile, persist: true)
-                return
+            for delay in delays {
+                if delay > .zero { try await Task.sleep(for: delay) }
+                guard self.userID == userID else { return }
+                if let profile = try await fetchProfile(userID) {
+                    lateProfileTask?.cancel()
+                    lateProfileTask = nil
+                    apply(profile, persist: true)
+                    return
+                }
             }
-            // No profile yet: create one, then read it back for its real status.
-            _ = try? await ChatBackend.client
-                .from("profiles")
-                .insert(NewProfile(id: userID.lower, display_name: ChatJSON.clean(suggestedName)), returning: .minimal)
-                .execute()
-            if let profile = try await fetchProfile(userID) {
-                apply(profile, persist: true)
-            } else {
-                apply(ChatProfile(id: userID, displayName: ChatJSON.clean(suggestedName), status: "pending"), persist: false)
-            }
+            print("[Chat] profile not ready yet, checking again shortly")
+            scheduleLateProfileRead(for: userID)
+        } catch is CancellationError {
+            return
         } catch {
             // Offline: whatever we showed last stays on screen.
             print("[Chat] profile refresh postponed")
+        }
+    }
+
+    /// One quiet follow-up read when the server hasn't finished creating the profile.
+    private func scheduleLateProfileRead(for id: UUID) {
+        guard lateProfileTask == nil else { return }
+        lateProfileTask = Task {
+            try? await Task.sleep(for: .seconds(4))
+            guard !Task.isCancelled, ChatSession.shared.userID == id else { return }
+            ChatSession.shared.lateProfileTask = nil
+            await ChatSession.shared.refreshProfile()
         }
     }
 
@@ -357,6 +369,8 @@ final class ChatSession {
 
     private func becomeSignedOut() async {
         stopWaiting()
+        lateProfileTask?.cancel()
+        lateProfileTask = nil
         userID = nil
         me = nil
         isNamePromptPresented = false
