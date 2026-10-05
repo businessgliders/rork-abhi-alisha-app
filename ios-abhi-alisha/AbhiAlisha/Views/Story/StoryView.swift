@@ -7,12 +7,12 @@ struct StoryView: View {
     @Environment(ContentStore.self) private var content
     @Environment(DeepLinkRouter.self) private var router
 
-    @State private var section: StorySection = .story
+    @State private var section: StorySection = .gallery
 
     private enum StorySection: String, CaseIterable, Identifiable {
-        case story
-        case family
         case gallery
+        case family
+        case story
 
         var id: String { rawValue }
 
@@ -105,7 +105,7 @@ struct StoryView: View {
             Eyebrow(text: section.eyebrow)
                 .animation(.softFade, value: section)
 
-            Text("Story")
+            Text("Gallery")
                 .brandFont(.screenTitle)
                 .foregroundStyle(BrandPalette.ink)
 

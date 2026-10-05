@@ -1,229 +1,5 @@
 import SwiftUI
 
-/// "Resort" — AVA Resort Cancún: the photography gathered into a single swipeable stack
-/// with both maps standing beside it, then what's there, then every question the couple
-/// has answered, searchable. Published data only.
-struct ResortView: View {
-    @Environment(ContentStore.self) private var content
-    @Environment(DeepLinkRouter.self) private var router
-
-    @State private var expandedFaqID: String?
-    @State private var expandedSections: Set<String> = []
-    @State private var didPrimeSections = false
-    @State private var query = ""
-
-    var body: some View {
-        ScrollViewReader { proxy in
-            page
-                .onChange(of: router.pendingResortSection) { _, _ in
-                    openSectionIfAsked(proxy)
-                }
-                .onAppear { openSectionIfAsked(proxy) }
-        }
-    }
-
-    /// An announcement asked for Travel & Stay (the top) or the FAQ (Questions).
-    private func openSectionIfAsked(_ proxy: ScrollViewProxy) {
-        guard let section = router.pendingResortSection else { return }
-        router.pendingResortSection = nil
-        Task {
-            // Let the tab finish appearing before the page moves.
-            try? await Task.sleep(for: .milliseconds(350))
-            withAnimation(.calm) {
-                switch section {
-                case .top:
-                    proxy.scrollTo(Self.topAnchor, anchor: .top)
-                case .questions:
-                    proxy.scrollTo(Self.questionsAnchor, anchor: .top)
-                }
-            }
-        }
-    }
-
-    private static let topAnchor = "resort.top"
-    private static let questionsAnchor = "resort.questions"
-
-    private var page: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
-                header
-                    .padding(.horizontal, 22)
-                    .id(Self.topAnchor)
-
-                SectionHeading(text: "Photos & Maps")
-                    .padding(.horizontal, 22)
-                    .padding(.top, 34)
-
-                PhotosAndMaps(
-                    photos: content.resortPhotos,
-                    scheduleMapURL: content.resortMap?.url
-                )
-                .padding(.top, 18)
-
-                SectionHeading(text: "Amenities")
-                    .padding(.horizontal, 22)
-                    .padding(.top, 42)
-
-                AmenityRow(amenities: ResortAmenity.all)
-                    .padding(.top, 18)
-
-                questions
-                    .padding(.top, 46)
-                    .id(Self.questionsAnchor)
-            }
-            .padding(.top, ScreenChrome.contentReserve)
-            .padding(.bottom, FloatingTabBar.contentReserve + 24)
-            .readableWidth()
-            .crestCorner()
-        }
-        .scrollIndicators(.hidden)
-        .scrollDismissesKeyboard(.interactively)
-        .background(BrandPalette.background.ignoresSafeArea())
-        .animation(.softFade, value: query)
-        .task {
-            await content.refreshIfNeeded()
-        }
-        .onChange(of: content.faqs.count) { _, _ in
-            primeSectionsIfNeeded()
-        }
-        .onAppear(perform: primeSectionsIfNeeded)
-    }
-
-    // MARK: - Header
-
-    private var header: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Eyebrow(text: "Where we're staying")
-
-            Text("Resort")
-                .brandFont(.screenTitle)
-                .foregroundStyle(BrandPalette.ink)
-
-            GoldRule(width: 58, alignment: .leading)
-                .padding(.top, 2)
-
-            Text("AVA Resort Cancún · Mexico")
-                .brandFont(.bodyItalic)
-                .foregroundStyle(BrandPalette.body)
-                .padding(.top, 12)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    // MARK: - Questions
-
-    /// Every answered question, grouped and collapsed. The first group opens on arrival;
-    /// searching opens whichever groups still have a match.
-    private var questions: some View {
-        let groups = matchingGroups
-
-        return VStack(alignment: .leading, spacing: 0) {
-            SectionHeading(text: "Questions")
-
-            QuestionSearchField(text: $query)
-                .padding(.top, 18)
-
-            if isSearching {
-                Text(resultCount == 1 ? "1 answer" : "\(resultCount) answers")
-                    .font(BrandLabel.font(size: 10, weight: .medium))
-                    .tracking(1.8)
-                    .textCase(.uppercase)
-                    .foregroundStyle(BrandPalette.body.opacity(0.75))
-                    .padding(.top, 14)
-            }
-
-            if groups.isEmpty {
-                emptyQuestions
-            } else {
-                VStack(spacing: 10) {
-                    ForEach(groups, id: \.section.id) { group in
-                        QuestionGroup(
-                            section: group.section,
-                            items: group.items,
-                            isExpanded: isExpanded(group.section),
-                            expandedFaqID: $expandedFaqID,
-                            onToggle: { toggle(group.section) }
-                        )
-                    }
-                }
-                .padding(.top, 20)
-            }
-        }
-        .padding(.horizontal, 22)
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    private var emptyQuestions: some View {
-        VStack(spacing: 14) {
-            IconWatermark(key: .sparkle, size: 70, opacity: 0.3)
-
-            Text(
-                isSearching
-                    ? "Nothing matches “\(query)”. Try a different word."
-                    : "The couple's answers will appear here soon."
-            )
-            .brandFont(.bodyItalic)
-            .foregroundStyle(BrandPalette.body)
-            .multilineTextAlignment(.center)
-            .fixedSize(horizontal: false, vertical: true)
-            .frame(maxWidth: 300)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.top, 46)
-    }
-
-    // MARK: - Question state
-
-    private var isSearching: Bool {
-        !query.trimmingCharacters(in: .whitespaces).isEmpty
-    }
-
-    private var resultCount: Int {
-        matchingGroups.reduce(0) { $0 + $1.items.count }
-    }
-
-    /// Groups with at least one question left after the search text is applied.
-    private var matchingGroups: [(section: FaqSection, items: [Faq])] {
-        content.allSectionsInReadingOrder().compactMap { section in
-            let items = matching(content.faqs(in: section))
-            return items.isEmpty ? nil : (section, items)
-        }
-    }
-
-    private func matching(_ items: [Faq]) -> [Faq] {
-        let needle = query.trimmingCharacters(in: .whitespaces)
-        guard !needle.isEmpty else { return items }
-        return items.filter { faq in
-            let haystack = [faq.question, faq.answer].compactMap { $0 }.joined(separator: " ")
-            return haystack.localizedStandardContains(needle)
-        }
-    }
-
-    /// While searching every surviving group is open, so no match ever hides.
-    private func isExpanded(_ section: FaqSection) -> Bool {
-        isSearching || expandedSections.contains(section.id)
-    }
-
-    private func toggle(_ section: FaqSection) {
-        BrandHaptics.tick()
-        withAnimation(.calm) {
-            if expandedSections.contains(section.id) {
-                expandedSections.remove(section.id)
-            } else {
-                expandedSections.insert(section.id)
-            }
-        }
-    }
-
-    /// Only the first group starts open; the rest wait to be asked for.
-    private func primeSectionsIfNeeded() {
-        guard !didPrimeSections,
-              let first = content.allSectionsInReadingOrder().first else { return }
-        didPrimeSections = true
-        expandedSections = [first.id]
-    }
-}
-
 // MARK: - Photography & maps
 
 /// One resort photograph in the deck.
@@ -234,12 +10,12 @@ private struct ResortSlide: Identifiable, Hashable {
 
 /// The whole resort library gathered into a single swipeable stack — the way Messages
 /// collates a run of photos — which leaves room for both maps to stand beside it.
-private struct PhotosAndMaps: View {
+struct PhotosAndMaps: View {
     let photos: [GalleryPhoto]
-    let scheduleMapURL: URL?
 
     @State private var lightbox: LightboxContext?
     @State private var isShowingResortMap = false
+    @State private var isShowingWingMap = false
 
     private static let rowHeight: CGFloat = 320
     private static let mapsWidth: CGFloat = 132
@@ -281,20 +57,13 @@ private struct PhotosAndMaps: View {
                     action: { isShowingResortMap = true }
                 )
 
-                if let scheduleMapURL {
-                    MapPlate(
-                        title: "Schedule Map",
-                        localImageName: nil,
-                        remoteURL: scheduleMapURL,
-                        action: {
-                            lightbox = LightboxContext(
-                                title: "Schedule Map",
-                                items: [scheduleMapURL],
-                                startIndex: 0
-                            )
-                        }
-                    )
-                }
+                MapPlate(
+                    title: "Wing Map",
+                    localImageName: WingMapArtwork.imageName,
+                    remoteURL: nil,
+                    imageAlignment: .center,
+                    action: { isShowingWingMap = true }
+                )
             }
             .frame(width: Self.mapsWidth)
         }
@@ -305,6 +74,9 @@ private struct PhotosAndMaps: View {
         }
         .fullScreenCover(isPresented: $isShowingResortMap) {
             ResortMapScreen()
+        }
+        .fullScreenCover(isPresented: $isShowingWingMap) {
+            WingMapViewer()
         }
     }
 }
@@ -752,7 +524,7 @@ struct ResortAmenity: Identifiable, Hashable {
 }
 
 /// Amenities as a horizontal run of cards, swiped like the photography.
-private struct AmenityRow: View {
+struct AmenityRow: View {
     let amenities: [ResortAmenity]
 
     var body: some View {
@@ -801,7 +573,7 @@ private struct AmenityRow: View {
 // MARK: - Questions
 
 /// A gold-lined search field in the app's own hand, not the system's.
-private struct QuestionSearchField: View {
+struct QuestionSearchField: View {
     @Binding var text: String
 
     @FocusState private var isFocused: Bool
@@ -850,7 +622,7 @@ private struct QuestionSearchField: View {
 
 /// One collapsible category of questions: a gold heading row with a count, and the
 /// questions themselves once it is open.
-private struct QuestionGroup: View {
+struct QuestionGroup: View {
     let section: FaqSection
     let items: [Faq]
     let isExpanded: Bool

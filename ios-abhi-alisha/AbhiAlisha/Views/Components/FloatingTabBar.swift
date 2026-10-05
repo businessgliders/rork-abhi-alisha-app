@@ -1,6 +1,7 @@
 import SwiftUI
 
-/// The five sections of the app. Gallery lives inside Story.
+/// The five sections of the app. The "story" tab is titled Gallery (with Our Family and
+/// Our Story inside); "resort" is titled Experience. Raw values stay for deep links.
 enum AppTab: String, CaseIterable, Hashable, Identifiable {
     case home
     case schedule
@@ -15,8 +16,8 @@ enum AppTab: String, CaseIterable, Hashable, Identifiable {
         case .home: return "Home"
         case .schedule: return "Schedule"
         case .chat: return "Chat"
-        case .story: return "Story"
-        case .resort: return "Resort"
+        case .story: return "Gallery"
+        case .resort: return "Experience"
         }
     }
 
@@ -26,8 +27,8 @@ enum AppTab: String, CaseIterable, Hashable, Identifiable {
         case .home: return "house"
         case .schedule: return "sparkles"
         case .chat: return "bubble.left.and.bubble.right"
-        case .story: return "heart"
-        case .resort: return "bed.double"
+        case .story: return "photo.on.rectangle"
+        case .resort: return "sparkle"
         }
     }
 }

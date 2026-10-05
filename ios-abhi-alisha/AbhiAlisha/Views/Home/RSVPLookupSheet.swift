@@ -9,9 +9,14 @@ struct RSVPLookupSheet: View {
     @State private var match: RSVPRecord?
     @State private var message: String?
     @State private var isSearching = false
+    @State private var isCheckDrawn = false
+    @FocusState private var isNameFocused: Bool
+
+    private static let resultAnchor = "rsvp.result"
 
     var body: some View {
         NavigationStack {
+            ScrollViewReader { proxy in
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     titleBlock
@@ -34,8 +39,9 @@ struct RSVPLookupSheet: View {
                     }
 
                     if let match {
-                        RSVPResultCard(record: match)
+                        RSVPResultCard(record: match, isCheckDrawn: isCheckDrawn)
                             .padding(.top, 30)
+                            .id(Self.resultAnchor)
                             .transition(.opacity.combined(with: .move(edge: .bottom)))
                     }
                 }
@@ -49,6 +55,11 @@ struct RSVPLookupSheet: View {
             .background(BrandPalette.background.ignoresSafeArea())
             .animation(.calm, value: match)
             .animation(.softFade, value: message)
+            .onChange(of: match?.id) { _, newID in
+                guard newID != nil else { return }
+                revealResult(proxy)
+            }
+            }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Close") { dismiss() }
@@ -99,6 +110,7 @@ struct RSVPLookupSheet: View {
                 .textInputAutocapitalization(.words)
                 .autocorrectionDisabled()
                 .submitLabel(.search)
+                .focused($isNameFocused)
                 .onSubmit(search)
         }
         .padding(.horizontal, 16)
@@ -149,8 +161,24 @@ struct RSVPLookupSheet: View {
 
     private func restoreLastMatch() {
         guard match == nil, let cached = RSVPService.shared.lastMatch else { return }
+        isCheckDrawn = true
         match = cached
         if let guestName = cached.guestName { name = guestName }
+    }
+
+    /// Keyboard away, then the result glides into view and its check mark draws itself.
+    private func revealResult(_ proxy: ScrollViewProxy) {
+        isNameFocused = false
+        Task {
+            try? await Task.sleep(for: .milliseconds(320))
+            withAnimation(.calm) {
+                proxy.scrollTo(Self.resultAnchor, anchor: .top)
+            }
+            try? await Task.sleep(for: .milliseconds(380))
+            guard !isCheckDrawn else { return }
+            withAnimation(.easeOut(duration: 0.6)) { isCheckDrawn = true }
+            BrandHaptics.tick()
+        }
     }
 
     private func search() {
@@ -167,10 +195,13 @@ struct RSVPLookupSheet: View {
 
             switch outcome {
             case let .found(record):
+                isNameFocused = false
+                if record.id != match?.id { isCheckDrawn = false }
                 match = record
                 message = nil
-                BrandHaptics.tick()
+                if isCheckDrawn { BrandHaptics.tick() }
             case .ambiguous:
+                isCheckDrawn = false
                 match = nil
                 message = "A few of our guests share that name. Add your last name so we find the right reply."
             case .notFound:
@@ -184,17 +215,62 @@ struct RSVPLookupSheet: View {
     }
 }
 
+/// A gold ring with a check that strokes itself in once the reply is found.
+private struct DrawnCheckMark: View {
+    let isDrawn: Bool
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .fill(BrandPalette.gold.opacity(isDrawn ? 0.14 : 0))
+            Circle()
+                .trim(from: 0, to: isDrawn ? 1 : 0)
+                .stroke(BrandPalette.gold, style: StrokeStyle(lineWidth: 1.4, lineCap: .round))
+                .rotationEffect(.degrees(-90))
+            CheckShape()
+                .trim(from: 0, to: isDrawn ? 1 : 0)
+                .stroke(BrandPalette.goldDeep, style: StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
+                .padding(11)
+        }
+        .scaleEffect(isDrawn ? 1 : 0.8)
+        .opacity(isDrawn ? 1 : 0.001)
+        .accessibilityLabel("Reply found")
+    }
+}
+
+private struct CheckShape: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        path.move(to: CGPoint(x: rect.minX, y: rect.midY + rect.height * 0.05))
+        path.addLine(to: CGPoint(x: rect.minX + rect.width * 0.38, y: rect.maxY - rect.height * 0.1))
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY + rect.height * 0.12))
+        return path
+    }
+}
+
 /// The matched party's own details — never anybody else's.
 private struct RSVPResultCard: View {
     let record: RSVPRecord
+    let isCheckDrawn: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            if let firstName = record.firstName {
-                Text("Welcome, \(firstName)")
-                    .brandFont(.eventTitle)
-                    .foregroundStyle(BrandPalette.ink)
-                    .fixedSize(horizontal: false, vertical: true)
+            HStack(alignment: .center, spacing: 12) {
+                if let firstName = record.firstName {
+                    Text("Welcome, \(firstName)")
+                        .brandFont(.eventTitle)
+                        .foregroundStyle(BrandPalette.ink)
+                        .fixedSize(horizontal: false, vertical: true)
+                } else {
+                    Text("We found you")
+                        .brandFont(.eventTitle)
+                        .foregroundStyle(BrandPalette.ink)
+                }
+
+                Spacer(minLength: 0)
+
+                DrawnCheckMark(isDrawn: isCheckDrawn)
+                    .frame(width: 38, height: 38)
             }
 
             if let isAttending = record.isAttending {

@@ -4,6 +4,9 @@ import SwiftUI
 /// one flexible event card, and the arrow stepper. Nothing scrolls except long copy
 /// inside the card itself.
 struct ScheduleView: View {
+    /// True while the Schedule tab is the one on screen.
+    var isActive = true
+
     @Environment(ScheduleStore.self) private var store
     @Environment(DeepLinkRouter.self) private var router
 
@@ -18,6 +21,8 @@ struct ScheduleView: View {
     @State private var phase = WeddingPhase.shared
     @State private var calendarMessage: String?
     @State private var messageTask: Task<Void, Never>?
+    @State private var isShowingCalendarTip = false
+    @AppStorage("schedule.calendarTipSeen") private var hasSeenCalendarTip = false
 
     /// After the wedding the Schedule reads as a keepsake: muted, nothing to add.
     private var isPast: Bool { phase.isThankYou(at: store.now) }
@@ -33,15 +38,24 @@ struct ScheduleView: View {
                 emptyState
                     .frame(maxHeight: .infinity)
             } else {
-                if !isPast {
-                    calendarControl
-                        .padding(.top, 14)
-                }
-
                 StringLightsNavigation(events: events, selectedIndex: $selectedIndex)
-                    .padding(.top, isPast ? 16 : 10)
+                    .padding(.top, 16)
                     .saturation(isPast ? 0.25 : 1)
                     .opacity(isPast ? 0.7 : 1)
+
+                if !isPast {
+                    calendarControl
+                        .padding(.top, 10)
+                        .overlay(alignment: .bottom) {
+                            if isShowingCalendarTip {
+                                CalendarTip(onDismiss: dismissCalendarTip)
+                                    .alignmentGuide(.bottom) { $0[.top] - 4 }
+                                    .transition(.opacity.combined(with: .scale(scale: 0.92, anchor: .top)))
+                                    .zIndex(5)
+                            }
+                        }
+                        .zIndex(5)
+                }
 
                 cardCarousel
                     .padding(.top, 10)
@@ -86,6 +100,9 @@ struct ScheduleView: View {
             openPendingEventIfNeeded()
         }
         .onAppear(perform: openPendingEventIfNeeded)
+        .task(id: isActive) {
+            await showCalendarTipIfNeeded()
+        }
         .task(id: selectedEvent?.id) {
             await loadWeatherForSelection()
         }
@@ -172,7 +189,25 @@ struct ScheduleView: View {
         .animation(.softFade, value: calendarMessage)
     }
 
+    /// The first time the guest lands on Schedule, a small note points at the button.
+    private func showCalendarTipIfNeeded() async {
+        guard isActive, !hasSeenCalendarTip, !isPast, !events.isEmpty else { return }
+        try? await Task.sleep(for: .milliseconds(900))
+        guard !Task.isCancelled, !hasSeenCalendarTip else { return }
+        hasSeenCalendarTip = true
+        withAnimation(.calm) { isShowingCalendarTip = true }
+        try? await Task.sleep(for: .seconds(6))
+        guard !Task.isCancelled else { return }
+        withAnimation(.softFade) { isShowingCalendarTip = false }
+    }
+
+    private func dismissCalendarTip() {
+        BrandHaptics.tick()
+        withAnimation(.softFade) { isShowingCalendarTip = false }
+    }
+
     private func addAllToCalendar() {
+        if isShowingCalendarTip { withAnimation(.softFade) { isShowingCalendarTip = false } }
         BrandHaptics.soft()
         Task {
             let outcome = await calendar.addAll(events)
@@ -190,6 +225,10 @@ struct ScheduleView: View {
     private var cardCarousel: some View {
         ZStack {
             if let event = selectedEvent {
+                StackedPaperBacking(
+                    sheetsBehind: min(2, max(events.count - selectedIndex - 1, 0))
+                )
+
                 EventCard(
                     event: event,
                     weather: weatherByEvent[event.id],

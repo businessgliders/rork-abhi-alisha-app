@@ -138,13 +138,13 @@ struct ContentView: View {
         case .home:
             HomeView()
         case .schedule:
-            ScheduleView()
+            ScheduleView(isActive: selection == .schedule)
         case .chat:
             ChatRootView(isActive: selection == .chat)
         case .story:
             StoryView()
         case .resort:
-            ResortView()
+            ExperienceView(isActive: selection == .resort)
         }
     }
 }

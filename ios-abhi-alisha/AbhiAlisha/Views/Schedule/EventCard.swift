@@ -12,7 +12,7 @@ struct EventCard: View {
     var onOpenDetails: (() -> Void)?
 
     var body: some View {
-        MatteCard(cornerRadius: 26) {
+        EmbossedPaperCard(cornerRadius: 26) {
             VStack(alignment: .leading, spacing: 0) {
                 Text(event.title)
                     .brandFont(.eventTitle)
@@ -21,6 +21,7 @@ struct EventCard: View {
                     .padding(.trailing, weather == nil ? 0 : 84)
 
                 GoldRule(width: 44, alignment: .leading)
+                    .debossed()
                     .padding(.top, 14)
 
                 description
@@ -50,7 +51,8 @@ struct EventCard: View {
             // Faint, behind the title, tucked under the weather chip and well clear of
             // the location row.
             .background(alignment: .topTrailing) {
-                IconWatermark(key: event.iconKey, size: 96, opacity: 0.12)
+                IconWatermark(key: event.iconKey, size: 96, opacity: 0.14)
+                    .debossed()
                     .padding(.top, weather == nil ? 18 : 58)
                     .padding(.trailing, 16)
                     .allowsHitTesting(false)

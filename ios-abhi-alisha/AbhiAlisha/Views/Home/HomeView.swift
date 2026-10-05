@@ -98,11 +98,11 @@ struct HomeView: View {
 
                 rsvpBlock
 
-                NotifyUpdatesCard()
-
                 if let next = store.nextEvent {
                     NextEventCard(event: next)
                 }
+
+                NotifyUpdatesCard()
 
                 MyOutfitsHomeCard {
                     isShowingOutfits = true
