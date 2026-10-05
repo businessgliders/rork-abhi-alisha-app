@@ -38,8 +38,14 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
     ) {
         let conversationID = DeepLinkRouter.conversationIDValue(in: notification.request.content.userInfo)
+        let isChat = DeepLinkRouter.opensValue(in: notification.request.content.userInfo) == "chat"
         let finish = PresentationCompletion(completionHandler)
         Self.onMainThread {
+            // Anything that isn't a chat message is an announcement: fetch it so the
+            // feed and its unread dot are current straight away.
+            if !isChat, conversationID == nil {
+                Task { await NotificationsStore.shared.refresh() }
+            }
             if let conversationID,
                let id = UUID(uuidString: conversationID),
                ChatStore.shared.activeThreadID == id {
@@ -65,9 +71,19 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         let screen = DeepLinkRouter.screenValue(in: userInfo)
         let eventID = DeepLinkRouter.eventIDValue(in: userInfo)
         let conversationID = DeepLinkRouter.conversationIDValue(in: userInfo)
-        let isChat = DeepLinkRouter.opensValue(in: userInfo) == "chat"
+        let opens = DeepLinkRouter.opensValue(in: userInfo)
+        let isChat = opens == "chat"
+        let isAnnouncement = opens == "announcements" || opens == "announcement"
         let finish = TapCompletion(completionHandler)
         Self.onMainThread {
+            // A new announcement brings the feed up to date on its way in.
+            Task { await NotificationsStore.shared.refresh() }
+            if isAnnouncement {
+                DeepLinkRouter.shared.pendingAnnouncements = true
+                DeepLinkRouter.shared.open(.tab(.chat))
+                finish.call()
+                return
+            }
             // A chat message ("opens": "chat") opens its conversation's thread. Without a
             // readable conversation it still lands on the Chat list, never somewhere else.
             if isChat || conversationID != nil {

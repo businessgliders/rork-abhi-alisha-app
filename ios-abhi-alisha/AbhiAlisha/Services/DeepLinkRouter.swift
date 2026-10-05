@@ -23,6 +23,8 @@ final class DeepLinkRouter {
     var pendingStoryGallery = false
     /// The conversation a chat notification asked to open.
     var pendingConversationID: UUID?
+    /// An announcement was tapped: open the Announcements feed in Chat.
+    var pendingAnnouncements = false
     /// Where a notification tap wants to land, held until the root view can act on it.
     var pending: Landing?
     /// The screen of past updates, raised over whichever tab is showing.
@@ -54,7 +56,11 @@ final class DeepLinkRouter {
         guard let screen = rawScreen?
             .trimmingCharacters(in: .whitespacesAndNewlines)
             .lowercased(), !screen.isEmpty else { return .tab(.home) }
-        if screen == "notifications" { return .notifications }
+        // Announcements now live at the top of Chat, open to everyone.
+        if screen == "notifications" || screen == "announcements" {
+            shared.pendingAnnouncements = true
+            return .tab(.chat)
+        }
         if screen == "gallery" {
             shared.pendingStoryGallery = true
             return .tab(.story)

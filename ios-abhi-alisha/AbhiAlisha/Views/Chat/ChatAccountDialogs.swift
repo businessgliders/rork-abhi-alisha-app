@@ -12,13 +12,15 @@ private struct ChatAccountDialogs: ViewModifier {
         @Bindable var session = session
 
         content
-            .alert("Sign out of the family chat?", isPresented: $isConfirmingSignOut) {
+            .alert(session.isAnonymous ? "Leave Questions & Chat?" : "Sign out of the chat?", isPresented: $isConfirmingSignOut) {
                 Button("Sign Out", role: .destructive) {
                     Task { await session.signOut() }
                 }
                 Button("Cancel", role: .cancel) {}
             } message: {
-                Text("Your messages stay with the family. You can sign in again any time.")
+                Text(session.isAnonymous
+                     ? "You joined with just a name, so this phone won't be able to come back as you. Your messages stay in the chat. You can join again with a name any time."
+                     : "Your messages stay with the family. You can sign in again any time.")
             }
             .alert("Delete your account?", isPresented: $isConfirmingDelete) {
                 Button("Delete Account", role: .destructive) {
@@ -26,7 +28,7 @@ private struct ChatAccountDialogs: ViewModifier {
                 }
                 Button("Cancel", role: .cancel) {}
             } message: {
-                Text("This permanently removes your profile and all of your messages from the family chat. It can't be undone.")
+                Text("This permanently removes your name and all of your messages from the chat. It can't be undone.")
             }
             .alert("Nothing was deleted", isPresented: $session.didDeleteFail) {
                 Button("Try Again") {
@@ -34,7 +36,7 @@ private struct ChatAccountDialogs: ViewModifier {
                 }
                 Button("Not Now", role: .cancel) {}
             } message: {
-                Text("We couldn't reach the family chat just now, so your account is exactly as it was. Please try again in a moment.")
+                Text("We couldn't reach the chat just now, so your account is exactly as it was. Please try again in a moment.")
             }
             .overlay {
                 if session.isDeletingAccount {

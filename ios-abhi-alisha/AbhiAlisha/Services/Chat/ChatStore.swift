@@ -48,6 +48,8 @@ final class ChatStore {
     private var isRefreshing = false
     private var needsAnotherRefresh = false
     private var lastReadSync: [UUID: Date] = [:]
+    /// Senders whose profile has already been asked for, so a busy thread asks once.
+    private var requestedProfiles: Set<UUID> = []
 
     private var client: SupabaseClient { ChatBackend.client }
 
@@ -62,6 +64,7 @@ final class ChatStore {
     nonisolated private struct GroupParams: Encodable, Sendable { let group_title: String; let member_ids: [String] }
     nonisolated private struct LeaveParams: Encodable, Sendable { let conv: String }
     nonisolated private struct StatusParams: Encodable, Sendable { let target: String; let new_status: String }
+    nonisolated private struct MuteChange: Encodable, Sendable { let muted: Bool }
 
     // MARK: - Lifecycle
 
@@ -103,6 +106,7 @@ final class ChatStore {
         activeThreadID = nil
         hasLoadedList = false
         lastReadSync = [:]
+        requestedProfiles = []
     }
 
     /// Back online: catch up on anything missed while the connection was down.
@@ -130,10 +134,11 @@ final class ChatStore {
         return full.split(separator: " ").first.map(String.init) ?? full
     }
 
-    /// Approved family members someone can start a conversation with.
+    /// Approved family members someone can start a conversation with. Name-only guests
+    /// from Questions & Chat are never offered here.
     var approvedPeople: [ChatProfile] {
         profiles.values
-            .filter { $0.access == .approved && $0.id != userID && !blocked.contains($0.id) }
+            .filter { $0.access == .approved && $0.isAnonymous != true && $0.id != userID && !blocked.contains($0.id) }
             .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
     }
 
@@ -146,20 +151,27 @@ final class ChatStore {
         conversations.first { $0.id == id }
     }
 
+    /// Questions & Chat, which every guest shares.
+    var openConversation: ChatConversation? {
+        conversations.first { $0.isOpen }
+    }
+
     func isFamily(_ conversation: ChatConversation) -> Bool {
+        if conversation.isOpen { return false }
         if conversation.isFamily { return true }
         guard !conversation.isGroupKind, !conversation.isDirectKind else { return false }
         return conversation.title?.lowercased().contains("family") == true
     }
 
     func isDirect(_ conversation: ChatConversation) -> Bool {
+        if conversation.isOpen { return false }
         if conversation.isDirectKind { return true }
         if isFamily(conversation) || conversation.isGroupKind { return false }
         return ChatJSON.clean(conversation.title) == nil && (members[conversation.id]?.count ?? 0) == 2
     }
 
     func isGroup(_ conversation: ChatConversation) -> Bool {
-        !isFamily(conversation) && !isDirect(conversation)
+        !conversation.isOpen && !isFamily(conversation) && !isDirect(conversation)
     }
 
     func otherMember(in conversation: ChatConversation) -> UUID? {
@@ -173,6 +185,7 @@ final class ChatStore {
     }
 
     func title(for conversation: ChatConversation) -> String {
+        if conversation.isOpen { return "Questions & Chat" }
         if isFamily(conversation) {
             return ChatJSON.clean(conversation.title) ?? "The Family"
         }
@@ -192,9 +205,10 @@ final class ChatStore {
         return ChatJSON.initials(for: title(for: conversation))
     }
 
-    /// Family first, always; then whatever spoke most recently.
+    /// The family chat's own conversations: family first, always; then whatever spoke
+    /// most recently. Questions & Chat has its own place above them.
     var sortedConversations: [ChatConversation] {
-        conversations.sorted { lhs, rhs in
+        conversations.filter { !$0.isOpen }.sorted { lhs, rhs in
             let lhsFamily = isFamily(lhs)
             let rhsFamily = isFamily(rhs)
             if lhsFamily != rhsFamily { return lhsFamily }
@@ -272,12 +286,14 @@ final class ChatStore {
                 }
             }
 
-            var fetchedProfiles: [ChatProfile] = try await client
+            // Guests who aren't in the family chat may not be allowed to list everyone;
+            // that must never stop Questions & Chat from loading.
+            var fetchedProfiles: [ChatProfile] = (try? await client
                 .from("profiles")
                 .select(ChatProfile.columns)
                 .eq("status", value: "approved")
                 .execute()
-                .value
+                .value) ?? []
             let known = Set(fetchedProfiles.map(\.id))
             let missing = Array(Set(fetchedMembers.map(\.userID)).subtracting(known))
             if !missing.isEmpty {
@@ -405,6 +421,7 @@ final class ChatStore {
         if threads[id] == nil, let userID {
             let cached = ChatCache.load([ChatMessage].self, named: ChatCache.threadName(for: userID, conversation: id)) ?? []
             threads[id] = ChatThreadState(messages: cached, hasMore: true, isLoadingOlder: false, didLoad: !cached.isEmpty)
+            fetchProfilesIfNeeded(cached.map(\.senderID))
         }
         subscribeThread(id)
         Task {
@@ -450,6 +467,7 @@ final class ChatStore {
                 threads[id] = state
             }
             if let newest = rows.first { updatePreview(with: newest) }
+            fetchProfilesIfNeeded(rows.map(\.senderID))
             persistThread(id)
         } catch {
             if threads[id] != nil { threads[id]?.didLoad = true }
@@ -480,6 +498,7 @@ final class ChatStore {
             current.hasMore = rows.count == Self.pageSize
             current.isLoadingOlder = false
             threads[id] = current
+            fetchProfilesIfNeeded(rows.map(\.senderID))
         } catch {
             threads[id]?.isLoadingOlder = false
         }
@@ -610,6 +629,7 @@ final class ChatStore {
         }
 
         updatePreview(with: message)
+        fetchProfilesIfNeeded([message.senderID])
 
         if let index = conversations.firstIndex(where: { $0.id == id }) {
             let current = conversations[index].lastMessageAt ?? .distantPast
@@ -622,6 +642,29 @@ final class ChatStore {
             markRead(id)
         }
         persistList()
+    }
+
+    /// Questions & Chat brings in guests the family list never loaded; their names are
+    /// fetched the first time one of their messages appears.
+    private func fetchProfilesIfNeeded(_ ids: [UUID]) {
+        let missing = Set(ids).subtracting(profiles.keys).subtracting(requestedProfiles)
+        guard !missing.isEmpty else { return }
+        requestedProfiles.formUnion(missing)
+        let wanted = Array(missing)
+        Task {
+            let rows: [ChatProfile] = (try? await ChatBackend.client
+                .from("profiles")
+                .select(ChatProfile.columns)
+                .in("id", values: ChatStore.filterValues(wanted))
+                .execute()
+                .value) ?? []
+            guard !rows.isEmpty else {
+                // Ask again next time rather than settling on a placeholder for good.
+                ChatStore.shared.requestedProfiles.subtract(wanted)
+                return
+            }
+            for row in rows { ChatStore.shared.profiles[row.id] = row }
+        }
     }
 
     private func updatePreview(with message: ChatMessage) {
@@ -726,6 +769,44 @@ final class ChatStore {
         }
     }
 
+    // MARK: - Muting
+
+    /// Muted means no pushes for this one conversation; announcements are never muted.
+    func isMuted(_ conversationID: UUID) -> Bool {
+        members[conversationID]?.first { $0.userID == userID }?.muted == true
+    }
+
+    func setMuted(_ muted: Bool, in conversationID: UUID) async -> Bool {
+        guard let userID else { return false }
+        let before = isMuted(conversationID)
+        applyMuted(muted, in: conversationID, for: userID)
+        do {
+            try await client
+                .from("conversation_members")
+                .update(MuteChange(muted: muted), returning: .minimal)
+                .eq("conversation_id", value: conversationID.lower)
+                .eq("user_id", value: userID.lower)
+                .execute()
+            persistList()
+            return true
+        } catch {
+            print("[Chat] mute could not be saved")
+            applyMuted(before, in: conversationID, for: userID)
+            return false
+        }
+    }
+
+    private func applyMuted(_ muted: Bool, in conversationID: UUID, for userID: UUID) {
+        if var list = members[conversationID], let index = list.firstIndex(where: { $0.userID == userID }) {
+            list[index].muted = muted
+            members[conversationID] = list
+        } else {
+            members[conversationID, default: []].append(
+                ChatMember(conversationID: conversationID, userID: userID, lastReadAt: nil, joinedAt: nil, muted: muted)
+            )
+        }
+    }
+
     // MARK: - Starting and leaving conversations
 
     /// Opens the private chat with this person, reusing the one that already exists.
@@ -785,10 +866,12 @@ final class ChatStore {
 
     func refreshAdmin() async {
         do {
+            // Name-only guests are never waiting for the family chat.
             let waiting: [ChatProfile] = try await client
                 .from("profiles")
                 .select(ChatProfile.columns)
                 .eq("status", value: "pending")
+                .eq("is_anonymous", value: false)
                 .order("created_at", ascending: true)
                 .execute()
                 .value
@@ -850,6 +933,25 @@ final class ChatStore {
             return true
         } catch {
             print("[Chat] status change failed")
+            return false
+        }
+    }
+
+    /// Admins only: removes someone from Questions & Chat (and the family chat) for good.
+    func removeFromChat(_ person: UUID) async -> Bool {
+        guard person != userID else { return false }
+        do {
+            try await client
+                .rpc("set_user_status", params: StatusParams(target: person.lower, new_status: "blocked"))
+                .execute()
+            withAnimation(.calm) {
+                var updated = profiles[person] ?? ChatProfile(id: person, displayName: nil, status: nil)
+                updated.status = "blocked"
+                profiles[person] = updated
+            }
+            return true
+        } catch {
+            print("[Chat] removal failed")
             return false
         }
     }

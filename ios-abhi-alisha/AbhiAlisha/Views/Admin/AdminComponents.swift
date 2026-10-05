@@ -173,8 +173,7 @@ struct AdminHeader: View {
 
             Spacer(minLength: 0)
 
-            CrestWatermark(width: CrestMark.width, finish: .pressed(BrandPalette.background))
-                .opacity(CrestMark.opacity)
+            CrestWatermark(width: 96, finish: .pressed(BrandPalette.background))
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }

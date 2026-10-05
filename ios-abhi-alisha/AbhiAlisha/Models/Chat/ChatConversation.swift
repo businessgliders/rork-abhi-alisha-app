@@ -1,6 +1,7 @@
 import Foundation
 
-/// A row of `public.conversations`: the family room, a group, or a private chat.
+/// A row of `public.conversations`: Questions & Chat, the family room, a group, or a
+/// private chat.
 nonisolated struct ChatConversation: Codable, Identifiable, Hashable, Sendable {
     let id: UUID
     var title: String?
@@ -23,6 +24,9 @@ nonisolated struct ChatConversation: Codable, Identifiable, Hashable, Sendable {
     private var normalizedKind: String { kind?.lowercased() ?? "" }
 
     var isFamily: Bool { normalizedKind == "family" }
+
+    /// Questions & Chat: open to every guest who has given a name.
+    var isOpen: Bool { normalizedKind == "open" }
 
     /// A private chat between two people.
     var isDirectKind: Bool {

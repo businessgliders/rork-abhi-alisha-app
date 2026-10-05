@@ -2,6 +2,8 @@ import SwiftUI
 
 /// Where the Chat tab's navigation can go.
 enum ChatRoute: Hashable {
+    case announcements
+    case openChannel
     case thread(UUID)
     case blocked
     case approvals
@@ -18,6 +20,84 @@ extension BrandFontSpec {
     static let chatMessageItalic = BrandFontSpec(.cormorantItalic, size: 18, weight: 450, textStyle: .body, maxSize: 30)
     /// The one-line preview under a conversation's name.
     static let chatPreview = BrandFontSpec(.cormorant, size: 16.5, weight: 500, textStyle: .subheadline, maxSize: 24)
+    /// An announcement's headline inside its gold bubble.
+    static let announcementTitle = BrandFontSpec(.playfairItalic, size: 21, weight: 500, textStyle: .headline, maxSize: 32)
+}
+
+/// The mark beside the two channels everyone shares: the couple's crest on gold for
+/// Announcements, a pair of speech marks for Questions & Chat.
+struct ChannelBadge: View {
+    enum Kind {
+        case announcements
+        case questions
+    }
+
+    let kind: Kind
+    var size: CGFloat = 46
+
+    var body: some View {
+        Circle()
+            .fill(fill)
+            .frame(width: size, height: size)
+            .overlay {
+                switch kind {
+                case .announcements:
+                    Image("crest")
+                        .renderingMode(.template)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .foregroundStyle(Color(hex: 0xFFFBF1))
+                        .padding(size * 0.2)
+                case .questions:
+                    Image(systemName: "bubble.left.and.bubble.right")
+                        .font(.system(size: size * 0.34, weight: .light))
+                        .foregroundStyle(BrandPalette.goldDeep)
+                }
+            }
+            .overlay(Circle().stroke(BrandPalette.gold.opacity(0.55), lineWidth: 1))
+            .overlay(
+                Circle()
+                    .inset(by: -3.5)
+                    .stroke(BrandPalette.gold.opacity(0.2), lineWidth: 0.75)
+            )
+            .padding(3.5)
+            .accessibilityHidden(true)
+    }
+
+    private var fill: AnyShapeStyle {
+        switch kind {
+        case .announcements:
+            AnyShapeStyle(LinearGradient(
+                colors: [Color(hex: 0xC2A24C), Color(hex: 0xA9873C)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            ))
+        case .questions:
+            AnyShapeStyle(BrandPalette.hairline.opacity(0.55))
+        }
+    }
+}
+
+/// The gold back chevron used at the top of every full-screen chat page.
+struct ChatBackButton: View {
+    var label: String = "Back to Chat"
+
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        Button {
+            BrandHaptics.tick()
+            dismiss()
+        } label: {
+            Image(systemName: "chevron.left")
+                .font(.system(size: 17, weight: .medium))
+                .foregroundStyle(BrandPalette.goldDeep)
+                .frame(width: 44, height: 44)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(label)
+    }
 }
 
 /// Initials (or the crest, for the family room) inside a fine double gold ring, in the

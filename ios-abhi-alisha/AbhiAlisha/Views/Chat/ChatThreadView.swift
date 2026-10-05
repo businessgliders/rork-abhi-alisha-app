@@ -34,9 +34,12 @@ struct ChatThreadView: View {
 
     @State private var store = ChatStore.shared
     @State private var outbox = ChatOutbox.shared
+    @State private var session = ChatSession.shared
     @State private var draft = ""
     @State private var toast: String?
     @State private var confirmingBlock: ChatMessage?
+    @State private var confirmingRemoval: ChatMessage?
+    @State private var isChangingMute = false
     @State private var confirmingDelete: ChatMessage?
     @State private var isConfirmingLeave = false
     @State private var isShowingMembers = false
@@ -50,6 +53,9 @@ struct ChatThreadView: View {
         guard let conversation else { return true }
         return !store.isDirect(conversation)
     }
+
+    /// Questions & Chat, open to every guest.
+    private var isOpenChannel: Bool { conversation?.isOpen == true }
 
     private var canLeave: Bool {
         guard let conversation else { return false }
@@ -99,6 +105,18 @@ struct ChatThreadView: View {
             Text("You won't see their messages anywhere in the chat. You can unblock them from Blocked people.")
         }
         .confirmationDialog(
+            "Remove \(confirmingRemoval.map { store.name(of: $0.senderID) } ?? "this person") from the chat?",
+            isPresented: Binding(get: { confirmingRemoval != nil }, set: { if !$0 { confirmingRemoval = nil } }),
+            titleVisibility: .visible
+        ) {
+            Button("Remove from Chat", role: .destructive) {
+                if let message = confirmingRemoval { remove(message.senderID) }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("They'll no longer be able to read or post in Questions & Chat, or the family chat.")
+        }
+        .confirmationDialog(
             "Delete this message?",
             isPresented: Binding(get: { confirmingDelete != nil }, set: { if !$0 { confirmingDelete = nil } }),
             titleVisibility: .visible
@@ -136,14 +154,18 @@ struct ChatThreadView: View {
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("Back to conversations")
+            .accessibilityLabel("Back to Chat")
 
             if let conversation {
-                ChatAvatar(
-                    initials: store.initials(for: conversation),
-                    size: 36,
-                    showsCrest: store.isFamily(conversation)
-                )
+                if conversation.isOpen {
+                    ChannelBadge(kind: .questions, size: 36)
+                } else {
+                    ChatAvatar(
+                        initials: store.initials(for: conversation),
+                        size: 36,
+                        showsCrest: store.isFamily(conversation)
+                    )
+                }
 
                 VStack(alignment: .leading, spacing: 1) {
                     Text(store.title(for: conversation))
@@ -163,7 +185,9 @@ struct ChatThreadView: View {
 
             Spacer(minLength: 0)
 
-            if isGroupLike {
+            if isOpenChannel {
+                muteButton
+            } else if isGroupLike {
                 Menu {
                     Button {
                         isShowingMembers = true
@@ -198,8 +222,39 @@ struct ChatThreadView: View {
     }
 
     private var memberLine: String {
+        if isOpenChannel {
+            return store.isMuted(conversationID) ? "Open to every guest · Muted" : "Open to every guest"
+        }
         let count = store.memberIDs(of: conversationID).count
         return count == 1 ? "1 person" : "\(count) people"
+    }
+
+    /// Mutes or unmutes pushes for this chat only. Announcements are never muted.
+    private var muteButton: some View {
+        let isMuted = store.isMuted(conversationID)
+        return Button {
+            guard !isChangingMute else { return }
+            BrandHaptics.tick()
+            isChangingMute = true
+            Task {
+                let done = await store.setMuted(!isMuted, in: conversationID)
+                isChangingMute = false
+                if done {
+                    showToast(isMuted ? "Notifications on for this chat" : "Muted. Announcements still come through.")
+                } else {
+                    showToast("That couldn't be changed just now.")
+                }
+            }
+        } label: {
+            Image(systemName: isMuted ? "bell.slash" : "bell")
+                .font(.system(size: 16, weight: .regular))
+                .foregroundStyle(isMuted ? BrandPalette.body : BrandPalette.goldDeep)
+                .contentTransition(.symbolEffect(.replace))
+                .frame(width: 44, height: 44)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(isMuted ? "Unmute this chat" : "Mute this chat")
     }
 
     // MARK: - Messages
@@ -405,6 +460,15 @@ struct ChatThreadView: View {
                 }
             }
         }
+
+        if isOpenChannel, session.isAdmin, !isMine {
+            Divider()
+            Button(role: .destructive) {
+                confirmingRemoval = message
+            } label: {
+                Label("Remove from Chat", systemImage: "person.crop.circle.badge.xmark")
+            }
+        }
     }
 
     // MARK: - Composer
@@ -511,6 +575,13 @@ struct ChatThreadView: View {
         Task {
             let done = await store.block(person)
             showToast(done ? "Blocked. You can undo this in Blocked people." : "That couldn't be saved just now.")
+        }
+    }
+
+    private func remove(_ person: UUID) {
+        Task {
+            let done = await store.removeFromChat(person)
+            showToast(done ? "Removed from the chat." : "That couldn't be done just now.")
         }
     }
 

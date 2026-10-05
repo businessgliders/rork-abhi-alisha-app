@@ -10,7 +10,7 @@ import SwiftUI
 struct ContentView: View {
     @State private var store = ScheduleStore()
     @State private var content = ContentStore()
-    @State private var updates = NotificationsStore()
+    @State private var updates = NotificationsStore.shared
     @State private var router = DeepLinkRouter.shared
     @State private var push = PushRegistrar.shared
     @State private var chat = ChatStore.shared

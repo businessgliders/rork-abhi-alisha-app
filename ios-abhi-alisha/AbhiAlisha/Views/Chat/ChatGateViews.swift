@@ -1,73 +1,74 @@
 import AuthenticationServices
 import SwiftUI
 
-/// Signed out: the crest, one line of welcome, and Sign in with Apple. Nothing else.
-struct ChatSignedOutView: View {
+/// Below the two shared channels: the invitation into the family chat. For a name-only
+/// guest, signing in with Apple joins their existing account, so nothing is lost.
+struct FamilyInviteCard: View {
     @State private var session = ChatSession.shared
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
-        GeometryReader { geometry in
-        ScrollView {
-            VStack(spacing: 0) {
-                Spacer(minLength: 40)
+        VStack(spacing: 0) {
+            CrestWatermark(width: 72, finish: .pressed(BrandPalette.card))
 
-                CrestWatermark(width: 150, finish: .pressed(BrandPalette.background))
+            Eyebrow(text: "The family table")
+                .padding(.top, 18)
 
-                Eyebrow(text: "The family table")
-                    .padding(.top, 30)
+            Text("Sign in with Apple to join the family chat")
+                .brandFont(.eventTitleSmall)
+                .foregroundStyle(BrandPalette.ink)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 10)
 
-                Text("A quiet place for the family to talk")
-                    .brandFont(.eventTitle)
-                    .foregroundStyle(BrandPalette.ink)
+            GoldRule(width: 40)
+                .padding(.top, 14)
+
+            Text(session.isAnonymous
+                 ? "Your name and messages come with you. Abhi & Alisha welcome each family member in."
+                 : "A private place for the family, small groups and one-to-one chats. Abhi & Alisha welcome each family member in.")
+                .brandFont(.bodyItalic)
+                .foregroundStyle(BrandPalette.body)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 14)
+
+            SignInWithAppleButton(.signIn) { request in
+                session.prepare(request)
+            } onCompletion: { result in
+                Task { await session.complete(result) }
+            }
+            .signInWithAppleButtonStyle(colorScheme == .dark ? .white : .black)
+            .frame(height: 50)
+            .frame(maxWidth: 360)
+            .clipShape(.rect(cornerRadius: 15, style: .continuous))
+            .opacity(session.isSigningIn ? 0.5 : 1)
+            .disabled(session.isSigningIn)
+            .padding(.top, 22)
+            .id(colorScheme)
+
+            if let error = session.signInError {
+                Text(error)
+                    .brandFont(.bodySmall)
+                    .foregroundStyle(BrandPalette.body)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
-                    .padding(.top, 12)
-
-                GoldRule(width: 44)
-                    .padding(.top, 18)
-
-                SignInWithAppleButton(.signIn) { request in
-                    session.prepare(request)
-                } onCompletion: { result in
-                    Task { await session.complete(result) }
-                }
-                .signInWithAppleButtonStyle(colorScheme == .dark ? .white : .black)
-                .frame(height: 52)
-                .frame(maxWidth: 360)
-                .clipShape(.rect(cornerRadius: 16, style: .continuous))
-                .opacity(session.isSigningIn ? 0.5 : 1)
-                .disabled(session.isSigningIn)
-                .padding(.top, 34)
-                .id(colorScheme)
-
-                if let error = session.signInError {
-                    Text(error)
-                        .brandFont(.bodySmall)
-                        .foregroundStyle(BrandPalette.body)
-                        .multilineTextAlignment(.center)
-                        .padding(.top, 16)
-                        .transition(.opacity)
-                }
-
-                Spacer(minLength: 40)
+                    .padding(.top, 14)
+                    .transition(.opacity)
             }
-            .padding(.horizontal, 30)
-            .padding(.top, ScreenChrome.contentReserve)
-            .padding(.bottom, FloatingTabBar.contentReserve + 24)
-            .frame(maxWidth: 520)
-            .frame(maxWidth: .infinity, minHeight: geometry.size.height)
         }
-        .scrollIndicators(.hidden)
-        .scrollBounceBehavior(.basedOnSize)
-        }
-        .background(BrandPalette.background.ignoresSafeArea())
+        .padding(.horizontal, 22)
+        .padding(.vertical, 26)
+        .frame(maxWidth: .infinity)
+        .background(RoundedRectangle(cornerRadius: 24, style: .continuous).fill(BrandPalette.card))
+        .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous).stroke(BrandPalette.gold.opacity(0.3), lineWidth: 1))
         .animation(.softFade, value: session.signInError)
     }
 }
 
-/// The three in-between states: opening, waiting to be welcomed in, and unavailable.
-struct ChatGateView: View {
+/// The family chat's in-between states, shown in place under the shared channels:
+/// opening, waiting to be welcomed in, or unavailable.
+struct FamilyGateCard: View {
     enum Kind {
         case opening
         case waiting
@@ -77,115 +78,149 @@ struct ChatGateView: View {
     let kind: Kind
 
     @State private var session = ChatSession.shared
-    @State private var isConfirmingSignOut = false
-    @State private var isConfirmingDelete = false
 
     var body: some View {
-        GeometryReader { geometry in
-        ScrollView {
-            VStack(spacing: 0) {
-                Spacer(minLength: 40)
-                content
-                Spacer(minLength: 40)
-            }
-            .padding(.horizontal, 32)
-            .padding(.top, ScreenChrome.contentReserve)
-            .padding(.bottom, FloatingTabBar.contentReserve + 24)
-            .frame(maxWidth: 520)
-            .frame(maxWidth: .infinity, minHeight: geometry.size.height)
-        }
-        .scrollIndicators(.hidden)
-        .scrollBounceBehavior(.basedOnSize)
-        }
-        .background(BrandPalette.background.ignoresSafeArea())
-        .overlay(alignment: .topTrailing) {
-            if kind == .waiting {
-                accountMenu
-                    .padding(.top, 8)
-                    .padding(.trailing, 14)
-            }
-        }
-        .chatAccountDialogs(isConfirmingSignOut: $isConfirmingSignOut, isConfirmingDelete: $isConfirmingDelete)
-    }
-
-    @ViewBuilder
-    private var content: some View {
-        switch kind {
-        case .opening:
-            VStack(spacing: 22) {
-                BreathingCrest(width: 120)
+        VStack(spacing: 0) {
+            switch kind {
+            case .opening:
+                BreathingCrest(width: 64)
                 Text("Opening the family chat")
                     .brandFont(.bodyItalic)
                     .foregroundStyle(BrandPalette.body)
-            }
+                    .padding(.top, 16)
 
-        case .waiting:
-            VStack(spacing: 0) {
-                BreathingCrest(width: 140)
-
+            case .waiting:
+                BreathingCrest(width: 72)
                 Eyebrow(text: "Almost there")
-                    .padding(.top, 30)
-
+                    .padding(.top, 18)
                 Text("Abhi & Alisha will welcome you in shortly")
-                    .brandFont(.eventTitle)
+                    .brandFont(.eventTitleSmall)
                     .foregroundStyle(BrandPalette.ink)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
-                    .padding(.top, 12)
-
-                GoldRule(width: 44)
-                    .padding(.top, 18)
-
+                    .padding(.top, 10)
+                GoldRule(width: 40)
+                    .padding(.top, 14)
                 Text(waitingLine)
                     .brandFont(.bodyItalic)
                     .foregroundStyle(BrandPalette.body)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
-                    .padding(.top, 18)
-            }
-            .accessibilityElement(children: .combine)
+                    .padding(.top, 14)
 
-        case .unavailable:
-            VStack(spacing: 16) {
-                Text("Chat isn't available")
+            case .unavailable:
+                Text("The family chat isn't available")
                     .brandFont(.eventTitleSmall)
                     .foregroundStyle(BrandPalette.ink)
                     .multilineTextAlignment(.center)
                 GoldRule(width: 36)
+                    .padding(.top, 14)
             }
         }
+        .padding(.horizontal, 22)
+        .padding(.vertical, 28)
+        .frame(maxWidth: .infinity)
+        .background(RoundedRectangle(cornerRadius: 24, style: .continuous).fill(BrandPalette.card))
+        .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous).stroke(BrandPalette.hairline, lineWidth: 1))
+        .accessibilityElement(children: .combine)
     }
 
     private var waitingLine: String {
         if let name = session.me?.displayName.flatMap(ChatJSON.clean) {
-            return "Thank you, \(name). The family chat will open right here the moment you're in."
+            return "Thank you, \(name). The family chat will open right here the moment you're in. Questions & Chat is open now."
         }
-        return "The family chat will open right here the moment you're in."
-    }
-
-    /// Kept out of the way while waiting, but always there: Apple requires that an
-    /// account can be deleted from inside the app.
-    private var accountMenu: some View {
-        Menu {
-            Button("Sign Out", systemImage: "rectangle.portrait.and.arrow.right") {
-                isConfirmingSignOut = true
-            }
-            Button("Delete Account", systemImage: "trash", role: .destructive) {
-                isConfirmingDelete = true
-            }
-        } label: {
-            Image(systemName: "ellipsis")
-                .font(.system(size: 15, weight: .medium))
-                .foregroundStyle(BrandPalette.goldDeep)
-                .frame(width: 44, height: 44)
-                .background(Circle().fill(BrandPalette.card))
-                .overlay(Circle().stroke(BrandPalette.hairline, lineWidth: 1))
-        }
-        .accessibilityLabel("Account")
+        return "The family chat will open right here the moment you're in. Questions & Chat is open now."
     }
 }
 
-/// "What should the family call you?" — asked once, after the first sign-in.
+/// "What should everyone call you?" — the only thing a guest needs for Questions & Chat.
+struct GuestNameSheet: View {
+    /// Called once the guest is in, before the sheet closes.
+    let onJoined: () -> Void
+
+    @State private var session = ChatSession.shared
+    @State private var name = ""
+    @State private var didFail = false
+    @FocusState private var isFocused: Bool
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 0) {
+                Eyebrow(text: "Questions & Chat")
+
+                Text("What should everyone call you?")
+                    .brandFont(.eventTitle)
+                    .foregroundStyle(BrandPalette.ink)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 8)
+
+                GoldRule(width: 44, alignment: .leading)
+                    .padding(.top, 14)
+
+                Text("Your name appears beside your messages. That's all we need, no account or password.")
+                    .brandFont(.bodyItalic)
+                    .foregroundStyle(BrandPalette.body)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 14)
+
+                ChatNameField(name: $name, isFocused: $isFocused, onSubmit: join)
+                    .padding(.top, 24)
+
+                if didFail {
+                    Text("We couldn't open the chat just now. Please check your connection and try again.")
+                        .brandFont(.bodySmall)
+                        .foregroundStyle(BrandPalette.body)
+                        .padding(.top, 12)
+                        .transition(.opacity)
+                }
+
+                GoldActionButton(
+                    title: "Join the chat",
+                    isBusy: session.isJoiningAsGuest,
+                    isEnabled: ChatJSON.clean(name) != nil,
+                    action: join
+                )
+                .padding(.top, 20)
+
+                Button("Not now") { dismiss() }
+                    .font(BrandLabel.font(size: 11, weight: .semibold))
+                    .tracking(1.2)
+                    .textCase(.uppercase)
+                    .foregroundStyle(BrandPalette.body.opacity(0.8))
+                    .frame(maxWidth: .infinity, minHeight: 44)
+                    .padding(.top, 6)
+            }
+            .padding(.horizontal, 26)
+            .padding(.top, 30)
+            .padding(.bottom, 24)
+        }
+        .scrollIndicators(.hidden)
+        .background(BrandPalette.background.ignoresSafeArea())
+        .animation(.softFade, value: didFail)
+        .presentationDetents([.medium, .large])
+        .presentationContentInteraction(.scrolls)
+        .interactiveDismissDisabled(session.isJoiningAsGuest)
+        .onAppear { isFocused = true }
+    }
+
+    private func join() {
+        guard ChatJSON.clean(name) != nil, !session.isJoiningAsGuest else { return }
+        didFail = false
+        Task {
+            if await session.joinAsGuest(name: name) {
+                BrandHaptics.tick()
+                onJoined()
+                dismiss()
+            } else {
+                didFail = true
+            }
+        }
+    }
+}
+
+/// "What should the family call you?" — asked once, after the first sign-in, and from
+/// "Change my name".
 struct ChatNameSheet: View {
     @State private var session = ChatSession.shared
     @State private var name = ""
@@ -196,9 +231,9 @@ struct ChatNameSheet: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                Eyebrow(text: "Welcome")
+                Eyebrow(text: session.me?.hasName == true ? "Your name" : "Welcome")
 
-                Text("What should the family call you?")
+                Text(session.isAnonymous ? "What should everyone call you?" : "What should the family call you?")
                     .brandFont(.eventTitle)
                     .foregroundStyle(BrandPalette.ink)
                     .fixedSize(horizontal: false, vertical: true)
@@ -213,20 +248,7 @@ struct ChatNameSheet: View {
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.top, 14)
 
-                TextField("Your name", text: $name)
-                    .textContentType(.name)
-                    .textInputAutocapitalization(.words)
-                    .autocorrectionDisabled()
-                    .submitLabel(.done)
-                    .onSubmit(save)
-                    .focused($isFocused)
-                    .brandFont(.bodyText)
-                    .foregroundStyle(BrandPalette.ink)
-                    .tint(BrandPalette.goldDeep)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 15)
-                    .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(BrandPalette.card))
-                    .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(BrandPalette.gold.opacity(0.3), lineWidth: 1))
+                ChatNameField(name: $name, isFocused: $isFocused, onSubmit: save)
                     .padding(.top, 24)
 
                 if didFail {
@@ -284,5 +306,29 @@ struct ChatNameSheet: View {
                 didFail = true
             }
         }
+    }
+}
+
+/// The cream name well shared by both name sheets.
+private struct ChatNameField: View {
+    @Binding var name: String
+    var isFocused: FocusState<Bool>.Binding
+    let onSubmit: () -> Void
+
+    var body: some View {
+        TextField("Your name", text: $name)
+            .textContentType(.name)
+            .textInputAutocapitalization(.words)
+            .autocorrectionDisabled()
+            .submitLabel(.done)
+            .onSubmit(onSubmit)
+            .focused(isFocused)
+            .brandFont(.bodyText)
+            .foregroundStyle(BrandPalette.ink)
+            .tint(BrandPalette.goldDeep)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 15)
+            .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(BrandPalette.card))
+            .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(BrandPalette.gold.opacity(0.3), lineWidth: 1))
     }
 }

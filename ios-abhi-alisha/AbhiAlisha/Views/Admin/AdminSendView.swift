@@ -148,7 +148,7 @@ struct AdminSendView: View {
         var id: String { screen }
 
         static let all: [DestinationChoice] = [
-            .init(screen: "notifications", title: "Updates"),
+            .init(screen: "notifications", title: "Announcements"),
             .init(screen: AppTab.home.rawValue, title: "Home"),
             .init(screen: AppTab.schedule.rawValue, title: "Schedule"),
             .init(screen: AppTab.chat.rawValue, title: "Chat"),
@@ -243,7 +243,7 @@ struct AdminSendView: View {
     }
 
     private var destinationPhrase: String {
-        if draft.destination.screen == "notifications" { return "Updates" }
+        if draft.destination.screen == "notifications" { return "Announcements" }
         if draft.destination.screen == "gallery" { return "Gallery" }
         guard let tab = AppTab(rawValue: draft.destination.screen) else { return "Home" }
         guard tab == .schedule, let celebration = selectedCelebration else { return tab.title }

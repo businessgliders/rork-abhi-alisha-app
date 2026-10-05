@@ -15,6 +15,8 @@ nonisolated struct ChatProfile: Codable, Identifiable, Hashable, Sendable {
     var role: String?
     var avatarURL: String?
     var createdAt: Date?
+    /// A name-only guest from Questions & Chat, with no Apple account behind them.
+    var isAnonymous: Bool?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -23,12 +25,13 @@ nonisolated struct ChatProfile: Codable, Identifiable, Hashable, Sendable {
         case role
         case avatarURL = "avatar_url"
         case createdAt = "created_at"
+        case isAnonymous = "is_anonymous"
     }
 
-    static let columns = "id,display_name,status,role,avatar_url,created_at"
+    static let columns = "id,display_name,status,role,avatar_url,created_at,is_anonymous"
 
     /// The name shown everywhere; never blank.
-    var name: String { ChatJSON.clean(displayName) ?? "Family member" }
+    var name: String { ChatJSON.clean(displayName) ?? (isAnonymous == true ? "Guest" : "Family member") }
 
     var hasName: Bool { ChatJSON.clean(displayName) != nil }
 
