@@ -30,14 +30,22 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
     // background thread, and UIKit aborts the app when a notification tap is completed
     // off the main thread — which is exactly the crash build 3 had.
 
-    /// A note that arrives while the app is open still shows as a banner.
+    /// A note that arrives while the app is open still shows as a banner, except a chat
+    /// message for the conversation already on screen, which simply appears in place.
     nonisolated func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         willPresent notification: UNNotification,
         withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
     ) {
+        let conversationID = DeepLinkRouter.conversationIDValue(in: notification.request.content.userInfo)
         let finish = PresentationCompletion(completionHandler)
         Self.onMainThread {
+            if let conversationID,
+               let id = UUID(uuidString: conversationID),
+               ChatStore.shared.activeThreadID == id {
+                finish.call([.list])
+                return
+            }
             finish.call([.banner, .list, .sound])
         }
     }
@@ -56,8 +64,16 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         let userInfo = response.notification.request.content.userInfo
         let screen = DeepLinkRouter.screenValue(in: userInfo)
         let eventID = DeepLinkRouter.eventIDValue(in: userInfo)
+        let conversationID = DeepLinkRouter.conversationIDValue(in: userInfo)
         let finish = TapCompletion(completionHandler)
         Self.onMainThread {
+            // A chat message names its conversation; it always opens in Chat.
+            if let conversationID {
+                DeepLinkRouter.shared.pendingConversationID = UUID(uuidString: conversationID)
+                DeepLinkRouter.shared.open(.tab(.chat))
+                finish.call()
+                return
+            }
             let landing = DeepLinkRouter.landing(forScreen: screen)
             if case .tab(.schedule) = landing, let eventID {
                 DeepLinkRouter.shared.pendingEventID = eventID

@@ -10,6 +10,7 @@
 		XX2F2D719C0EF179FE782EXX /* AbhiAlishaWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = XXFECD93F8CE8391DDF12EXX /* AbhiAlishaWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		XX2F454EBB60C27EB3313AXX /* AbhiAlishaWatchWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = XX9A918967852AE91A553EXX /* AbhiAlishaWatchWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		XX9F62D95E8263ACF0CA07XX /* AbhiAlishaWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = XX877ED8969F1802A998B6XX /* AbhiAlishaWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		XXCB0C833A4E7DDE353CE0XX /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = XX17F496E7391AF4178246XX /* Supabase */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -51,6 +52,17 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		FF7E4C2A91D4480FBA30C61B /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				XX2F454EBB60C27EB3313AXX /* AbhiAlishaWatchWidget.appex in Embed Foundation Extensions */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			name = "Embed Foundation Extensions";
+			dstPath = "";
+			dstSubfolderSpec = 13;
+		};
 		XX81FF245A222E3682268EXX /* Embed Watch Content */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -73,17 +85,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 		};
-		FF7E4C2A91D4480FBA30C61B /* Embed Foundation Extensions */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				XX2F454EBB60C27EB3313AXX /* AbhiAlishaWatchWidget.appex in Embed Foundation Extensions */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			name = "Embed Foundation Extensions";
-			dstPath = "";
-			dstSubfolderSpec = 13;
-		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
@@ -96,6 +97,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		FF9E4C2A91D4480FBA30C63D /* Exceptions for "AbhiAlishaWatch" folder in "AbhiAlishaWatch" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				AbhiAlishaWatch.entitlements,
+			);
+			target = XX2A266D0DE95353D76097XX /* AbhiAlishaWatch */;
+		};
 		XX769B2448490ABDC44B32XX /* Exceptions for "AbhiAlishaWatchWidget" folder in "AbhiAlishaWatchWidget" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -103,13 +111,6 @@
 				AbhiAlishaWatchWidget.entitlements,
 			);
 			target = XX5D98368F33E386823FB9XX /* AbhiAlishaWatchWidget */;
-		};
-		FF9E4C2A91D4480FBA30C63D /* Exceptions for "AbhiAlishaWatch" folder in "AbhiAlishaWatch" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				AbhiAlishaWatch.entitlements,
-			);
-			target = XX2A266D0DE95353D76097XX /* AbhiAlishaWatch */;
 		};
 		XX9E3459D161D25BA806C0XX /* Exceptions for "AbhiAlishaWidget" folder in "AbhiAlishaWidget" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
@@ -137,6 +138,11 @@
 			path = AbhiAlishaUITests;
 			sourceTree = "<group>";
 		};
+		FF8E4C2A91D4480FBA30C62C /* WatchShared */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = WatchShared;
+			sourceTree = "<group>";
+		};
 		SHARED00CODE00GROUP00001 /* Shared */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = Shared;
@@ -149,11 +155,6 @@
 			exceptions = (
 				FF9E4C2A91D4480FBA30C63D /* Exceptions for "AbhiAlishaWatch" folder in "AbhiAlishaWatch" target */,
 			);
-		};
-		FF8E4C2A91D4480FBA30C62C /* WatchShared */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = WatchShared;
-			sourceTree = "<group>";
 		};
 		XX57B8A0AC90CE3D9AB644XX /* AbhiAlishaWatchWidget */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
@@ -178,6 +179,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				XXCB0C833A4E7DDE353CE0XX /* Supabase in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -272,6 +274,7 @@
 			);
 			name = AbhiAlisha;
 			packageProductDependencies = (
+				XX17F496E7391AF4178246XX /* Supabase */,
 			);
 			productName = AbhiAlisha;
 			productReference = 105FC57A2E9EAD3100EA8BCF /* AbhiAlisha.app */;
@@ -431,6 +434,9 @@
 				XX170BB40174A02606543BXX /* AbhiAlishaWidget */,
 				XX2A266D0DE95353D76097XX /* AbhiAlishaWatch */,
 				XX5D98368F33E386823FB9XX /* AbhiAlishaWatchWidget */,
+			);
+			packageReferences = (
+				XXA26CCC1C14E04A80BED3XX /* XCRemoteSwiftPackageReference "supabase-swift" */,
 			);
 		};
 /* End PBXProject section */
@@ -1060,6 +1066,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		XXA26CCC1C14E04A80BED3XX /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase/supabase-swift.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.20.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		XX17F496E7391AF4178246XX /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = XXA26CCC1C14E04A80BED3XX /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 105FC5722E9EAD3100EA8BCF /* Project object */;
 }

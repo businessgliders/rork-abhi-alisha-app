@@ -3,9 +3,15 @@ import SwiftUI
 /// "Gallery" — the couple's photographs and films, filtered by their own categories and
 /// laid out as a two-column masonry in each picture's natural proportions.
 ///
+/// This is a section, not a screen: the Story tab shows it as its third part, inside
+/// its own scroll view and page margins.
+///
 /// Photographs are cached to disk, so the grid opens instantly and works offline.
 /// Anything that fails to load is quietly left out rather than shown as a broken frame.
-struct GalleryView: View {
+struct GallerySection: View {
+    /// The page margin the section sits inside; the category row bleeds past it.
+    var pageMargin: CGFloat = 22
+
     @Environment(ContentStore.self) private var content
     @Environment(\.openURL) private var openURL
 
@@ -21,27 +27,18 @@ struct GalleryView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
-                header
+        VStack(alignment: .leading, spacing: 0) {
+            categoryRow
+                .padding(.horizontal, -pageMargin)
 
-                categoryRow
+            if items.isEmpty {
+                emptyState
+            } else {
+                masonry
                     .padding(.top, 20)
-
-                if items.isEmpty {
-                    emptyState
-                } else {
-                    masonry
-                        .padding(.horizontal, 22)
-                        .padding(.top, 22)
-                }
             }
-            .padding(.top, ScreenChrome.contentReserve)
-            .padding(.bottom, FloatingTabBar.contentReserve + 24)
-            .crestCorner()
         }
-        .scrollIndicators(.hidden)
-        .background(BrandPalette.background.ignoresSafeArea())
+        .frame(maxWidth: .infinity, alignment: .leading)
         .animation(.softFade, value: selectedSlug)
         .fullScreenCover(item: $viewer) { context in
             GalleryViewer(items: context.items, startIndex: context.index)
@@ -57,23 +54,6 @@ struct GalleryView: View {
         }
     }
 
-    // MARK: - Header
-
-    private var header: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Eyebrow(text: "Memories")
-
-            Text("Gallery")
-                .brandFont(.screenTitle)
-                .foregroundStyle(BrandPalette.ink)
-
-            GoldRule(width: 58, alignment: .leading)
-                .padding(.top, 2)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 22)
-    }
-
     /// "All" plus each of the couple's own categories, underlined in gold when active.
     private var categoryRow: some View {
         ScrollView(.horizontal) {
@@ -86,7 +66,7 @@ struct GalleryView: View {
             }
         }
         .scrollIndicators(.hidden)
-        .contentMargins(.horizontal, 22, for: .scrollContent)
+        .contentMargins(.horizontal, pageMargin, for: .scrollContent)
     }
 
     private func categoryButton(title: String, slug: String?) -> some View {
@@ -127,7 +107,7 @@ struct GalleryView: View {
                 .frame(maxWidth: 300)
         }
         .frame(maxWidth: .infinity)
-        .padding(.top, 80)
+        .padding(.top, 60)
     }
 
     // MARK: - Masonry

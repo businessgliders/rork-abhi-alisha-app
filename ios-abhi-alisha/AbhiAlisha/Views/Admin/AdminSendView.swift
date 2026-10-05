@@ -135,7 +135,8 @@ struct AdminSendView: View {
 
     // MARK: - Destination
 
-    /// One of the six places a note can open. Updates first — the default.
+    /// One of the places a note can open. Updates first — the default. "gallery" is
+    /// still sent as its own value; the app opens Story on its Gallery part for it.
     private struct DestinationChoice: Identifiable {
         let screen: String
         let title: String
@@ -145,8 +146,9 @@ struct AdminSendView: View {
             .init(screen: "notifications", title: "Updates"),
             .init(screen: AppTab.home.rawValue, title: "Home"),
             .init(screen: AppTab.schedule.rawValue, title: "Schedule"),
+            .init(screen: AppTab.chat.rawValue, title: "Chat"),
             .init(screen: AppTab.story.rawValue, title: "Story"),
-            .init(screen: AppTab.gallery.rawValue, title: "Gallery"),
+            .init(screen: "gallery", title: "Gallery"),
             .init(screen: AppTab.resort.rawValue, title: "Resort")
         ]
     }
@@ -237,6 +239,7 @@ struct AdminSendView: View {
 
     private var destinationPhrase: String {
         if draft.destination.screen == "notifications" { return "Updates" }
+        if draft.destination.screen == "gallery" { return "Gallery" }
         guard let tab = AppTab(rawValue: draft.destination.screen) else { return "Home" }
         guard tab == .schedule, let celebration = selectedCelebration else { return tab.title }
         return "\(tab.title) · \(celebration.title)"

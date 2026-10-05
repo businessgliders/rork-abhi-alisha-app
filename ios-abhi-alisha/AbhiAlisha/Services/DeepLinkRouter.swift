@@ -19,6 +19,10 @@ final class DeepLinkRouter {
     static let shared = DeepLinkRouter()
 
     var pendingEventID: String?
+    /// Set when a note asked for the Gallery, which now lives inside Story.
+    var pendingStoryGallery = false
+    /// The conversation a chat notification asked to open.
+    var pendingConversationID: UUID?
     /// Where a notification tap wants to land, held until the root view can act on it.
     var pending: Landing?
     /// The screen of past updates, raised over whichever tab is showing.
@@ -51,6 +55,11 @@ final class DeepLinkRouter {
             .trimmingCharacters(in: .whitespacesAndNewlines)
             .lowercased(), !screen.isEmpty else { return .tab(.home) }
         if screen == "notifications" { return .notifications }
+        if screen == "gallery" {
+            shared.pendingStoryGallery = true
+            return .tab(.story)
+        }
+        if screen == "message" || screen == "messages" { return .tab(.chat) }
         if let tab = AppTab(rawValue: screen) { return .tab(tab) }
         return .tab(.home)
     }
@@ -73,6 +82,15 @@ final class DeepLinkRouter {
         if let id = payload["event_id"] as? String { return id.nonEmpty }
         if let aps = payload["aps"] as? [AnyHashable: Any],
            let id = aps["event_id"] as? String { return id.nonEmpty }
+        return nil
+    }
+
+    /// The conversation a chat notification belongs to, read with the same defensive
+    /// rules. A missing or mangled value simply opens the Chat tab's list.
+    nonisolated static func conversationIDValue(in payload: [AnyHashable: Any]) -> String? {
+        if let id = payload["conversation_id"] as? String { return id.nonEmpty }
+        if let aps = payload["aps"] as? [AnyHashable: Any],
+           let id = aps["conversation_id"] as? String { return id.nonEmpty }
         return nil
     }
 }

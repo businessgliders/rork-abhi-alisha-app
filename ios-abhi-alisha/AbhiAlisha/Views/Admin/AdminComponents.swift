@@ -36,8 +36,8 @@ struct NotificationDraft: Equatable {
 /// Where a note sends guests when they tap it: one of the app's screens, and for
 /// Schedule notes, optionally one celebration in particular.
 struct NoteDestination: Equatable {
-    /// One of the six values the app accepts on a tap: `notifications`, `home`,
-    /// `schedule`, `story`, `gallery` or `resort`. Anything else falls back to Home.
+    /// One of the values the app accepts on a tap: `notifications`, `home`, `schedule`,
+    /// `chat`, `story`, `gallery` or `resort`. Anything else falls back to Home.
     var screen: String
     /// The celebration a Schedule note opens on; nil leaves Schedule on whatever's on now.
     var eventID: String?

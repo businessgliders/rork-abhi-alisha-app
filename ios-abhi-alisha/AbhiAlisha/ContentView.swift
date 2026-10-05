@@ -13,6 +13,7 @@ struct ContentView: View {
     @State private var updates = NotificationsStore()
     @State private var router = DeepLinkRouter.shared
     @State private var push = PushRegistrar.shared
+    @State private var chat = ChatStore.shared
     @State private var admin: AdminSession
     @State private var checklist: ChecklistStore
     @State private var selection: AppTab = .home
@@ -42,8 +43,12 @@ struct ContentView: View {
             }
             .animation(.softFade, value: selection)
 
-            FloatingTabBar(selection: $selection)
+            if !isReadingThread {
+                FloatingTabBar(selection: $selection)
+                    .transition(.opacity.combined(with: .move(edge: .bottom)))
+            }
         }
+        .animation(.calm, value: isReadingThread)
         .overlay(alignment: .top) {
             ScreenChrome(showsCrest: selection == .home)
         }
@@ -86,10 +91,12 @@ struct ContentView: View {
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {
                 push.applicationDidBecomeActive()
+                ChatSession.shared.applicationDidBecomeActive()
             }
         }
         .onAppear(perform: openPendingLanding)
         .task {
+            ChatSession.shared.start()
             store.startClock()
             await content.refreshIfNeeded()
         }
@@ -114,6 +121,11 @@ struct ContentView: View {
         }
     }
 
+    /// A conversation fills the screen, composer and all, so the bar steps aside.
+    private var isReadingThread: Bool {
+        selection == .chat && chat.activeThreadID != nil
+    }
+
     @ViewBuilder
     private func screen(for tab: AppTab) -> some View {
         switch tab {
@@ -121,10 +133,10 @@ struct ContentView: View {
             HomeView()
         case .schedule:
             ScheduleView()
+        case .chat:
+            ChatRootView(isActive: selection == .chat)
         case .story:
             StoryView()
-        case .gallery:
-            GalleryView()
         case .resort:
             ResortView()
         }

@@ -1,11 +1,11 @@
 import SwiftUI
 
-/// The five sections of the app.
+/// The five sections of the app. Gallery lives inside Story.
 enum AppTab: String, CaseIterable, Hashable, Identifiable {
     case home
     case schedule
+    case chat
     case story
-    case gallery
     case resort
 
     var id: String { rawValue }
@@ -14,8 +14,8 @@ enum AppTab: String, CaseIterable, Hashable, Identifiable {
         switch self {
         case .home: return "Home"
         case .schedule: return "Schedule"
+        case .chat: return "Chat"
         case .story: return "Story"
-        case .gallery: return "Gallery"
         case .resort: return "Resort"
         }
     }
@@ -25,8 +25,8 @@ enum AppTab: String, CaseIterable, Hashable, Identifiable {
         switch self {
         case .home: return "house"
         case .schedule: return "sparkles"
+        case .chat: return "bubble.left.and.bubble.right"
         case .story: return "heart"
-        case .gallery: return "photo.on.rectangle.angled"
         case .resort: return "bed.double"
         }
     }

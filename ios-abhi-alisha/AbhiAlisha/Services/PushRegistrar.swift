@@ -94,14 +94,25 @@ final class PushRegistrar {
 
     // MARK: - Registration
 
+    /// The current APNs token, once the system has handed one over.
+    var currentToken: String? { deviceToken }
+
     func didRegister(tokenData: Data) {
-        deviceToken = tokenData.map { String(format: "%02x", $0) }.joined()
-        Task { await sendRegistrationIfChanged() }
+        let token = tokenData.map { String(format: "%02x", $0) }.joined()
+        deviceToken = token
+        ChatSession.shared.pushTokenDidChange(token)
+        Task {
+            // The family chat may fetch a token before wedding updates are switched on;
+            // the couple's list only hears about phones that have said yes.
+            await refreshStatus()
+            guard isEnabled else { return }
+            await sendRegistrationIfChanged()
+        }
     }
 
     /// After an RSVP lookup, so the couple's list knows whose phone this is.
     func guestNameMayHaveChanged() {
-        guard deviceToken != nil else { return }
+        guard deviceToken != nil, isEnabled else { return }
         Task { await sendRegistrationIfChanged() }
     }
 

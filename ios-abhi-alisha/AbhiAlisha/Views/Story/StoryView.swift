@@ -1,16 +1,18 @@
 import SwiftUI
 
-/// "Story" holds two halves of the same thing: the couple's own invitation, written in
-/// their words, and the families standing beside them. A segmented control moves between
-/// them and the screen cross-fades — nothing reloads.
+/// "Story" holds three parts of the same thing: the couple's own invitation, written in
+/// their words, the families standing beside them, and the photographs. A segmented
+/// control moves between them and the screen cross-fades — nothing reloads.
 struct StoryView: View {
     @Environment(ContentStore.self) private var content
+    @Environment(DeepLinkRouter.self) private var router
 
     @State private var section: StorySection = .story
 
     private enum StorySection: String, CaseIterable, Identifiable {
         case story
         case family
+        case gallery
 
         var id: String { rawValue }
 
@@ -18,6 +20,7 @@ struct StoryView: View {
             switch self {
             case .story: return "Our Story"
             case .family: return "Our Family"
+            case .gallery: return "Gallery"
             }
         }
 
@@ -25,6 +28,7 @@ struct StoryView: View {
             switch self {
             case .story: return "Invitation"
             case .family: return "Side by side"
+            case .gallery: return "Memories"
             }
         }
     }
@@ -38,11 +42,15 @@ struct StoryView: View {
                     .padding(.top, 22)
 
                 ZStack(alignment: .top) {
-                    if section == .story {
+                    switch section {
+                    case .story:
                         invitation
                             .transition(.opacity)
-                    } else {
+                    case .family:
                         FamilyRoster(members: content.familyMembers)
+                            .transition(.opacity)
+                    case .gallery:
+                        GallerySection(pageMargin: 22)
                             .transition(.opacity)
                     }
                 }
@@ -57,9 +65,20 @@ struct StoryView: View {
         }
         .scrollIndicators(.hidden)
         .background(BrandPalette.background.ignoresSafeArea())
+        .onChange(of: router.pendingStoryGallery) { _, _ in
+            openGalleryIfAsked()
+        }
+        .onAppear(perform: openGalleryIfAsked)
         .task {
             await content.refreshIfNeeded()
         }
+    }
+
+    /// A note that used to open the Gallery tab now lands here, on the Gallery part.
+    private func openGalleryIfAsked() {
+        guard router.pendingStoryGallery else { return }
+        router.pendingStoryGallery = false
+        section = .gallery
     }
 
     /// The couple's letter, standing in for the story itself.
@@ -109,8 +128,11 @@ struct StoryView: View {
                 } label: {
                     Text(option.title.uppercased())
                         .font(BrandLabel.font(size: 10.5, weight: isSelected ? .semibold : .medium))
-                        .tracking(1.9)
+                        .tracking(1.6)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.75)
                         .foregroundStyle(isSelected ? BrandPalette.goldDeep : BrandPalette.tabInactive)
+                        .padding(.horizontal, 4)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 12)
                         .background {
