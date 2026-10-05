@@ -16,6 +16,7 @@ struct EventDetailSheet: View {
     @State private var isSavingToCalendar = false
     @State private var followNotice: String?
     @State private var isShowingFullMap = false
+    @State private var phase = WeddingPhase.shared
 
     var body: some View {
         NavigationStack {
@@ -40,6 +41,16 @@ struct EventDetailSheet: View {
                     if let photos, event.dressCode == nil {
                         section(title: "Outfit Inspiration") {
                             outfitStrip(photos)
+                        }
+                        .padding(.top, 34)
+                    }
+
+                    if !event.isFarewell {
+                        section(title: "My Outfit") {
+                            NavigationLink(value: OutfitLookRoute(eventID: event.id)) {
+                                MyOutfitEntryCard(eventID: event.id)
+                            }
+                            .buttonStyle(PressableStyle())
                         }
                         .padding(.top, 34)
                     }
@@ -85,6 +96,9 @@ struct EventDetailSheet: View {
             }
             .scrollIndicators(.hidden)
             .background(BrandPalette.background.ignoresSafeArea())
+            .navigationDestination(for: OutfitLookRoute.self) { route in
+                OutfitLookView(eventID: route.eventID)
+            }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Close") { dismiss() }
@@ -354,9 +368,9 @@ struct EventDetailSheet: View {
             saveToCalendar()
         } label: {
             HStack(spacing: 10) {
-                Image(systemName: "calendar")
+                Image(systemName: CalendarService.shared.isAdded(event) ? "checkmark" : "calendar")
                     .font(.system(size: 13, weight: .light))
-                Text("Add to Calendar")
+                Text(CalendarService.shared.isAdded(event) ? "In Your Calendar" : "Add to Calendar")
                     .font(BrandLabel.font(size: 12, weight: .semibold))
                     .tracking(1.5)
             }
@@ -413,7 +427,7 @@ struct EventDetailSheet: View {
 
     /// Hidden entirely when there is no confirmed start time to save.
     private var canAddToCalendar: Bool {
-        event.startsAt != nil && !event.isTimeToBeAnnounced
+        event.startsAt != nil && !event.isTimeToBeAnnounced && !event.isFarewell && !phase.isThankYou(at: store.now)
     }
 
     /// Offered only while there is still something to count down to.
@@ -489,7 +503,7 @@ private struct OutfitPlate: View {
 }
 
 /// Full-screen look at one outfit photograph.
-private struct OutfitLightbox: View {
+struct OutfitLightbox: View {
     let photo: OutfitPhoto
 
     @Environment(\.dismiss) private var dismiss

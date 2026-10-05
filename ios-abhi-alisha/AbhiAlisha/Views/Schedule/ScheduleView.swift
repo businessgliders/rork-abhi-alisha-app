@@ -14,6 +14,13 @@ struct ScheduleView: View {
     @State private var dragOffset: CGFloat = 0
     @State private var isMovingForward = true
     @State private var detailEvent: ScheduleEvent?
+    @State private var calendar = CalendarService.shared
+    @State private var phase = WeddingPhase.shared
+    @State private var calendarMessage: String?
+    @State private var messageTask: Task<Void, Never>?
+
+    /// After the wedding the Schedule reads as a keepsake: muted, nothing to add.
+    private var isPast: Bool { phase.isThankYou(at: store.now) }
 
     private var events: [ScheduleEvent] { store.events }
 
@@ -26,12 +33,21 @@ struct ScheduleView: View {
                 emptyState
                     .frame(maxHeight: .infinity)
             } else {
+                if !isPast {
+                    calendarControl
+                        .padding(.top, 14)
+                }
+
                 StringLightsNavigation(events: events, selectedIndex: $selectedIndex)
-                    .padding(.top, 16)
+                    .padding(.top, isPast ? 16 : 10)
+                    .saturation(isPast ? 0.25 : 1)
+                    .opacity(isPast ? 0.7 : 1)
 
                 cardCarousel
                     .padding(.top, 10)
                     .frame(maxHeight: .infinity)
+                    .saturation(isPast ? 0.35 : 1)
+                    .opacity(isPast ? 0.82 : 1)
 
                 stepper
                     .padding(.top, 14)
@@ -79,7 +95,7 @@ struct ScheduleView: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Eyebrow(text: "The Celebrations")
+            Eyebrow(text: isPast ? "The celebrations · Past" : "The Celebrations")
 
             Text("Schedule")
                 .brandFont(.screenTitle)
@@ -89,6 +105,86 @@ struct ScheduleView: View {
                 .padding(.top, 2)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// One tap puts every celebration in the guest's calendar; a second tap only updates.
+    private var calendarControl: some View {
+        let isAdded = calendar.hasAddedAll(events)
+
+        return VStack(spacing: 6) {
+            Button {
+                addAllToCalendar()
+            } label: {
+                HStack(spacing: 8) {
+                    if calendar.isAddingAll {
+                        ProgressView()
+                            .controlSize(.mini)
+                            .tint(isAdded ? Color(hex: 0xFFFBF1) : BrandPalette.goldDeep)
+                    } else {
+                        Image(systemName: isAdded ? "checkmark" : "calendar.badge.plus")
+                            .font(.system(size: 12, weight: .regular))
+                    }
+                    Text(isAdded ? "Added to Calendar" : "Add all to Calendar")
+                        .font(BrandLabel.font(size: 11, weight: .semibold))
+                        .tracking(1.3)
+                        .textCase(.uppercase)
+                }
+                .foregroundStyle(isAdded ? Color(hex: 0xFFFBF1) : BrandPalette.goldDeep)
+                .padding(.horizontal, 18)
+                .frame(minHeight: 40)
+                .frame(maxWidth: .infinity)
+                .background(
+                    Capsule(style: .continuous)
+                        .fill(
+                            isAdded
+                                ? AnyShapeStyle(LinearGradient(
+                                    colors: [Color(hex: 0xC2A24C), Color(hex: 0xA9873C)],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                ))
+                                : AnyShapeStyle(BrandPalette.card)
+                        )
+                )
+                .overlay(
+                    Capsule(style: .continuous)
+                        .stroke(BrandPalette.gold.opacity(isAdded ? 0.3 : 0.55), lineWidth: 1)
+                )
+            }
+            .buttonStyle(PressableStyle())
+            .disabled(calendar.isAddingAll)
+            .accessibilityHint(isAdded ? "Tap to update your calendar" : "Adds every celebration with an alert an hour before")
+
+            if let calendarMessage {
+                Text(calendarMessage)
+                    .brandFont(.bodySmall)
+                    .foregroundStyle(BrandPalette.body)
+                    .multilineTextAlignment(.center)
+                    .transition(.opacity)
+            } else if isAdded {
+                Text("Tap to update")
+                    .font(BrandLabel.font(size: 9.5, weight: .medium))
+                    .tracking(1)
+                    .foregroundStyle(BrandPalette.body.opacity(0.6))
+                    .transition(.opacity)
+            }
+        }
+        .animation(.calm, value: isAdded)
+        .animation(.softFade, value: calendarMessage)
+    }
+
+    private func addAllToCalendar() {
+        BrandHaptics.soft()
+        Task {
+            let outcome = await calendar.addAll(events)
+            if case .done = outcome { BrandHaptics.tick() }
+            calendarMessage = outcome.message
+            messageTask?.cancel()
+            messageTask = Task {
+                try? await Task.sleep(for: .seconds(4))
+                guard !Task.isCancelled else { return }
+                calendarMessage = nil
+            }
+        }
     }
 
     private var cardCarousel: some View {

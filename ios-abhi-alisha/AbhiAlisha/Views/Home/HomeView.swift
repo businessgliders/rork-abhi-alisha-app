@@ -12,6 +12,11 @@ struct HomeView: View {
     @State private var rsvpMatch: RSVPRecord?
     /// How far the sheet has risen, 0 at rest to 1 once it covers the hero.
     @State private var coverage: CGFloat = 0
+    @State private var isShowingOutfits = false
+    @State private var phase = WeddingPhase.shared
+
+    /// From noon on the day after the reception, Home becomes a thank-you.
+    private var isThankYou: Bool { phase.isThankYou(at: store.now) }
 
     var body: some View {
         GeometryReader { proxy in
@@ -21,7 +26,8 @@ struct HomeView: View {
                 // The photograph stays exactly where it is; only the sheet moves.
                 HeroHeader(
                     ceremonyDate: store.mainCeremony?.startsAt,
-                    heroPhotos: content.heroPhotos
+                    heroPhotos: content.heroPhotos,
+                    isThankYou: isThankYou
                 )
                 .frame(height: heroHeight)
                 .overlay {
@@ -57,6 +63,10 @@ struct HomeView: View {
         .sheet(isPresented: $isShowingRSVP, onDismiss: syncMatch) {
             RSVPLookupSheet()
         }
+        .fullScreenCover(isPresented: $isShowingOutfits) {
+            MyOutfitsView()
+        }
+        .animation(.calm, value: isThankYou)
         .onAppear {
             syncMatch()
             openRSVPIfAsked()
@@ -76,12 +86,27 @@ struct HomeView: View {
                 .frame(width: 34, height: 2)
                 .padding(.top, 20)
 
-            rsvpBlock
+            if isThankYou {
+                ThankYouLinks(
+                    onGallery: openGallery,
+                    onOutfits: { isShowingOutfits = true },
+                    onChat: { DeepLinkRouter.shared.open(.tab(.chat)) }
+                )
+                .transition(.opacity)
+            } else {
+                HappeningNowBanner(events: store.events)
 
-            NotifyUpdatesCard()
+                rsvpBlock
 
-            if let next = store.nextEvent {
-                NextEventCard(event: next)
+                NotifyUpdatesCard()
+
+                if let next = store.nextEvent {
+                    NextEventCard(event: next)
+                }
+
+                MyOutfitsHomeCard {
+                    isShowingOutfits = true
+                }
             }
 
             VStack(spacing: 12) {
@@ -155,9 +180,19 @@ struct HomeView: View {
         }
     }
 
-    /// An announcement asked for the RSVP: open the lookup straight away.
+    private func openGallery() {
+        router.pendingStoryGallery = true
+        router.open(.tab(.story))
+    }
+
+    /// An announcement asked for the RSVP: open the lookup straight away, unless the
+    /// wedding is over and the RSVP has nothing left to say.
     private func openRSVPIfAsked() {
         guard router.pendingRSVP else { return }
+        guard !isThankYou else {
+            router.pendingRSVP = false
+            return
+        }
         router.pendingRSVP = false
         isShowingRSVP = true
     }
@@ -221,6 +256,7 @@ private struct HeroHeader: View {
 
     let ceremonyDate: Date?
     let heroPhotos: [GalleryPhoto]
+    var isThankYou = false
 
     var body: some View {
         Color(BrandPalette.heroFallback)
@@ -261,7 +297,15 @@ private struct HeroHeader: View {
                 .padding(.top, 18)
                 .calmFadeIn(delay: 2.5)
 
-            if let ceremonyDate {
+            if isThankYou {
+                Text("Thank you for celebrating with us")
+                    .brandFont(.eventTitleSmall)
+                    .foregroundStyle(Color(hex: 0xFDFAF3))
+                    .multilineTextAlignment(.center)
+                    .shadow(color: Color.black.opacity(0.35), radius: 10, y: 3)
+                    .padding(.top, 22)
+                    .calmFadeIn(delay: 2.75)
+            } else if let ceremonyDate {
                 // The date types itself in once the countdown has settled into view.
                 CountdownView(target: ceremonyDate, dateStartDelay: 3.15)
                     .padding(.top, 22)

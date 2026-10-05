@@ -227,6 +227,37 @@ struct AdminLockFooter: View {
     }
 }
 
+/// Tucked at the foot of the couple's area: shows this phone the after-the-wedding Home
+/// and Schedule now, without waiting for February 3.
+struct ThankYouPreviewToggle: View {
+    @State private var phase = WeddingPhase.shared
+
+    var body: some View {
+        @Bindable var phase = phase
+
+        Toggle(isOn: $phase.isPreviewingThankYou) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Preview post-wedding mode")
+                    .font(BrandLabel.font(size: 11, weight: .semibold))
+                    .tracking(1)
+                    .textCase(.uppercase)
+                    .foregroundStyle(BrandPalette.body)
+                Text("Only on this phone. Starts for everyone Feb 3, noon.")
+                    .font(BrandLabel.font(size: 10, weight: .regular))
+                    .foregroundStyle(BrandPalette.body.opacity(0.7))
+            }
+        }
+        .tint(BrandPalette.goldDeep)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(BrandPalette.hairline, lineWidth: 1)
+        )
+        .onChange(of: phase.isPreviewingThankYou) { _, _ in BrandHaptics.tick() }
+    }
+}
+
 /// A soft line shown in place of content that couldn't load.
 struct AdminNote: View {
     let text: String

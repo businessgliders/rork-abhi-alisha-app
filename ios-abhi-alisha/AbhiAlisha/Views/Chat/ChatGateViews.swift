@@ -135,6 +135,9 @@ struct FamilyGateCard: View {
 
 /// "What should everyone call you?" — the only thing a guest needs for Questions & Chat.
 struct GuestNameSheet: View {
+    var eyebrow: String = "Questions & Chat"
+    var detail: String = "Your name appears beside your messages. That's all we need, no account or password."
+    var actionTitle: String = "Join the chat"
     /// Called once the guest is in, before the sheet closes.
     let onJoined: () -> Void
 
@@ -147,7 +150,7 @@ struct GuestNameSheet: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                Eyebrow(text: "Questions & Chat")
+                Eyebrow(text: eyebrow)
 
                 Text("What should everyone call you?")
                     .brandFont(.eventTitle)
@@ -158,7 +161,7 @@ struct GuestNameSheet: View {
                 GoldRule(width: 44, alignment: .leading)
                     .padding(.top, 14)
 
-                Text("Your name appears beside your messages. That's all we need, no account or password.")
+                Text(detail)
                     .brandFont(.bodyItalic)
                     .foregroundStyle(BrandPalette.body)
                     .fixedSize(horizontal: false, vertical: true)
@@ -168,7 +171,7 @@ struct GuestNameSheet: View {
                     .padding(.top, 24)
 
                 if didFail {
-                    Text("We couldn't open the chat just now. Please check your connection and try again.")
+                    Text("We couldn't connect just now. Please check your connection and try again.")
                         .brandFont(.bodySmall)
                         .foregroundStyle(BrandPalette.body)
                         .padding(.top, 12)
@@ -176,7 +179,7 @@ struct GuestNameSheet: View {
                 }
 
                 GoldActionButton(
-                    title: "Join the chat",
+                    title: actionTitle,
                     isBusy: session.isJoiningAsGuest,
                     isEnabled: ChatJSON.clean(name) != nil,
                     action: join

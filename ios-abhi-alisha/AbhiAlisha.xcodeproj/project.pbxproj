@@ -693,7 +693,9 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "Update the wedding celebrations you added to your calendar when their times change.";
 				INFOPLIST_KEY_NSCalendarsWriteOnlyAccessUsageDescription = "Add wedding celebrations to your own calendar so you never miss one.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Photograph your outfits for each wedding celebration. Only you can see them.";
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_NSSupportsLiveActivitiesFrequentUpdates = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -730,7 +732,9 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "Update the wedding celebrations you added to your calendar when their times change.";
 				INFOPLIST_KEY_NSCalendarsWriteOnlyAccessUsageDescription = "Add wedding celebrations to your own calendar so you never miss one.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Photograph your outfits for each wedding celebration. Only you can see them.";
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_NSSupportsLiveActivitiesFrequentUpdates = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;

@@ -15,6 +15,7 @@ struct ConversationListView: View {
     @State private var isAskingName = false
     @State private var isConfirmingSignOut = false
     @State private var isConfirmingDelete = false
+    @State private var isShowingOutfits = false
 
     var body: some View {
         ScrollView {
@@ -60,6 +61,9 @@ struct ConversationListView: View {
             }
         }
         .chatAccountDialogs(isConfirmingSignOut: $isConfirmingSignOut, isConfirmingDelete: $isConfirmingDelete)
+        .fullScreenCover(isPresented: $isShowingOutfits) {
+            MyOutfitsView()
+        }
         .task {
             async let feed: Void = updates.refreshIfNeeded()
             async let chats: Void = store.refreshAll()
@@ -95,6 +99,13 @@ struct ConversationListView: View {
                     } label: {
                         Label(reportsTitle, systemImage: "flag")
                     }
+                }
+            }
+            Section {
+                Button {
+                    isShowingOutfits = true
+                } label: {
+                    Label("My Outfits", systemImage: "hanger")
                 }
             }
             Section {

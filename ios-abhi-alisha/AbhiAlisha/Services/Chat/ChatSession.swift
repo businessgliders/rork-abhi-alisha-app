@@ -481,6 +481,7 @@ final class ChatSession {
         ChatOutbox.shared.reset()
         await ChatStore.shared.reset()
         ChatCache.wipeAll()
+        OutfitStore.shared.reset()
     }
 
     // MARK: - Helpers

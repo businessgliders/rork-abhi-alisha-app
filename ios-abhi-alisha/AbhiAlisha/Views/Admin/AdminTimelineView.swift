@@ -41,8 +41,11 @@ struct AdminTimelineView: View {
                     .padding(.top, 24)
                 }
 
-                AdminLockFooter()
+                ThankYouPreviewToggle()
                     .padding(.top, 30)
+
+                AdminLockFooter()
+                    .padding(.top, 10)
             }
             .padding(.horizontal, 22)
             .padding(.bottom, FloatingTabBar.contentReserve + 20)
