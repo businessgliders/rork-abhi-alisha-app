@@ -44,6 +44,7 @@ struct ChatThreadView: View {
     @State private var isConfirmingLeave = false
     @State private var isShowingMembers = false
     @State private var sendTick = 0
+    @State private var isShowingGuidelines = false
     @FocusState private var isComposerFocused: Bool
     @Environment(\.dismiss) private var dismiss
 
@@ -136,6 +137,11 @@ struct ChatThreadView: View {
         }
         .sheet(isPresented: $isShowingMembers) {
             GroupMembersSheet(conversationID: conversationID)
+        }
+        .sheet(isPresented: $isShowingGuidelines) {
+            CommunityGuidelinesSheet {
+                send()
+            }
         }
     }
 
@@ -549,6 +555,12 @@ struct ChatThreadView: View {
 
     private func send() {
         guard let text = ChatJSON.clean(draft) else { return }
+        // The first post on this phone waits for the guidelines; the draft stays put.
+        guard CommunityGuidelines.isAccepted else {
+            isComposerFocused = false
+            isShowingGuidelines = true
+            return
+        }
         sendTick += 1
         draft = ""
         withAnimation(.calm) {
@@ -567,7 +579,7 @@ struct ChatThreadView: View {
         BrandHaptics.soft()
         Task {
             let done = await store.report(message)
-            showToast(done ? "Thank you. Abhi & Alisha will take a look." : "That report couldn't be sent just now.")
+            showToast(done ? "Thanks — the organizers will review this within 24 hours." : "That report couldn't be sent just now.")
         }
     }
 

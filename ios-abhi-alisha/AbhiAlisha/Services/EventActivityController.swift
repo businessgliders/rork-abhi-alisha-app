@@ -48,7 +48,19 @@ final class EventActivityController {
     func sync(events: [ScheduleEvent], at now: Date) async {
         guard areActivitiesEnabled else { return }
 
-        let live = Activity<EventFollowAttributes>.activities
+        var live = Activity<EventFollowAttributes>.activities
+
+        // The server and the app may both have raised the same celebration at the same
+        // moment; keep one and quietly put away the rest.
+        var seen: Set<String> = []
+        for activity in live {
+            if seen.contains(activity.attributes.eventID) {
+                await activity.end(nil, dismissalPolicy: .immediate)
+            } else {
+                seen.insert(activity.attributes.eventID)
+            }
+        }
+        live = Activity<EventFollowAttributes>.activities
         let liveIDs = Set(live.map(\.attributes.eventID))
 
         for activity in live {
@@ -80,17 +92,22 @@ final class EventActivityController {
         let attributes = EventFollowAttributes(event: event, startsAt: startsAt)
         let state = EventFollowAttributes.ContentState(phase: now >= startsAt ? .now : .soon)
 
+        let content = ActivityContent(state: state, staleDate: attributes.conclusion)
         do {
-            _ = try Activity.request(
-                attributes: attributes,
-                content: ActivityContent(state: state, staleDate: attributes.conclusion),
-                pushType: nil
-            )
+            // With a push token, the couple's server can move it to "Happening now" and
+            // retire it even while the app is closed.
+            _ = try Activity.request(attributes: attributes, content: content, pushType: .token)
             refreshFollowedIDs()
             return true
         } catch {
-            print("[EventActivityController] could not follow event: \(error.localizedDescription)")
-            return false
+            do {
+                _ = try Activity.request(attributes: attributes, content: content, pushType: nil)
+                refreshFollowedIDs()
+                return true
+            } catch {
+                print("[EventActivityController] could not follow event: \(error.localizedDescription)")
+                return false
+            }
         }
     }
 

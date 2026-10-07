@@ -45,14 +45,6 @@ struct OutfitLookView: View {
         .scrollIndicators(.hidden)
         .background(BrandPalette.background.ignoresSafeArea())
         .navigationBarTitleDisplayMode(.inline)
-        .confirmationDialog(sourceTitle, isPresented: $isChoosingSource, titleVisibility: .visible) {
-            Button("Take Photo") { isShowingCamera = true }
-            Button("Choose from Library") {
-                libraryPicks = []
-                isShowingLibrary = true
-            }
-            Button("Cancel", role: .cancel) { target = nil }
-        }
         .photosPicker(
             isPresented: $isShowingLibrary,
             selection: $libraryPicks,
@@ -245,12 +237,38 @@ struct OutfitLookView: View {
                         onNote: { noteItem = $0 },
                         onDelete: { deletingItem = $0 }
                     )
+                    // Attached to the slot itself, so on iPad the choice opens as a bubble
+                    // pointing at the box that was tapped; on iPhone it rises from the bottom.
+                    .confirmationDialog(sourceTitle, isPresented: sourceBinding(for: category), titleVisibility: .visible) {
+                        Button("Take Photo") { isShowingCamera = true }
+                        Button("Choose from Library") {
+                            libraryPicks = []
+                            isShowingLibrary = true
+                        }
+                        Button("Cancel", role: .cancel) { target = nil }
+                    }
                 }
             }
         }
     }
 
     // MARK: - Actions
+
+    /// The slot the next photo belongs to.
+    private var targetCategory: OutfitCategory? {
+        switch target {
+        case .add(let category): return category
+        case .replace(let item): return item.kind ?? .outfit
+        case .none: return nil
+        }
+    }
+
+    private func sourceBinding(for category: OutfitCategory) -> Binding<Bool> {
+        Binding(
+            get: { isChoosingSource && targetCategory == category },
+            set: { if !$0 { isChoosingSource = false } }
+        )
+    }
 
     private var isReplacing: Bool {
         if case .replace = target { return true }

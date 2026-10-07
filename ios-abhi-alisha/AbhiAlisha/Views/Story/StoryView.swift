@@ -50,8 +50,23 @@ struct StoryView: View {
                         FamilyRoster(members: content.familyMembers)
                             .transition(.opacity)
                     case .gallery:
-                        GallerySection(pageMargin: 22)
-                            .transition(.opacity)
+                        VStack(alignment: .leading, spacing: 0) {
+                            WeddingWeekSection()
+
+                            VStack(alignment: .leading, spacing: 4) {
+                                GoldRule(width: 44, alignment: .leading)
+                                Eyebrow(text: "From Abhi & Alisha", size: 10)
+                                    .padding(.top, 14)
+                                Text("The Gallery")
+                                    .brandFont(.eventTitle)
+                                    .foregroundStyle(BrandPalette.ink)
+                            }
+                            .padding(.top, 44)
+                            .padding(.bottom, 18)
+
+                            GallerySection(pageMargin: 22)
+                        }
+                        .transition(.opacity)
                     }
                 }
                 .animation(.softFade, value: section)

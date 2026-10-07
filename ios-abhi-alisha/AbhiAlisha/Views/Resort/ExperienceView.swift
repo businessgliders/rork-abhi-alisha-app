@@ -1,10 +1,10 @@
 import SwiftUI
 
-/// "Experience": the guest's own week first (their looks, how the app keeps them posted,
+/// "My Experience": the guest's own week first (their looks, how the app keeps them posted,
 /// and every answered question), then AVA Resort Cancún itself: photographs, both maps
 /// and what's there.
 struct ExperienceView: View {
-    /// True while the Experience tab is the one on screen.
+    /// True while the My Experience tab is the one on screen.
     var isActive = true
 
     @Environment(ContentStore.self) private var content
@@ -103,7 +103,7 @@ struct ExperienceView: View {
         VStack(alignment: .leading, spacing: 6) {
             Eyebrow(text: "Your wedding week")
 
-            Text("Experience")
+            Text("My Experience")
                 .brandFont(.screenTitle)
                 .foregroundStyle(BrandPalette.ink)
 

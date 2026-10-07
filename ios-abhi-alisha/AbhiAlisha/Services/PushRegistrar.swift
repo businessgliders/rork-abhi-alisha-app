@@ -5,9 +5,9 @@ import UserNotifications
 
 /// Wedding updates: when to ask, and telling the couple's backend where to reach this phone.
 ///
-/// Permission is never asked on first launch. The explainer rises on the second launch,
-/// or whenever the guest taps "Notify me about updates", and the system prompt only
-/// follows once they've read why. The device token is sent to `registerDevice` whenever
+/// On the very first open, once the names finish writing themselves on Home, a short gold
+/// card asks to turn on schedule updates; the system prompt only follows a tap on
+/// "Turn on". The fuller explainer still opens whenever the guest taps "Notify me". The device token is sent to `registerDevice` whenever
 /// it (or the guest's name) differs from what was last sent, and failures stay silent.
 @Observable
 final class PushRegistrar {
@@ -15,6 +15,8 @@ final class PushRegistrar {
 
     private(set) var status: UNAuthorizationStatus = .notDetermined
     var isExplainerPresented = false
+    /// The compact first-open card.
+    var isFirstOpenCardPresented = false
 
     private var deviceToken: String?
     private var isSending = false
@@ -51,12 +53,13 @@ final class PushRegistrar {
                 return
             }
             guard status == .notDetermined,
-                  launches >= 2,
+                  launches >= 1,
                   !defaults.bool(forKey: Key.didOfferOnLaunch) else { return }
             // Let the names finish writing themselves across the hero first.
             try? await Task.sleep(for: .seconds(3.6))
+            guard status == .notDetermined, !isExplainerPresented else { return }
             defaults.set(true, forKey: Key.didOfferOnLaunch)
-            isExplainerPresented = true
+            isFirstOpenCardPresented = true
         }
     }
 

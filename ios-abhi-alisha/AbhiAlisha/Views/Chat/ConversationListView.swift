@@ -1,10 +1,10 @@
 import SwiftUI
 
-/// The Chat tab. Two channels everyone shares sit at the top: Announcements (read-only,
-/// no sign-in) and Questions & Chat (just a name). Below them, the family chat: an
-/// invitation to sign in with Apple, a waiting note, or the family's conversations with
-/// the family room pinned first. Everything opens from the phone's saved copy, then
-/// refreshes quietly.
+/// The Chat tab, guests first. Two large cards everyone shares sit at the top:
+/// Announcements (read-only, no sign-in) and Questions & Chat (just a name). Below them,
+/// a quiet "Start a family chat" button that asks for Sign in with Apple only when
+/// tapped; or, for family, a waiting note or the family's conversations with the family
+/// room pinned first. Everything opens from the phone's saved copy, then refreshes quietly.
 struct ConversationListView: View {
     @Binding var path: [ChatRoute]
 
@@ -16,6 +16,7 @@ struct ConversationListView: View {
     @State private var isConfirmingSignOut = false
     @State private var isConfirmingDelete = false
     @State private var isShowingOutfits = false
+    @State private var isShowingFamilySignIn = false
 
     var body: some View {
         ScrollView {
@@ -59,6 +60,9 @@ struct ConversationListView: View {
             GuestNameSheet {
                 path.append(.openChannel)
             }
+        }
+        .sheet(isPresented: $isShowingFamilySignIn) {
+            FamilySignInSheet()
         }
         .chatAccountDialogs(isConfirmingSignOut: $isConfirmingSignOut, isConfirmingDelete: $isConfirmingDelete)
         .fullScreenCover(isPresented: $isShowingOutfits) {
@@ -220,7 +224,7 @@ struct ConversationListView: View {
     // MARK: - Shared channels
 
     private var channels: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 12) {
             Eyebrow(text: "For every guest", size: 9.5)
                 .padding(.leading, 4)
                 .padding(.bottom, 2)
@@ -289,7 +293,7 @@ struct ConversationListView: View {
             if session.phase == .loading && !session.isSignedIn {
                 EmptyView()
             } else {
-                FamilyInviteCard()
+                StartFamilyChatButton { isShowingFamilySignIn = true }
                     .transition(.opacity)
             }
         } else {
@@ -301,7 +305,7 @@ struct ConversationListView: View {
             case .blocked:
                 FamilyGateCard(kind: .unavailable)
             case .signedOut:
-                FamilyInviteCard()
+                StartFamilyChatButton { isShowingFamilySignIn = true }
             case .approved:
                 VStack(alignment: .leading, spacing: 0) {
                     Eyebrow(text: "The family", size: 9.5)
@@ -373,7 +377,7 @@ struct ConversationListView: View {
     }
 }
 
-/// One of the two shared channels, in the same shape as a conversation row.
+/// One of the two shared channels: a large card, front and centre for every guest.
 private struct ChannelRow: View {
     let badge: ChannelBadge.Kind
     let title: String
@@ -384,10 +388,10 @@ private struct ChannelRow: View {
     let isHighlighted: Bool
 
     var body: some View {
-        HStack(spacing: 12) {
-            ChannelBadge(kind: badge, size: 48)
+        HStack(alignment: .top, spacing: 14) {
+            ChannelBadge(kind: badge, size: 56)
 
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: 6) {
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
                     Text(title)
                         .brandFont(.chatName)
@@ -412,33 +416,134 @@ private struct ChannelRow: View {
                     }
                 }
 
-                HStack(alignment: .center, spacing: 8) {
+                HStack(alignment: .top, spacing: 8) {
                     Text(preview)
                         .brandFont(.chatPreview)
                         .foregroundStyle(isUnread ? BrandPalette.ink : BrandPalette.body)
-                        .lineLimit(1)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
                         .frame(maxWidth: .infinity, alignment: .leading)
 
                     if isUnread {
                         UnreadDot()
+                            .padding(.top, 6)
                             .transition(.scale.combined(with: .opacity))
                     }
                 }
+
+                HStack(spacing: 6) {
+                    Text(badge == .announcements ? "Read the latest" : "Open the chat")
+                        .font(BrandLabel.font(size: 10.5, weight: .semibold))
+                        .tracking(1.3)
+                        .textCase(.uppercase)
+                    Image(systemName: "arrow.right")
+                        .font(.system(size: 9.5, weight: .semibold))
+                }
+                .foregroundStyle(BrandPalette.goldDeep)
+                .padding(.top, 6)
             }
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 12)
+        .padding(.horizontal, 18)
+        .padding(.vertical, 18)
+        .frame(maxWidth: .infinity, minHeight: 128, alignment: .topLeading)
         .background(
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
                 .fill(isHighlighted ? AnyShapeStyle(BrandPalette.gold.opacity(0.1)) : AnyShapeStyle(BrandPalette.card))
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
                 .stroke(BrandPalette.gold.opacity(isHighlighted ? 0.5 : 0.3), lineWidth: 1)
         )
+        .shadow(color: Color.black.opacity(0.04), radius: 14, x: 0, y: 6)
         .animation(.calm, value: isUnread)
         .accessibilityElement(children: .combine)
         .accessibilityValue(isUnread ? "Unread" : "")
+    }
+}
+
+/// The one quiet way into the family chat for guests: a slim button and a single line.
+private struct StartFamilyChatButton: View {
+    let action: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Button {
+                BrandHaptics.soft()
+                action()
+            } label: {
+                HStack(spacing: 12) {
+                    Image(systemName: "person.2")
+                        .symbolVariant(.none)
+                        .font(.system(size: 15, weight: .light))
+                        .frame(width: 34, height: 34)
+                        .overlay(Circle().stroke(BrandPalette.gold.opacity(0.45), lineWidth: 1))
+                    Text("Start a family chat")
+                        .font(BrandLabel.font(size: 12, weight: .semibold))
+                        .tracking(1.4)
+                        .textCase(.uppercase)
+                    Spacer(minLength: 0)
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 11, weight: .light))
+                }
+                .foregroundStyle(BrandPalette.goldDeep)
+                .padding(.horizontal, 14)
+                .frame(minHeight: 58)
+                .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(BrandPalette.card))
+                .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(BrandPalette.hairline, lineWidth: 1))
+            }
+            .buttonStyle(PressableStyle())
+            .accessibilityHint("For family. Asks you to sign in with Apple.")
+
+            Text("For family: a private room, small groups and one-to-one chats.")
+                .brandFont(.bodySmall)
+                .foregroundStyle(BrandPalette.body.opacity(0.85))
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, 6)
+        }
+    }
+}
+
+/// Explains that Abhi & Alisha welcome each family member in, with Sign in with Apple
+/// underneath. Closes itself once the sign-in has gone through.
+private struct FamilySignInSheet: View {
+    @State private var session = ChatSession.shared
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 0) {
+                FamilyInviteCard()
+
+                Button("Not now") {
+                    BrandHaptics.tick()
+                    dismiss()
+                }
+                .font(BrandLabel.font(size: 11, weight: .semibold))
+                .tracking(1.2)
+                .textCase(.uppercase)
+                .foregroundStyle(BrandPalette.body.opacity(0.8))
+                .frame(maxWidth: .infinity, minHeight: 44)
+                .padding(.top, 10)
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 26)
+            .padding(.bottom, 20)
+            .readableWidth(480)
+        }
+        .scrollIndicators(.hidden)
+        .background(BrandPalette.background.ignoresSafeArea())
+        .presentationDetents([.medium, .large])
+        .presentationContentInteraction(.scrolls)
+        .presentationDragIndicator(.visible)
+        .onChange(of: session.isAnonymous) { _, _ in closeIfSignedIn() }
+        .onChange(of: session.userID) { _, _ in closeIfSignedIn() }
+    }
+
+    private func closeIfSignedIn() {
+        guard session.isSignedIn, !session.isAnonymous else { return }
+        BrandHaptics.tick()
+        dismiss()
     }
 }
 

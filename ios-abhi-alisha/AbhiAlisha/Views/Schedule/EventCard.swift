@@ -5,11 +5,17 @@ import SwiftUI
 ///
 /// In `fillsHeight` mode the card takes the space the schedule screen gives it and
 /// long descriptions scroll inside; the title, chips and location never move.
+///
+/// With `showsAttirePreview` (iPad portrait, where the card is tall), the description
+/// takes only the room it needs and the couple's attire photos fill the rest.
 struct EventCard: View {
     let event: ScheduleEvent
     var weather: DayWeather?
     var fillsHeight = false
+    var showsAttirePreview = false
     var onOpenDetails: (() -> Void)?
+
+    @State private var descriptionHeight: CGFloat = 0
 
     var body: some View {
         EmbossedPaperCard(cornerRadius: 26) {
@@ -29,6 +35,11 @@ struct EventCard: View {
 
                 chips
                     .padding(.top, 16)
+
+                if showsAttirePreview {
+                    CardAttirePreview(event: event, onTap: openDetails)
+                        .padding(.top, 22)
+                }
 
                 if event.locationName != nil || event.displayTime != nil {
                     whereAndWhen
@@ -89,7 +100,18 @@ struct EventCard: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-            if fillsHeight {
+            if fillsHeight && showsAttirePreview {
+                // Only as tall as the copy, and first to claim space; it still scrolls if
+                // the copy outgrows the card.
+                ScrollView(.vertical) {
+                    text
+                        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { descriptionHeight = $0 }
+                }
+                .scrollIndicators(.hidden)
+                .scrollBounceBehavior(.basedOnSize)
+                .frame(minHeight: 0, maxHeight: max(descriptionHeight, 1), alignment: .top)
+                .layoutPriority(1)
+            } else if fillsHeight {
                 ScrollView(.vertical) {
                     text
                 }
@@ -187,6 +209,79 @@ struct EventCard: View {
         guard let onOpenDetails else { return }
         BrandHaptics.soft()
         onOpenDetails()
+    }
+}
+
+// MARK: - Attire preview
+
+extension ScheduleEvent {
+    /// The couple's outfit suggestion photographs that can actually be shown.
+    var attirePhotos: [OutfitPhoto] {
+        (outfitPhotos ?? []).filter { $0.imageURL != nil || $0.lightboxURL != nil }
+    }
+}
+
+/// On a tall card: up to four of the couple's attire photographs in a row, with the
+/// guest's own look progress beside the heading. Either opens the details.
+private struct CardAttirePreview: View {
+    let event: ScheduleEvent
+    let onTap: () -> Void
+
+    @State private var outfits = OutfitStore.shared
+
+    private var photos: [OutfitPhoto] { Array(event.attirePhotos.prefix(4)) }
+
+    var body: some View {
+        Button(action: onTap) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(alignment: .center, spacing: 10) {
+                    Eyebrow(text: "Attire inspiration", color: BrandPalette.gold.opacity(0.8), size: 9.5)
+                    Spacer(minLength: 8)
+                    if !event.isFarewell {
+                        progress
+                    }
+                }
+
+                HStack(spacing: 8) {
+                    ForEach(photos) { photo in
+                        BrandPalette.hairline.opacity(0.7)
+                            .aspectRatio(0.78, contentMode: .fit)
+                            .overlay {
+                                RemoteImage(url: URL(string: photo.imageURL ?? photo.lightboxURL ?? ""), contentMode: .fill)
+                                    .allowsHitTesting(false)
+                            }
+                            .clipShape(.rect(cornerRadius: 14))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                    .stroke(BrandPalette.gold.opacity(0.25), lineWidth: 0.75)
+                            )
+                    }
+                }
+                .frame(maxWidth: .infinity, maxHeight: 360, alignment: .leading)
+            }
+            .frame(maxHeight: .infinity, alignment: .center)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(PressableStyle())
+        .accessibilityLabel("Attire inspiration and my outfit")
+        .accessibilityHint("Opens the event details")
+    }
+
+    private var progress: some View {
+        let filled = outfits.filledSlots(for: event.id)
+        return HStack(spacing: 7) {
+            OutfitProgressRing(filled: filled, size: 22, lineWidth: 2, showsCount: false)
+            Text(filled == 0 ? "Plan my outfit" : "My outfit · \(filled) of 4 added")
+                .font(BrandLabel.font(size: 10.5, weight: .medium))
+                .tracking(0.4)
+                .foregroundStyle(BrandPalette.body)
+                .lineLimit(1)
+        }
+        .padding(.leading, 6)
+        .padding(.trailing, 11)
+        .padding(.vertical, 5)
+        .background(Capsule(style: .continuous).fill(BrandPalette.background.opacity(0.55)))
+        .overlay(Capsule(style: .continuous).stroke(BrandPalette.hairline, lineWidth: 0.75))
     }
 }
 

@@ -22,7 +22,16 @@ struct ScheduleView: View {
     @State private var calendarMessage: String?
     @State private var messageTask: Task<Void, Never>?
     @State private var isShowingCalendarTip = false
+    @State private var containerSize: CGSize = .zero
+    @State private var calendarIconX: CGFloat = 0
+    @State private var calendarButtonWidth: CGFloat = 0
     @AppStorage("schedule.calendarTipSeen") private var hasSeenCalendarTip = false
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
+    /// iPad held upright: a tall card with room to spare below the description.
+    private var isTallLayout: Bool {
+        horizontalSizeClass == .regular && containerSize.height > containerSize.width * 1.1
+    }
 
     /// After the wedding the Schedule reads as a keepsake: muted, nothing to add.
     private var isPast: Bool { phase.isThankYou(at: store.now) }
@@ -46,14 +55,6 @@ struct ScheduleView: View {
                 if !isPast {
                     calendarControl
                         .padding(.top, 10)
-                        .overlay(alignment: .bottom) {
-                            if isShowingCalendarTip {
-                                CalendarTip(onDismiss: dismissCalendarTip)
-                                    .alignmentGuide(.bottom) { $0[.top] - 4 }
-                                    .transition(.opacity.combined(with: .scale(scale: 0.92, anchor: .top)))
-                                    .zIndex(5)
-                            }
-                        }
                         .zIndex(5)
                 }
 
@@ -79,6 +80,7 @@ struct ScheduleView: View {
         .readableWidth()
         .crestCorner()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .onGeometryChange(for: CGSize.self) { $0.size } action: { containerSize = $0 }
         .background(BrandPalette.background.ignoresSafeArea())
         .sheet(item: $detailEvent) { event in
             EventDetailSheet(event: event, weather: weatherByEvent[event.id])
@@ -140,6 +142,9 @@ struct ScheduleView: View {
                     } else {
                         Image(systemName: isAdded ? "checkmark" : "calendar.badge.plus")
                             .font(.system(size: 12, weight: .regular))
+                            .onGeometryChange(for: CGFloat.self) {
+                                $0.frame(in: .named(Self.calendarSpace)).midX
+                            } action: { calendarIconX = $0 }
                     }
                     Text(isAdded ? "Added to Calendar" : "Add all to Calendar")
                         .font(BrandLabel.font(size: 11, weight: .semibold))
@@ -170,6 +175,21 @@ struct ScheduleView: View {
             .buttonStyle(PressableStyle())
             .disabled(calendar.isAddingAll)
             .accessibilityHint(isAdded ? "Tap to update your calendar" : "Adds every celebration with an alert an hour before")
+            .coordinateSpace(.named(Self.calendarSpace))
+            .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { calendarButtonWidth = $0 }
+            // The tip hangs from the button itself: the arrow's point touches its lower
+            // edge, directly beneath the calendar glyph.
+            .overlay(alignment: .bottom) {
+                if isShowingCalendarTip {
+                    CalendarTip(
+                        arrowOffset: calendarIconX - calendarButtonWidth / 2,
+                        onDismiss: dismissCalendarTip
+                    )
+                    .alignmentGuide(.bottom) { $0[.top] + 1 }
+                    .transition(.opacity.combined(with: .scale(scale: 0.92, anchor: .top)))
+                }
+            }
+            .zIndex(2)
 
             if let calendarMessage {
                 Text(calendarMessage)
@@ -222,17 +242,20 @@ struct ScheduleView: View {
         }
     }
 
+    /// On a tall iPad page, a card with attire photos fills the space and shows them;
+    /// one without simply fits its content and sits centred. Elsewhere it always fills.
+    private func cardFills(_ event: ScheduleEvent) -> Bool {
+        !isTallLayout || !event.attirePhotos.isEmpty
+    }
+
     private var cardCarousel: some View {
         ZStack {
             if let event = selectedEvent {
-                StackedPaperBacking(
-                    sheetsBehind: min(2, max(events.count - selectedIndex - 1, 0))
-                )
-
                 EventCard(
                     event: event,
                     weather: weatherByEvent[event.id],
-                    fillsHeight: true,
+                    fillsHeight: cardFills(event),
+                    showsAttirePreview: isTallLayout && !event.attirePhotos.isEmpty,
                     onOpenDetails: { detailEvent = event }
                 )
                 .id(event.id)
@@ -245,7 +268,16 @@ struct ScheduleView: View {
                 )
             }
         }
+        // The pile of sheets behind always matches the card on top, tall or short.
+        .background {
+            if selectedEvent != nil {
+                StackedPaperBacking(
+                    sheetsBehind: min(2, max(events.count - selectedIndex - 1, 0))
+                )
+            }
+        }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .animation(.calm, value: isTallLayout)
         .offset(x: dragOffset)
         .gesture(
             DragGesture(minimumDistance: 20)
@@ -314,6 +346,8 @@ struct ScheduleView: View {
         }
         .frame(maxWidth: .infinity)
     }
+
+    nonisolated private static let calendarSpace = "schedule.calendarButton"
 
     // MARK: - Selection
 

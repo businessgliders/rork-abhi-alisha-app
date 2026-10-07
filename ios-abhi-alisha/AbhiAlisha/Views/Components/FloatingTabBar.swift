@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// The five sections of the app. The "story" tab is titled Gallery (with Our Family and
-/// Our Story inside); "resort" is titled Experience. Raw values stay for deep links.
+/// Our Story inside); "resort" is titled My Experience. Raw values stay for deep links.
 enum AppTab: String, CaseIterable, Hashable, Identifiable {
     case home
     case schedule
@@ -17,7 +17,7 @@ enum AppTab: String, CaseIterable, Hashable, Identifiable {
         case .schedule: return "Schedule"
         case .chat: return "Chat"
         case .story: return "Gallery"
-        case .resort: return "Experience"
+        case .resort: return "My Experience"
         }
     }
 
@@ -92,7 +92,7 @@ struct FloatingTabBar: View {
                 .tracking(0.9)
                 .foregroundStyle(isSelected ? BrandPalette.goldDeep : BrandPalette.tabInactive)
                 .lineLimit(1)
-                .minimumScaleFactor(0.85)
+                .minimumScaleFactor(0.68)
         }
         .frame(maxWidth: .infinity)
         .frame(height: Self.barHeight)

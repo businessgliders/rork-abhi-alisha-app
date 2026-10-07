@@ -60,6 +60,14 @@ struct ContentView: View {
             }
         }
         .animation(.calm, value: admin.isPromptPresented)
+        .overlay(alignment: .bottom) {
+            if push.isFirstOpenCardPresented {
+                FirstOpenUpdatesCard()
+                    .padding(.bottom, FloatingTabBar.contentReserve - 4)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(.calm, value: push.isFirstOpenCardPresented)
         .sheet(isPresented: $push.isExplainerPresented) {
             NotificationExplainerSheet()
                 .environment(push)
@@ -93,12 +101,15 @@ struct ContentView: View {
             if phase == .active {
                 push.applicationDidBecomeActive()
                 ChatSession.shared.applicationDidBecomeActive()
+                WeddingPhotoStore.shared.resumeUploads()
             }
         }
         .onAppear(perform: openPendingLanding)
         .task {
             ChatSession.shared.start()
             store.startClock()
+            LiveActivityRegistrar.shared.start()
+            WeddingPhotoStore.shared.resumeUploads()
             await content.refreshIfNeeded()
         }
     }

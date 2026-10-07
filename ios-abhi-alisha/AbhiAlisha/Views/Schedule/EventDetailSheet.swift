@@ -17,6 +17,9 @@ struct EventDetailSheet: View {
     @State private var followNotice: String?
     @State private var isShowingFullMap = false
     @State private var phase = WeddingPhase.shared
+    @State private var session = ChatSession.shared
+    @State private var photoStore = WeddingPhotoStore.shared
+    @State private var addSource: WeddingAddSource?
 
     var body: some View {
         NavigationStack {
@@ -71,6 +74,13 @@ struct EventDetailSheet: View {
                     }
                     .padding(.top, 34)
 
+                    if session.isAdmin, !event.isFarewell {
+                        section(title: "Wedding Week photos") {
+                            weddingPhotosAdmin
+                        }
+                        .padding(.top, 34)
+                    }
+
                     if canFollowLive {
                         followControl
                             .padding(.top, 34)
@@ -108,6 +118,8 @@ struct EventDetailSheet: View {
             }
         }
         .presentationDetents([.large])
+        // On iPad, a tall page that uses nearly the whole screen rather than a small form.
+        .presentationSizing(.page)
         .presentationContentInteraction(.scrolls)
         .fullScreenCover(item: $lightboxPhoto) { photo in
             OutfitLightbox(photo: photo)
@@ -115,6 +127,23 @@ struct EventDetailSheet: View {
         .fullScreenCover(isPresented: $isShowingFullMap) {
             ResortMapScreen(focusEventID: event.id, returnsToEventID: event.id)
         }
+        .weddingPhotoAdder(source: $addSource, originEventID: event.id)
+    }
+
+    /// For the couple: how many photos this celebration has, and a way to add more.
+    private var weddingPhotosAdmin: some View {
+        let count = photoStore.photos(for: event.id).count
+        return VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .center, spacing: 12) {
+                Text(count == 0 ? "No photos yet" : (count == 1 ? "1 photo" : "\(count) photos"))
+                    .brandFont(.bodyText)
+                    .foregroundStyle(BrandPalette.ink)
+                Spacer(minLength: 8)
+                AddWeddingPhotosButton(source: $addSource)
+            }
+            WeddingUploadProgress()
+        }
+        .animation(.calm, value: photoStore.isUploadingAnything)
     }
 
     // MARK: - Blocks

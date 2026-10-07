@@ -137,15 +137,23 @@ struct StackedPaperBacking: View {
 // MARK: - First-visit tip
 
 /// A small dark note hanging beneath "Add all to Calendar" on the first visit.
+/// `arrowOffset` slides the arrow from the note's centre so it sits under the button's
+/// calendar glyph rather than the middle of the note.
 struct CalendarTip: View {
+    var arrowOffset: CGFloat = 0
     let onDismiss: () -> Void
 
+    private static let maxWidth: CGFloat = 290
+
     var body: some View {
+        let limit = Self.maxWidth / 2 - 24
+
         Button(action: onDismiss) {
             VStack(spacing: 0) {
                 TipArrow()
                     .fill(BrandPalette.ink)
                     .frame(width: 16, height: 8)
+                    .offset(x: min(max(arrowOffset, -limit), limit))
 
                 HStack(spacing: 10) {
                     Image(systemName: "calendar.badge.plus")
@@ -169,7 +177,7 @@ struct CalendarTip: View {
                         .fill(BrandPalette.ink)
                 )
             }
-            .frame(maxWidth: 290)
+            .frame(maxWidth: Self.maxWidth)
             .shadow(color: Color.black.opacity(0.18), radius: 14, x: 0, y: 8)
         }
         .buttonStyle(PressableStyle())
