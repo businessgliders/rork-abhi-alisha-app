@@ -55,52 +55,178 @@ struct AddWeddingPhotosButton: View {
 
 // MARK: - Upload progress
 
-/// "Uploading 12 of 23", with a gold bar; it waits quietly while offline.
+/// The upload's honest story: how far along it is, what's waiting, and any photo that
+/// failed — each under a red edge, one tap from a retry or removal. It never sits
+/// silently at a percentage: sending, waiting, or finished with failures spelled out.
 struct WeddingUploadProgress: View {
     @State private var store = WeddingPhotoStore.shared
+    @State private var removalTarget: WeddingUploadJob?
 
     var body: some View {
-        if store.isUploadingAnything {
-            let total = max(store.runTotal, store.queue.count)
-            let done = store.uploadedInRun
-            VStack(alignment: .leading, spacing: 8) {
-                HStack(spacing: 8) {
-                    Image(systemName: store.isOnline ? "arrow.up.circle" : "wifi.slash")
-                        .font(.system(size: 12, weight: .regular))
-                        .foregroundStyle(BrandPalette.goldDeep)
-                    Text(store.isOnline
-                         ? "Uploading \(min(done + 1, total)) of \(total)"
-                         : "Waiting for a connection · \(done) of \(total) uploaded")
-                        .font(BrandLabel.font(size: 11.5, weight: .semibold))
-                        .foregroundStyle(BrandPalette.ink)
-                        .monospacedDigit()
-                        .contentTransition(.numericText())
-                    Spacer(minLength: 0)
+        if store.hasPendingWork {
+            VStack(alignment: .leading, spacing: 10) {
+                header
+
+                if store.hasActiveJobs {
+                    bar
                 }
 
-                GeometryReader { proxy in
-                    ZStack(alignment: .leading) {
-                        Capsule().fill(BrandPalette.hairline)
-                        Capsule()
-                            .fill(
-                                LinearGradient(
-                                    colors: [BrandPalette.goldPale, BrandPalette.gold, BrandPalette.goldDeep],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                            )
-                            .frame(width: max(8, proxy.size.width * CGFloat(done) / CGFloat(max(total, 1))))
-                    }
+                if !store.failedJobs.isEmpty {
+                    failedSection
                 }
-                .frame(height: 5)
-                .animation(.calm, value: done)
             }
             .padding(14)
             .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(BrandPalette.card))
             .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(BrandPalette.gold.opacity(0.35), lineWidth: 1))
             .transition(.opacity.combined(with: .move(edge: .top)))
-            .accessibilityElement(children: .combine)
+            .animation(.calm, value: store.queue)
+            .confirmationDialog(
+                removalTitle,
+                isPresented: Binding(
+                    get: { removalTarget != nil },
+                    set: { if !$0 { removalTarget = nil } }
+                ),
+                titleVisibility: .visible
+            ) {
+                Button("Retry upload") {
+                    if let target = removalTarget { store.retryFailed(target.id) }
+                    removalTarget = nil
+                }
+                Button("Remove photo", role: .destructive) {
+                    if let target = removalTarget { store.removeFailed(target.id) }
+                    removalTarget = nil
+                }
+                Button("Cancel", role: .cancel) { removalTarget = nil }
+            } message: {
+                Text("Retry gives it three fresh attempts. Remove discards it from this phone.")
+            }
+            .accessibilityElement(children: .contain)
         }
+    }
+
+    private var header: some View {
+        HStack(spacing: 8) {
+            Image(systemName: headerIcon)
+                .font(.system(size: 12, weight: .regular))
+                .foregroundStyle(store.hasActiveJobs ? BrandPalette.goldDeep : BrandPalette.overdue)
+            Text(headline)
+                .font(BrandLabel.font(size: 11.5, weight: .semibold))
+                .foregroundStyle(BrandPalette.ink)
+                .monospacedDigit()
+                .contentTransition(.numericText())
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
+        }
+        .accessibilityElement(children: .combine)
+    }
+
+    private var headerIcon: String {
+        store.hasActiveJobs ? (store.isOnline ? "arrow.up.circle" : "wifi.slash") : "exclamationmark.circle"
+    }
+
+    private var headline: String {
+        let total = max(store.runTotal, store.queue.count)
+        let done = store.uploadedInRun
+        let failed = store.failedJobs.count
+        let failedNote = failed == 0 ? "" : (failed == 1 ? " · 1 failed" : " · \(failed) failed")
+
+        if store.hasActiveJobs {
+            if store.isOnline {
+                return "Uploading \(min(done + 1, total)) of \(total)\(failedNote)"
+            }
+            return "Waiting for a connection · \(done) of \(total) uploaded\(failedNote)"
+        }
+        // Nothing left to send: the run ended with failures still on the table.
+        return failed == 1 ? "1 photo failed to upload" : "\(failed) photos failed to upload"
+    }
+
+    private var bar: some View {
+        let total = max(store.runTotal, store.queue.count)
+        let done = store.uploadedInRun
+
+        return GeometryReader { proxy in
+            ZStack(alignment: .leading) {
+                Capsule().fill(BrandPalette.hairline)
+                Capsule()
+                    .fill(
+                        LinearGradient(
+                            colors: [BrandPalette.goldPale, BrandPalette.gold, BrandPalette.goldDeep],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .frame(width: max(8, proxy.size.width * CGFloat(done) / CGFloat(max(total, 1))))
+            }
+        }
+        .frame(height: 5)
+        .animation(.calm, value: done)
+    }
+
+    private var failedSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Failed — tap to retry / remove")
+                .font(BrandLabel.font(size: 10.5, weight: .semibold))
+                .tracking(1.2)
+                .textCase(.uppercase)
+                .foregroundStyle(BrandPalette.overdue)
+
+            HStack(spacing: 8) {
+                ForEach(store.failedJobs) { job in
+                    FailedJobThumb(job: job) {
+                        BrandHaptics.tick()
+                        removalTarget = job
+                    }
+                }
+            }
+        }
+    }
+
+    private var removalTitle: String {
+        guard let target = removalTarget else { return "Failed upload" }
+        if let caption = target.caption { return caption }
+        if let takenAt = target.takenAt {
+            return takenAt.formatted(.dateTime.month(.abbreviated).day().hour().minute())
+        }
+        return "Failed upload"
+    }
+}
+
+/// A photo that spent every attempt: its thumbnail under a red edge, one tap from a retry.
+private struct FailedJobThumb: View {
+    let job: WeddingUploadJob
+    let action: () -> Void
+
+    @State private var image: UIImage?
+
+    var body: some View {
+        let shape = RoundedRectangle(cornerRadius: 12, style: .continuous)
+
+        Button(action: action) {
+            Color(BrandPalette.hairline)
+                .frame(width: 62, height: 62)
+                .overlay {
+                    if let image {
+                        Image(uiImage: image)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .allowsHitTesting(false)
+                    } else {
+                        Image(systemName: "photo")
+                            .font(.system(size: 16, weight: .light))
+                            .foregroundStyle(BrandPalette.body)
+                    }
+                }
+                .clipShape(shape)
+                .overlay(shape.stroke(BrandPalette.overdue, lineWidth: 2))
+                .contentShape(shape)
+        }
+        .buttonStyle(PressableStyle())
+        .task {
+            if let url = WeddingPhotoProcessor.stagedURL(job.thumbName) {
+                image = UIImage(contentsOfFile: url.path)
+            }
+        }
+        .accessibilityLabel("Upload failed. Shows retry and remove options.")
     }
 }
 

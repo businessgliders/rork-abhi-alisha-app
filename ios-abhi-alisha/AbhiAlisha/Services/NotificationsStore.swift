@@ -44,11 +44,17 @@ final class NotificationsStore {
 
     var latest: NotificationRecord? { records.first }
 
-    /// Something has arrived since the feed was last opened on this phone.
+    /// Something has arrived since the deck was last opened on this phone.
     var hasUnread: Bool {
-        guard let newest = records.first?.sentAt else { return false }
+        guard let newest = records.first else { return false }
+        return isUnread(newest)
+    }
+
+    /// True when this record arrived after the deck was last opened on this phone.
+    func isUnread(_ record: NotificationRecord) -> Bool {
+        guard let sentAt = record.sentAt else { return false }
         guard let lastOpenedAt else { return true }
-        return newest > lastOpenedAt.addingTimeInterval(0.5)
+        return sentAt > lastOpenedAt.addingTimeInterval(0.5)
     }
 
     /// Everything currently in the feed has now been seen.
@@ -58,13 +64,16 @@ final class NotificationsStore {
         defaults.set(stamp, forKey: Self.lastOpenedKey)
     }
 
-    /// Shows a just-sent announcement at the bottom of the feed straight away.
-    func addJustSent(title: String, body: String) {
+    /// Shows a just-sent announcement at the front of the deck straight away, keeping
+    /// where it opens so its button and colour are right before the server confirms.
+    func addJustSent(title: String, body: String, destination: AnnouncementDestination? = nil) {
         let record = NotificationRecord(
             id: "local-\(UUID().uuidString)",
             title: title,
             body: body,
-            sentAt: Date()
+            sentAt: Date(),
+            screen: destination?.screen,
+            eventID: destination?.eventID
         )
         justSent.append(record)
         markOpened()

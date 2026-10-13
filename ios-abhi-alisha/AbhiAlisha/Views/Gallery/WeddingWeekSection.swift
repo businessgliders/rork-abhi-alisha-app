@@ -60,7 +60,7 @@ struct WeddingWeekSection: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .animation(.calm, value: photoStore.isUploadingAnything)
+        .animation(.calm, value: photoStore.hasPendingWork)
         .weddingPhotoAdder(source: $addSource, originEventID: nil)
         .fullScreenCover(item: $viewer) { context in
             WeddingPhotoViewer(photos: context.photos, startIndex: context.index)

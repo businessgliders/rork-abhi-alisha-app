@@ -10,9 +10,11 @@ import UIKit
 ///
 /// The list is kept on the phone so the timeline opens instantly and offline, and
 /// thumbnails go through `ImageCache`, so anything seen once stays available. New
-/// photographs arrive live. Uploads are a queue saved to disk: each finished photo is
-/// removed from it, failures retry with a growing pause, nothing moves while offline,
-/// and whatever is left when the app closes carries on next time it opens.
+/// photographs arrive live. Uploads are a queue saved to disk: each photo gets three
+/// attempts with a time limit each, a photo that spends all three is set aside with a
+/// visible failed state (retry or remove) while the rest of the batch carries on,
+/// nothing moves while offline, and whatever is left when the app closes carries on
+/// next time it opens — failed photos included, until they are retried or removed.
 @Observable
 final class WeddingPhotoStore {
     static let shared = WeddingPhotoStore()
@@ -25,6 +27,9 @@ final class WeddingPhotoStore {
     private(set) var isOnline = true
     private(set) var busyIDs: Set<String> = []
     var notice: String?
+
+    /// One attempt's ceiling, so a stalled request can never hold the percentage still.
+    static let attemptTimeout: Duration = .seconds(90)
 
     private var channel: RealtimeChannelV2?
     private var listenTasks: [Task<Void, Never>] = []
@@ -50,7 +55,14 @@ final class WeddingPhotoStore {
         return [cover] + all.filter { $0.id != cover.id }
     }
 
-    var isUploadingAnything: Bool { !queue.isEmpty }
+    var isUploadingAnything: Bool { hasActiveJobs }
+    /// Photos still being sent, or waiting to be — failed ones are not among them.
+    var activeJobs: [WeddingUploadJob] { queue.filter { !$0.isFailed } }
+    /// Photos that spent every attempt and now wait for Retry or Remove.
+    var failedJobs: [WeddingUploadJob] { queue.filter(\.isFailed) }
+    var hasActiveJobs: Bool { queue.contains { !$0.isFailed } }
+    /// True while anything should stay on screen: sending, waiting, or failed.
+    var hasPendingWork: Bool { !queue.isEmpty }
     var uploadedInRun: Int { max(runTotal - queue.count, 0) }
 
     // MARK: - Refresh and live updates
@@ -162,17 +174,36 @@ final class WeddingPhotoStore {
             )
         }
         guard !jobs.isEmpty else { return }
-        if queue.isEmpty { runTotal = 0 }
+        // A failed photo left behind joins the new run, so the counts stay honest.
+        if !hasActiveJobs { runTotal = queue.count }
         runTotal += jobs.count
         withAnimation(.calm) { queue.append(contentsOf: jobs) }
         WeddingPhotoDisk.saveQueue(queue)
         resumeUploads()
     }
 
+    /// Gives a failed photo three fresh attempts and sends it on its way.
+    func retryFailed(_ jobID: UUID) {
+        guard let index = queue.firstIndex(where: { $0.id == jobID }) else { return }
+        queue[index].attempts = 0
+        queue[index].lastError = nil
+        WeddingPhotoDisk.saveQueue(queue)
+        resumeUploads()
+    }
+
+    /// Discards a failed photo and its staged files for good.
+    func removeFailed(_ jobID: UUID) {
+        guard let job = queue.first(where: { $0.id == jobID }) else { return }
+        withAnimation(.calm) { queue.removeAll { $0.id == jobID } }
+        WeddingPhotoDisk.saveQueue(queue)
+        WeddingPhotoProcessor.discard([job.fullName, job.thumbName])
+        if queue.isEmpty { runTotal = 0 }
+    }
+
     /// Called on launch, on return to the foreground, and when the connection returns.
     func resumeUploads() {
         startMonitoring()
-        guard !queue.isEmpty, !isUploading, isOnline else { return }
+        guard hasActiveJobs, !isUploading, isOnline else { return }
         guard ChatSession.shared.isAdmin else { return }
         isUploading = true
         beginBackgroundTime()
@@ -184,27 +215,29 @@ final class WeddingPhotoStore {
     }
 
     private func drain() async {
-        while let job = queue.first, isOnline {
-            let ok = await upload(job)
-            if ok {
-                withAnimation(.calm) { queue.removeFirst() }
+        while isOnline, hasActiveJobs, let index = queue.firstIndex(where: { !$0.isFailed }) {
+            let job = queue[index]
+            let outcome = await upload(job)
+            // The photo may have been retried or removed while it was in flight.
+            guard let current = queue.firstIndex(where: { $0.id == job.id }) else { continue }
+            if outcome.ok {
+                withAnimation(.calm) { queue.remove(at: current) }
                 WeddingPhotoDisk.saveQueue(queue)
                 WeddingPhotoProcessor.discard([job.fullName, job.thumbName])
             } else {
-                var failed = job
-                failed.attempts += 1
-                if failed.attempts >= 6 {
-                    // Set it aside at the back so one stubborn photo can't block the rest.
-                    queue.removeFirst()
-                    failed.attempts = 0
-                    queue.append(failed)
-                    WeddingPhotoDisk.saveQueue(queue)
-                    notice = "A photo is having trouble uploading. It will keep trying."
-                    try? await Task.sleep(for: .seconds(30))
+                var spent = queue[current]
+                spent.attempts += 1
+                spent.lastError = outcome.message
+                let gaveUp = spent.attempts >= WeddingUploadJob.maxAttempts
+                queue[current] = spent
+                WeddingPhotoDisk.saveQueue(queue)
+                if gaveUp {
+                    // Set it aside with a visible failed state; the rest of the batch carries on.
+                    BrandHaptics.soft()
+                    let reason = spent.lastError ?? "unknown reason"
+                    print("[WeddingWeek] gave up on a photo after \(spent.attempts) attempts: \(reason)")
                 } else {
-                    queue[0] = failed
-                    WeddingPhotoDisk.saveQueue(queue)
-                    try? await Task.sleep(for: .seconds(min(pow(2, Double(failed.attempts)), 30)))
+                    try? await Task.sleep(for: .seconds(min(pow(2, Double(spent.attempts)), 8)))
                 }
             }
         }
@@ -214,13 +247,25 @@ final class WeddingPhotoStore {
         }
     }
 
-    private func upload(_ job: WeddingUploadJob) async -> Bool {
+    /// Sends one photo, with a ceiling on how long a single attempt may take.
+    private func upload(_ job: WeddingUploadJob) async -> (ok: Bool, message: String?) {
+        let work = Task { await self.performUpload(job) }
+        let watchdog = Task {
+            try? await Task.sleep(for: Self.attemptTimeout)
+            work.cancel()
+        }
+        let outcome = await work.value
+        watchdog.cancel()
+        return outcome
+    }
+
+    private func performUpload(_ job: WeddingUploadJob) async -> (ok: Bool, message: String?) {
         guard let fullURL = WeddingPhotoProcessor.stagedURL(job.fullName),
               let thumbURL = WeddingPhotoProcessor.stagedURL(job.thumbName),
               let full = try? Data(contentsOf: fullURL),
               let thumb = try? Data(contentsOf: thumbURL) else {
             // The staged files are gone; there is nothing left to send.
-            return true
+            return (true, nil)
         }
         let bucket = client.storage.from(WeddingPhoto.bucket)
         let options = FileOptions(contentType: "image/jpeg", upsert: true)
@@ -248,11 +293,21 @@ final class WeddingPhotoStore {
                 .value
             ImageCache.shared.prefetch([row.thumbURL].compactMap { $0 })
             ingest(row)
-            return true
+            return (true, nil)
         } catch {
-            print("[WeddingWeek] upload will retry")
-            return false
+            let message = Self.describe(error, timedOut: Task.isCancelled)
+            // The server's own reason goes to the logs, so a stubborn photo can be diagnosed.
+            print("[WeddingWeek] upload attempt failed (job \(job.id.uuidString.prefix(8))): \(message)")
+            return (false, message)
         }
+    }
+
+    /// A short reason for the logs: the timeout that fired, or the error's own words.
+    private nonisolated static func describe(_ error: Error, timedOut: Bool) -> String {
+        if timedOut || error is CancellationError { return "timed out" }
+        let text = error.localizedDescription.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return "unknown error" }
+        return String(text.prefix(200))
     }
 
     // MARK: - Managing

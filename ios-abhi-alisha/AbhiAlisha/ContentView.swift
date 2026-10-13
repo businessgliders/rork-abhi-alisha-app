@@ -61,7 +61,7 @@ struct ContentView: View {
         }
         .animation(.calm, value: admin.isPromptPresented)
         .overlay(alignment: .bottom) {
-            if push.isFirstOpenCardPresented {
+            if push.isFirstOpenCardPresented, !ScreenshotCapture.isActive {
                 FirstOpenUpdatesCard()
                     .padding(.bottom, FloatingTabBar.contentReserve - 4)
                     .transition(.move(edge: .bottom).combined(with: .opacity))

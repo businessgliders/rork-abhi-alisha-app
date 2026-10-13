@@ -1,0 +1,5 @@
+screenshots/ipad/en/01_home.png filter=lfs diff=lfs merge=lfs -text
+screenshots/ipad/en/02_schedule.png filter=lfs diff=lfs merge=lfs -text
+screenshots/ipad/en/05_my_experience.png filter=lfs diff=lfs merge=lfs -text
+screenshots/experiments/product-page/search_3840x2560.png filter=lfs diff=lfs merge=lfs -text
+screenshots/experiments/product-page/header_5244x2950.png filter=lfs diff=lfs merge=lfs -text

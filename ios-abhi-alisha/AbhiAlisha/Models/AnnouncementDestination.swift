@@ -66,6 +66,37 @@ nonisolated enum AnnouncementDestination: Hashable, Sendable {
     /// Every fixed choice besides a specific celebration, in menu order.
     static let screens: [AnnouncementDestination] = [.announcements, .schedule]
     static let more: [AnnouncementDestination] = [.gallery, .rsvp, .travel, .faq, .chat]
+
+    /// Turns a saved announcement's `screen` and `event_id` into where its button opens,
+    /// with the same mapping a push tap follows. Nil means nothing worth showing: the
+    /// screen was never saved (older rows), it points back at the Announcements feed
+    /// itself, or the celebration it named has left the schedule.
+    static func resolve(screen: String?, eventID: String?, events: [ScheduleEvent]) -> AnnouncementDestination? {
+        let raw = (screen ?? "").trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        switch raw {
+        case "", "announcements", "announcement", "notifications", "notification":
+            return nil
+        case "event", "schedule", "itinerary":
+            if let eventID, let event = events.first(where: { $0.id == eventID }) {
+                return .event(id: event.id, title: event.title.trimmed)
+            }
+            // A named celebration the schedule no longer lists has nowhere precise to
+            // go; a plain schedule note still opens the Schedule.
+            return raw == "event" ? nil : .schedule
+        case "gallery", "photos":
+            return .gallery
+        case "rsvp":
+            return .rsvp
+        case "travel", "travel_stay", "travel-stay", "stay", "resort":
+            return .travel
+        case "faq", "faqs", "questions":
+            return .faq
+        case "chat", "message", "messages":
+            return .chat
+        default:
+            return nil
+        }
+    }
 }
 
 /// Guesses where an announcement should open from its words. Case-insensitive, whole

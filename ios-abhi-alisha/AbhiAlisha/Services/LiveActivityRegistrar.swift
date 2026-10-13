@@ -11,7 +11,9 @@ import UIKit
 /// sign-in: the phone's push-to-start token (so the server can raise a celebration an
 /// hour before it begins), and each running activity's own update token (so it can
 /// switch to "Happening now" and retire it when the event ends). A token is only sent
-/// again when it changes. Failures stay silent and simply retry on the next launch.
+/// again when it changes. Failures change nothing the guest can see — no error, no
+/// retry message: the call is dropped and quietly tried again the next time the app
+/// opens, so the server can be switched on long after phones have registered.
 @MainActor
 final class LiveActivityRegistrar {
     static let shared = LiveActivityRegistrar()
@@ -84,6 +86,8 @@ final class LiveActivityRegistrar {
             // Keep the list small: only the most recent registrations matter.
             defaults.set(Array(sent.suffix(40)), forKey: Key.sent)
         } catch {
+            // The server may not be switched on yet. Nothing is shown to the guest and
+            // nothing is retried from here; the unsent fingerprint tries again next launch.
             print("[LiveActivity] registration postponed")
         }
     }

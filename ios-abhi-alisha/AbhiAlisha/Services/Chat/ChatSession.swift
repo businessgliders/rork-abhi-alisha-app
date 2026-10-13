@@ -446,8 +446,10 @@ final class ChatSession {
             request.httpBody = Data("{}".utf8)
             request.timeoutInterval = 30
 
-            let (_, response) = try await URLSession.shared.data(for: request)
-            guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
+            let (data, response) = try await URLSession.shared.data(for: request)
+            guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode),
+                  let payload = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  payload["ok"] as? Bool == true else {
                 print("[Chat] account deletion was refused")
                 didDeleteFail = true
                 return false

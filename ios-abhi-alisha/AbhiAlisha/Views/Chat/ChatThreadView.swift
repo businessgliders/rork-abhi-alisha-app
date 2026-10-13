@@ -561,6 +561,13 @@ struct ChatThreadView: View {
             isShowingGuidelines = true
             return
         }
+        // Held at the door: obvious profanity and abuse are never published. The draft
+        // stays so the message can be edited rather than lost.
+        guard !ChatContentFilter.isObjectionable(text) else {
+            BrandHaptics.tick()
+            showToast("That message can't be posted as written. Please edit it — the guidelines keep this chat kind.")
+            return
+        }
         sendTick += 1
         draft = ""
         withAnimation(.calm) {

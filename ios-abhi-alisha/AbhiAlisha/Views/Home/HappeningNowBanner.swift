@@ -37,6 +37,10 @@ struct HappeningNowBanner: View {
     /// outside the wedding dates, since no celebration is then near.
     static func state(in events: [ScheduleEvent], at now: Date) -> State? {
         let timed = events.filter { $0.isActive != false && $0.startsAt != nil && !$0.isTimeToBeAnnounced }
+        // TEMPORARY (App Store screenshot capture): the ribbon always reads "Happening now".
+        if ScreenshotCapture.isActive, let forced = timed.first {
+            return State(event: forced, moment: .now)
+        }
         if let live = timed.first(where: { $0.isHappening(at: now) }) {
             return State(event: live, moment: .now)
         }

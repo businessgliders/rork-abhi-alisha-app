@@ -130,6 +130,8 @@ extension BrandFontSpec {
     static let eventTitleSmall = BrandFontSpec(.playfairItalic, size: 24, weight: 500, textStyle: .title2, maxSize: 36)
     /// The opening line of the couple's letter.
     static let letterSalutation = BrandFontSpec(.playfairItalic, size: 27, weight: 500, textStyle: .title2, maxSize: 40)
+    /// An announcement card's headline.
+    static let announcementHeadline = BrandFontSpec(.playfairItalic, size: 28, weight: 500, textStyle: .title2, maxSize: 42)
     static let bodyText = BrandFontSpec(.cormorant, size: 19, weight: 450, textStyle: .body, maxSize: 30)
     static let bodyItalic = BrandFontSpec(.cormorantItalic, size: 19, weight: 450, textStyle: .body, maxSize: 30)
     static let bodySmall = BrandFontSpec(.cormorant, size: 17, weight: 500, textStyle: .callout, maxSize: 26)

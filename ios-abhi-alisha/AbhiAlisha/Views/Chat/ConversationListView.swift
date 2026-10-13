@@ -239,6 +239,7 @@ struct ConversationListView: View {
                     preview: announcementPreview,
                     time: updates.latest?.sentAt,
                     isUnread: updates.hasUnread,
+                    usesRelativeTime: true,
                     isHighlighted: true
                 )
             }
@@ -385,6 +386,7 @@ private struct ChannelRow: View {
     let time: Date?
     let isUnread: Bool
     var isMuted: Bool = false
+    var usesRelativeTime: Bool = false
     let isHighlighted: Bool
 
     var body: some View {
@@ -408,7 +410,7 @@ private struct ChannelRow: View {
                     Spacer(minLength: 6)
 
                     if let time {
-                        Text(ChatTime.listStamp(time))
+                        Text(usesRelativeTime ? ChatTime.ago(time) : ChatTime.listStamp(time))
                             .font(BrandLabel.font(size: 11, weight: isUnread ? .semibold : .regular))
                             .foregroundStyle(isUnread ? BrandPalette.goldDeep : BrandPalette.body.opacity(0.8))
                             .monospacedDigit()

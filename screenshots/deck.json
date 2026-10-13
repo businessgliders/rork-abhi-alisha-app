@@ -1,0 +1,88 @@
+{
+  "appContext": {
+    "appName": "Abhi & Alisha",
+    "category": "wedding guest guide",
+    "summary": "The official guest guide to Abhi & Alisha's wedding week at a resort in Cancún: every celebration's schedule with dress codes, RSVP lookup by name, an outfit builder for each event, announcements from the couple, family chat, and a Wedding Week photo album as it happens. Works offline. Warm editorial aesthetic: aged cream paper, antique gold, Playfair italic serif and Cormorant text, string lights, paper-texture cards. On iPad the layouts are roomier: the schedule shows tall invitation cards with attire photo previews.",
+    "domainKeywords": [
+      "wedding",
+      "wedding week",
+      "schedule",
+      "RSVP",
+      "outfits",
+      "Sangeet",
+      "Haldi",
+      "Anand Karaj",
+      "Reception",
+      "Cancún",
+      "resort",
+      "wing map",
+      "announcements",
+      "family chat",
+      "photos"
+    ],
+    "forbiddenInterpretations": [
+      "dating app",
+      "wedding planning marketplace or vendor directory",
+      "photo editing app",
+      "travel booking app",
+      "religious study app"
+    ]
+  },
+  "theme": {
+    "style": "Warm editorial wedding stationery world: aged cream paper, antique gold leaf, and soft blush, warmed by dusk light over a Caribbean sea. Lighting is gentle golden hour with faint bokeh like distant string lights. Surfaces carry fine paper grain, deckled softness, and delicate gold foil shimmer. Backgrounds stay calm, airy and luxurious, never loud, with generous open space at the top for the serif headline.",
+    "headlineFont": "font-family: 'Playfair Display', serif; font-style: italic; font-weight: 500; @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,500&display=swap');",
+    "headlineFontSize": 120,
+    "mockupIds": {
+      "iphone": "silver",
+      "ipad": "silver"
+    },
+    "palette": {
+      "primary": "#F4ECDD",
+      "secondary": "#B08A4A",
+      "accent": "#2F5D6B"
+    },
+    "layoutId": "floating-centered"
+  },
+  "slides": [
+    {
+      "label": "Home",
+      "backgroundPrompt": "Soft photorealistic dusk atmosphere with a warm cream sky melting into pale peach and a faint band of muted teal sea at the lower edge, scattered out-of-focus warm gold bokeh orbs floating along the bottom third. Gentle golden-hour light glows from the lower right, with fine paper grain over the frame and the upper 30% an open, calm ivory wash. 8K quality, ultra smooth gradients, premium feel, no text, no letters, no UI elements, no device mockups",
+      "backgroundUrl": "https://r2-pub.rork.com/app-store-screenshots/344bb918-53ea-4a4c-b93a-b9664a6cb917.png"
+    },
+    {
+      "label": "Schedule",
+      "backgroundPrompt": "Abstract layered composition of overlapping sheets of aged cream and ivory handmade paper with softly torn deckled edges, fanned diagonally across the lower half. Thin antique gold foil edges catch warm side light from the left. Soft shadows between the layers add depth, and the upper 30% fades to smooth creamy parchment. 8K quality, ultra smooth gradients, premium feel, no text, no letters, no UI elements, no device mockups",
+      "backgroundUrl": "https://r2-pub.rork.com/app-store-screenshots/62b8c3ec-103a-475a-9417-be45dc89eafc.png"
+    },
+    {
+      "label": "Chat",
+      "backgroundPrompt": "Abstract art of flowing silk ribbons in champagne gold and soft blush drifting in gentle curves across a warm cream backdrop, gathering toward the lower center. Diffused overhead light gives the silk a subtle sheen, with faint teal-tinted shadows in the folds. The top region stays airy and pale ivory with a fine grain texture. 8K quality, ultra smooth gradients, premium feel, no text, no letters, no UI elements, no device mockups",
+      "backgroundUrl": "https://r2-pub.rork.com/app-store-screenshots/264426c4-0c3e-496c-8782-5f7d01800060.png"
+    },
+    {
+      "label": "Wedding Week",
+      "backgroundPrompt": "Photorealistic soft-focus twilight scene of a warm apricot and cream sky over a calm muted teal sea horizon. Delicate strands of warm gold light points stretch in a gentle arc across the lower third, heavily blurred. Glow rises from the horizon, and the upper 30% stays a serene, clean cream-to-peach gradient with subtle film grain. 8K quality, ultra smooth gradients, premium feel, no text, no letters, no UI elements, no device mockups",
+      "backgroundUrl": "https://r2-pub.rork.com/app-store-screenshots/be41dea8-4f9a-47ed-9274-747cd663705a.png"
+    },
+    {
+      "label": "My Experience",
+      "backgroundPrompt": "Abstract minimalist art of sweeping fine antique gold linework curves and soft concentric contour arcs on textured aged cream paper, radiating from the lower left corner. Pale teal watercolor washes bleed softly at the edges. Warm raking light from the right reveals the paper fibers, and the upper 30% stays open and quiet. 8K quality, ultra smooth gradients, premium feel, no text, no letters, no UI elements, no device mockups",
+      "backgroundUrl": "https://r2-pub.rork.com/app-store-screenshots/9c32abef-19a7-4e0b-940e-06a9304b6035.png"
+    },
+    {
+      "label": "My Outfits",
+      "backgroundPrompt": "Luxurious close-up abstract of draped sheer chiffon in blush rose and champagne gold, with scattered fine gold shimmer particles, cascading from the bottom right. A deep teal silk fold adds accent contrast. Soft warm backlight makes the fabric glow translucent, with a shallow depth of field, and the upper 30% fades into smooth creamy ivory. 8K quality, ultra smooth gradients, premium feel, no text, no letters, no UI elements, no device mockups",
+      "backgroundUrl": "https://r2-pub.rork.com/app-store-screenshots/821afc5a-fd3e-4486-8544-fe190a65250a.png"
+    }
+  ],
+  "headlines": {
+    "en": {
+      "Home": "The Celebration<br>Has Begun",
+      "Schedule": "Every Moment<br>In Order",
+      "Chat": "Stay Close",
+      "Wedding Week": "Live From<br>Cancún",
+      "My Experience": "Find Your Way",
+      "My Outfits": "Dress<br>The Part"
+    }
+  }
+}

@@ -211,7 +211,7 @@ struct ScheduleView: View {
 
     /// The first time the guest lands on Schedule, a small note points at the button.
     private func showCalendarTipIfNeeded() async {
-        guard isActive, !hasSeenCalendarTip, !isPast, !events.isEmpty else { return }
+        guard isActive, !hasSeenCalendarTip, !isPast, !events.isEmpty, !ScreenshotCapture.isActive else { return }
         try? await Task.sleep(for: .milliseconds(900))
         guard !Task.isCancelled, !hasSeenCalendarTip else { return }
         hasSeenCalendarTip = true

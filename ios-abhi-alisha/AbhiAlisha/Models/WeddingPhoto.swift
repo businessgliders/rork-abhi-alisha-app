@@ -115,6 +115,9 @@ struct PreparedWeddingPhoto: Identifiable, Equatable {
 
 /// A photo on its way up, kept on disk so it survives the app closing.
 nonisolated struct WeddingUploadJob: Codable, Identifiable, Equatable, Sendable {
+    /// Attempts spent before a photo is set aside as failed.
+    static let maxAttempts = 3
+
     let id: UUID
     let eventID: String
     let caption: String?
@@ -123,7 +126,12 @@ nonisolated struct WeddingUploadJob: Codable, Identifiable, Equatable, Sendable 
     let fullName: String
     let thumbName: String
     var attempts: Int = 0
+    /// The server's own reason for the last failure, kept for the logs.
+    var lastError: String?
 
     var photoPath: String { "\(eventID)/\(id.uuidString.lowercased()).jpg" }
     var thumbPath: String { "\(eventID)/\(id.uuidString.lowercased())_t.jpg" }
+
+    /// Every attempt spent; it now waits for Retry or Remove instead of blocking the queue.
+    var isFailed: Bool { attempts >= Self.maxAttempts }
 }

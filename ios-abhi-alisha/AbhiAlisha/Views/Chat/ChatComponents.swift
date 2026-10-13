@@ -281,4 +281,18 @@ enum ChatTime {
         formatter.unitsStyle = .full
         return formatter.localizedString(for: date, relativeTo: Date())
     }
+
+    /// A short age for cards and lists: "now", "5m ago", "2h ago", "3d ago", else a date.
+    static func ago(_ date: Date) -> String {
+        let seconds = Date().timeIntervalSince(date)
+        guard seconds >= 0 else { return listStamp(date) }
+        if seconds < 60 { return "now" }
+        let minutes = Int(seconds / 60)
+        if minutes < 60 { return "\(minutes)m ago" }
+        let hours = Int(seconds / 3600)
+        if hours < 24 { return "\(hours)h ago" }
+        let days = Int(seconds / 86400)
+        if days < 7 { return "\(days)d ago" }
+        return listStamp(date)
+    }
 }

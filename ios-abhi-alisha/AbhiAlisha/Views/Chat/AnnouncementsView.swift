@@ -1,14 +1,17 @@
 import SwiftUI
 
-/// Every announcement Abhi & Alisha have sent, oldest at the top like a chat, each in
-/// a gold bubble. Guests only read; an admin (profile role = admin) gets a composer at
-/// the bottom that sends to every guest after a confirmation.
+/// Every announcement Abhi & Alisha have sent, as a deck of paper cards: the newest
+/// fully open at the front, the ones before it tucked above as strips. Guests read;
+/// an admin (profile role = admin) gets a gold "+ New announcement" button in the
+/// header, which opens a full sheet to write in before the send is confirmed.
 /// Opens instantly from the saved copy, then refreshes quietly.
 struct AnnouncementsView: View {
     @State private var updates = NotificationsStore.shared
     @State private var session = ChatSession.shared
     @State private var draft = AnnouncementDraft.shared
+    @Environment(ScheduleStore.self) private var store
     @State private var pendingSend: PendingSend?
+    @State private var isComposing = false
     @State private var toast: String?
     @State private var toastTask: Task<Void, Never>?
 
@@ -25,16 +28,9 @@ struct AnnouncementsView: View {
     var body: some View {
         VStack(spacing: 0) {
             header
-            feed
+            content
         }
         .background(BrandPalette.background.ignoresSafeArea())
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            if canCompose {
-                AnnouncementComposer(onSend: prepareSend)
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
-            }
-        }
-        .animation(.calm, value: canCompose)
         .overlay(alignment: .top) {
             if let toast {
                 ChatToast(text: toast)
@@ -43,6 +39,13 @@ struct AnnouncementsView: View {
             }
         }
         .animation(.calm, value: toast)
+        .sheet(isPresented: $isComposing) {
+            NewAnnouncementSheet(events: store.events) { title, message, destination in
+                isComposing = false
+                BrandHaptics.soft()
+                pendingSend = PendingSend(title: title, message: message, destination: destination)
+            }
+        }
         .sheet(item: $pendingSend) { pending in
             AnnouncementSendSheet(
                 title: pending.title,
@@ -53,9 +56,10 @@ struct AnnouncementsView: View {
             }
         }
         .toolbar(.hidden, for: .navigationBar)
-        .onAppear { syncComposerPresence() }
-        .onChange(of: canCompose) { _, _ in syncComposerPresence() }
-        .onDisappear { draft.isComposerOnScreen = false }
+        .onAppear {
+            // The composer bar is gone; the floating tab bar never needs to step aside.
+            draft.isComposerOnScreen = false
+        }
         .task {
             updates.markOpened()
             await updates.refresh()
@@ -79,6 +83,7 @@ struct AnnouncementsView: View {
                     .brandFont(.chatName)
                     .foregroundStyle(BrandPalette.ink)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.8)
                 Text("From Abhi & Alisha")
                     .font(BrandLabel.font(size: 11, weight: .medium))
                     .foregroundStyle(BrandPalette.body)
@@ -86,7 +91,11 @@ struct AnnouncementsView: View {
             }
             .accessibilityElement(children: .combine)
 
-            Spacer(minLength: 0)
+            Spacer(minLength: 8)
+
+            if canCompose {
+                newAnnouncementButton
+            }
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
@@ -98,59 +107,79 @@ struct AnnouncementsView: View {
         }
     }
 
-    // MARK: - Feed
+    private var newAnnouncementButton: some View {
+        Button {
+            BrandHaptics.soft()
+            isComposing = true
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: "plus")
+                    .font(.system(size: 11, weight: .semibold))
+                Text("New announcement")
+                    .font(BrandLabel.font(size: 11, weight: .semibold))
+                    .tracking(1.1)
+                    .textCase(.uppercase)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
+            }
+            .foregroundStyle(Color(hex: 0xFFFBF1))
+            .padding(.horizontal, 14)
+            .frame(minHeight: 38)
+            .background(
+                Capsule(style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [Color(hex: 0xC2A24C), Color(hex: 0xA9873C)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+            )
+            .contentShape(Capsule(style: .continuous))
+        }
+        .buttonStyle(PressableStyle())
+        .accessibilityLabel("New announcement")
+    }
 
-    private var feed: some View {
+    // MARK: - The deck
+
+    private var content: some View {
         ScrollView {
-            LazyVStack(alignment: .leading, spacing: 0) {
-                let list = updates.feed
-                if list.isEmpty {
-                    emptyState
+            VStack(spacing: 0) {
+                if updates.records.isEmpty {
+                    emptyCard
+                        .padding(.top, 34)
                 } else {
-                    VStack(spacing: 10) {
-                        IconWatermark(key: .sparkle, size: 46, opacity: 0.35)
-                        Text("Only Abhi & Alisha post here")
-                            .brandFont(.bodyItalic)
-                            .foregroundStyle(BrandPalette.body)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 22)
-
-                    ForEach(Array(list.enumerated()), id: \.element.id) { index, record in
-                        let previous = index > 0 ? list[index - 1] : nil
-                        if showsDayHeader(record, after: previous), let sentAt = record.sentAt {
-                            dayHeader(sentAt)
-                        }
-                        AnnouncementBubble(record: record)
-                            .padding(.trailing, 44)
-                            .padding(.bottom, 12)
-                            .id(record.id)
-                    }
+                    AnnouncementDeck(
+                        records: updates.records,
+                        events: store.events,
+                        isUnread: { updates.isUnread($0) },
+                        onRoute: route
+                    )
+                    .padding(.top, 12)
                 }
             }
             .padding(.horizontal, 14)
-            .padding(.top, 6)
-            .padding(.bottom, canCompose ? 16 : FloatingTabBar.contentReserve + 16)
-            .readableWidth(720)
+            .padding(.bottom, FloatingTabBar.contentReserve + 16)
+            .readableWidth(680)
         }
         .scrollIndicators(.hidden)
-        .scrollDismissesKeyboard(.interactively)
-        .defaultScrollAnchor(.bottom)
         .refreshable { await updates.refresh() }
         .animation(.calm, value: updates.records)
     }
 
-    // MARK: - Sending
-
-    private func prepareSend() {
-        guard let title = draft.title.nonEmpty, let message = draft.body.nonEmpty else { return }
+    /// Following an announcement's link goes exactly where tapping its notification would.
+    private func route(_ destination: AnnouncementDestination) {
         BrandHaptics.soft()
-        pendingSend = PendingSend(title: title, message: message, destination: draft.destination)
+        let landing = DeepLinkRouter.landing(forScreen: destination.screen, eventID: destination.eventID)
+        DeepLinkRouter.shared.open(landing)
     }
+
+    // MARK: - Sending
 
     private func didSend(_ pending: PendingSend, count: Int?) {
         draft.clear()
-        updates.addJustSent(title: pending.title, body: pending.message)
+        updates.addJustSent(title: pending.title, body: pending.message, destination: pending.destination)
         if let count {
             showToast(count == 1 ? "Sent to 1 guest" : "Sent to \(count) guests")
         } else {
@@ -169,101 +198,21 @@ struct AnnouncementsView: View {
         }
     }
 
-    /// The composer fills the bottom edge, so the floating tab bar steps aside for it,
-    /// just as it does inside a conversation.
-    private func syncComposerPresence() {
-        draft.isComposerOnScreen = canCompose
-    }
+    // MARK: - Empty
 
-    private var emptyState: some View {
-        VStack(spacing: 16) {
-            IconWatermark(key: .sparkle, size: 84, opacity: 0.3)
-            Text("Nothing announced yet")
-                .brandFont(.eventTitleSmall)
-                .foregroundStyle(BrandPalette.ink)
-            Text("News from Abhi & Alisha will arrive here, and on your lock screen.")
+    private var emptyCard: some View {
+        VStack(spacing: 14) {
+            IconWatermark(key: .sparkle, size: 64, opacity: 0.3)
+            Text("Announcements from Abhi & Alisha will appear here")
                 .brandFont(.bodyItalic)
                 .foregroundStyle(BrandPalette.body)
                 .multilineTextAlignment(.center)
-                .frame(maxWidth: 300)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: 280)
         }
         .frame(maxWidth: .infinity)
-        .padding(.top, 90)
-    }
-
-    private func showsDayHeader(_ record: NotificationRecord, after previous: NotificationRecord?) -> Bool {
-        guard let sentAt = record.sentAt else { return false }
-        guard let previousDate = previous?.sentAt else { return true }
-        return !Calendar.current.isDate(sentAt, inSameDayAs: previousDate)
-    }
-
-    private func dayHeader(_ date: Date) -> some View {
-        Text(ChatTime.dayHeader(date).uppercased())
-            .font(BrandLabel.font(size: 10, weight: .semibold))
-            .tracking(1.8)
-            .foregroundStyle(BrandPalette.gold)
-            .frame(maxWidth: .infinity)
-            .padding(.top, 10)
-            .padding(.bottom, 12)
-            .accessibilityAddTraits(.isHeader)
-    }
-}
-
-/// One announcement: from "Abhi & Alisha", the title in Playfair italic, the words in
-/// Cormorant, and the time beneath.
-private struct AnnouncementBubble: View {
-    let record: NotificationRecord
-
-    var body: some View {
-        let shape = UnevenRoundedRectangle(
-            topLeadingRadius: 6,
-            bottomLeadingRadius: 20,
-            bottomTrailingRadius: 20,
-            topTrailingRadius: 20,
-            style: .continuous
-        )
-
-        VStack(alignment: .leading, spacing: 6) {
-            Text("Abhi & Alisha")
-                .brandFont(.chatSender)
-                .foregroundStyle(BrandPalette.goldDeep)
-
-            if let title = record.title {
-                Text(title)
-                    .brandFont(.announcementTitle)
-                    .foregroundStyle(BrandPalette.ink)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-
-            if let body = record.body {
-                Text(body)
-                    .brandFont(.chatMessage)
-                    .foregroundStyle(BrandPalette.ink.opacity(0.88))
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-
-            if let sentAt = record.sentAt {
-                Text(ChatTime.clock(sentAt))
-                    .font(BrandLabel.font(size: 9.5, weight: .medium))
-                    .foregroundStyle(BrandPalette.body.opacity(0.8))
-                    .monospacedDigit()
-                    .padding(.top, 2)
-            }
-        }
-        .padding(.horizontal, 16)
-        .padding(.top, 12)
-        .padding(.bottom, 10)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            shape.fill(
-                LinearGradient(
-                    colors: [BrandPalette.gold.opacity(0.24), BrandPalette.gold.opacity(0.13)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-            )
-        )
-        .overlay(shape.stroke(BrandPalette.gold.opacity(0.45), lineWidth: 1))
-        .accessibilityElement(children: .combine)
+        .padding(.vertical, 56)
+        .padding(.horizontal, 20)
+        .announcementPaper(cornerRadius: 22, isLatest: false)
     }
 }
