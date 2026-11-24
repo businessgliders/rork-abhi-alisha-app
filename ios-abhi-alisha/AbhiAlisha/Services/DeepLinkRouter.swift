@@ -51,6 +51,7 @@ final class DeepLinkRouter {
             pendingEventID = eventID
             return .schedule
         }
+        if WeddingGroup.Link.isSchedule(url) { return .schedule }
         return .home
     }
 

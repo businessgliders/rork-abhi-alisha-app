@@ -40,6 +40,13 @@ nonisolated enum WeddingGroup: Sendable {
 
         static var home: URL? { URL(string: "\(scheme)://home") }
 
+        static var schedule: URL? { URL(string: "\(scheme)://schedule") }
+
+        /// True when the link asks for the schedule tab rather than one event.
+        static func isSchedule(_ url: URL) -> Bool {
+            url.scheme == scheme && url.host == "schedule"
+        }
+
         static func event(_ id: String) -> URL? {
             var components = URLComponents()
             components.scheme = scheme

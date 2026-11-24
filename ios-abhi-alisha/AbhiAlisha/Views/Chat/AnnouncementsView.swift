@@ -14,6 +14,10 @@ struct AnnouncementsView: View {
     @State private var isComposing = false
     @State private var toast: String?
     @State private var toastTask: Task<Void, Never>?
+    // TEMPORARY — header diagnostics, TestFlight only. Remove with the panel below
+    // before the App Store submission.
+    @State private var headerFrame: CGRect = .zero
+    @State private var showsDiagnostics = false
 
     /// A snapshot of the note at the moment Send was tapped.
     private struct PendingSend: Identifiable {
@@ -26,23 +30,24 @@ struct AnnouncementsView: View {
     private var canCompose: Bool { session.isAdmin }
 
     var body: some View {
-        content
-            // The header lives in the safe area itself, so on the folding iPhone's
-            // outer screen — where the sensor housing takes an edge and the top inset
-            // is small — it can never rise above the visible area. The background
-            // still runs under the status bar; the content does not.
-            .safeAreaInset(edge: .top, spacing: 0) { header }
-            .background(BrandPalette.background.ignoresSafeArea())
-            .overlay(alignment: .top) {
-                if let toast {
-                    ChatToast(text: toast)
-                    // The header now counts as safe area, so the toast sits just
-                    // beneath it without a hard-coded status-bar height.
-                    .padding(.top, 10)
+        // The header is a plain sibling above the stage — never inside a scroll view
+        // and never offset — so no device or pose can lift it off the top. The stage
+        // below scales the easel to whatever room is left, so the page never scrolls.
+        VStack(spacing: 0) {
+            header
+            content
+        }
+        .background(BrandPalette.background.ignoresSafeArea())
+        .overlay(alignment: .top) {
+            if let toast {
+                ChatToast(text: toast)
+                    .padding(.top, 70)
                     .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
         .animation(.calm, value: toast)
+        .onPreferenceChange(HeaderFrameKey.self) { headerFrame = $0 }
+        .overlay { diagnosticsPanel }
         .sheet(isPresented: $isComposing) {
             NewAnnouncementSheet(events: store.events) { title, message, destination in
                 isComposing = false
@@ -77,14 +82,8 @@ struct AnnouncementsView: View {
     // MARK: - Header
 
     /// Narrow windows (the closed folding iPhone, a Split View pane) collapse the
-    /// gold button to an icon-only circle instead of squeezing the words.
-    private var header: some View {
-        ViewThatFits(in: .horizontal) {
-            headerRow { newAnnouncementButton }
-            headerRow { compactNewAnnouncementButton }
-        }
-    }
-
+    /// gold button to an icon-only circle instead of squeezing the words. The frame
+    /// capture feeds the diagnostics panel.
     private func headerRow<Compose: View>(@ViewBuilder compose: () -> Compose) -> some View {
         HStack(spacing: 10) {
             ChatBackButton()
@@ -98,6 +97,16 @@ struct AnnouncementsView: View {
                     .lineLimit(1)
                     .minimumScaleFactor(0.75)
                     .truncationMode(.tail)
+                    // TEMPORARY diagnostics trigger — remove with the panel.
+                    .onLongPressGesture(minimumDuration: 2) {
+                        guard HeaderDiagnostics.isEnabled else { return }
+                        BrandHaptics.soft()
+                        showsDiagnostics = true
+                    }
+                    .accessibilityAction(named: "Show layout numbers") {
+                        guard HeaderDiagnostics.isEnabled else { return }
+                        showsDiagnostics = true
+                    }
                 Text("From \(ActiveWedding.couple)")
                     .font(BrandLabel.font(size: 11, weight: .medium))
                     .foregroundStyle(BrandPalette.body)
@@ -113,6 +122,7 @@ struct AnnouncementsView: View {
                 compose()
             }
         }
+        .padding(.top, 8)
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
         .background(BrandPalette.background)
@@ -120,6 +130,19 @@ struct AnnouncementsView: View {
             Rectangle()
                 .fill(BrandPalette.hairline)
                 .frame(height: 1)
+        }
+    }
+
+    /// Where the header actually landed, for the diagnostics panel.
+    private var header: some View {
+        ViewThatFits(in: .horizontal) {
+            headerRow { newAnnouncementButton }
+            headerRow { compactNewAnnouncementButton }
+        }
+        .background {
+            GeometryReader { g in
+                Color.clear.preference(key: HeaderFrameKey.self, value: g.frame(in: .global))
+            }
         }
     }
 
@@ -199,34 +222,33 @@ struct AnnouncementsView: View {
     // MARK: - The deck
 
     private var content: some View {
+        // The room below the header only. The easel is fixed-ratio and scales itself
+        // into whatever this measures; nothing here scrolls, so nothing can start
+        // scrolled or shift after appearing.
         GeometryReader { proxy in
-            ScrollView {
-                VStack(spacing: 0) {
-                    if updates.records.isEmpty {
-                        emptyCard
-                            .padding(.top, 34)
-                            .padding(.horizontal, 14)
-                            .readableWidth(560)
-                    } else {
-                        // One composition sized to the room between the header and the tab bar.
-                        AnnouncementEasel(
-                            records: updates.records,
-                            events: store.events,
-                            available: CGSize(
-                                width: max(proxy.size.width - 32, 200),
-                                height: max(proxy.size.height - FloatingTabBar.contentReserve - 16 - 14, 260)
-                            ),
-                            isUnread: { updates.isUnread($0) },
-                            onRoute: route
-                        )
-                        .padding(.top, 14)
-                    }
+            Group {
+                if updates.records.isEmpty {
+                    emptyCard
+                        .padding(.horizontal, 14)
+                        .readableWidth(560)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                        .padding(.top, 34)
+                } else {
+                    AnnouncementEasel(
+                        records: updates.records,
+                        events: store.events,
+                        available: CGSize(
+                            width: max(proxy.size.width - 32, 200),
+                            height: max(proxy.size.height - FloatingTabBar.contentReserve - 16 - 14, 120)
+                        ),
+                        isUnread: { updates.isUnread($0) },
+                        onRoute: route
+                    )
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                    .padding(.top, 14)
                 }
-                .frame(maxWidth: .infinity)
-                .padding(.bottom, FloatingTabBar.contentReserve + 16)
             }
-            .scrollIndicators(.hidden)
-            .refreshable { await updates.refresh() }
+            .padding(.bottom, FloatingTabBar.contentReserve + 12)
             .animation(.calm, value: updates.records)
         }
     }
@@ -277,5 +299,68 @@ struct AnnouncementsView: View {
         .padding(.vertical, 56)
         .padding(.horizontal, 20)
         .announcementPaper(cornerRadius: 22, isLatest: false)
+    }
+
+    // MARK: - TEMPORARY header diagnostics (TestFlight only — remove before App Store)
+
+    private var diagnosticsPanel: some View {
+        Group {
+            if showsDiagnostics {
+                ZStack {
+                    Color.black.opacity(0.55)
+                        .ignoresSafeArea()
+                        .onTapGesture { showsDiagnostics = false }
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Header diagnostics")
+                            .font(.system(size: 13, weight: .semibold, design: .monospaced))
+                        Text(HeaderDiagnostics.readout)
+                            .font(.system(size: 12, design: .monospaced))
+                        Text("header x \(Int(headerFrame.minX)) y \(Int(headerFrame.minY)) w \(Int(headerFrame.width)) h \(Int(headerFrame.height))")
+                            .font(.system(size: 12, design: .monospaced))
+                        Text("scroll: none — page does not scroll")
+                            .font(.system(size: 12, design: .monospaced))
+                        Text("Tap anywhere to close")
+                            .font(.system(size: 11, design: .monospaced))
+                            .opacity(0.7)
+                    }
+                    .foregroundStyle(.white)
+                    .padding(18)
+                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    .padding(30)
+                }
+                .transition(.opacity)
+            }
+        }
+        .animation(.easeInOut(duration: 0.2), value: showsDiagnostics)
+    }
+}
+
+/// TEMPORARY — what the folding phone's window really reports. Reads the key window's
+/// own safe-area insets, which is what SwiftUI's layout was given. Shows only in
+/// TestFlight and sandbox builds, never an App Store build; remove entirely before
+/// the App Store submission.
+enum HeaderDiagnostics {
+    static let isEnabled = Bundle.main.appStoreReceiptURL?.lastPathComponent == "sandboxReceipt"
+
+    static var readout: String {
+        let window = UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap(\.windows)
+            .first { $0.isKeyWindow }
+        guard let window else { return "No key window" }
+        let inset = window.safeAreaInsets
+        return """
+        window \(Int(window.bounds.size.width)) \u{d7} \(Int(window.bounds.size.height))
+        insets  top \(inset.top)  left \(inset.left)
+                bottom \(inset.bottom)  right \(inset.right)
+        """
+    }
+}
+
+/// The header row's frame in global coordinates, captured where it really landed.
+private struct HeaderFrameKey: PreferenceKey {
+    static var defaultValue: CGRect = .zero
+    static func reduce(value: inout CGRect, nextValue: () -> CGRect) {
+        if value == .zero { value = nextValue() }
     }
 }
