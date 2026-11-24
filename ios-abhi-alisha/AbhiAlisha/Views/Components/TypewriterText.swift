@@ -78,15 +78,26 @@ struct TypewriterText: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(text)
         .task {
-            guard !didRun else { return }
+            // Seen before (back from a cover, a tab switch, a rebuilt layout): show the
+            // whole word at once, never a half-typed or empty one.
+            guard !didRun else {
+                revealed = Self.all
+                return
+            }
             didRun = true
             await reveal()
         }
+        .onChange(of: text) { _, _ in
+            if didRun { revealed = Self.all }
+        }
     }
+
+    /// "Every letter", whatever the word's length becomes.
+    private static let all = Int.max / 2
 
     private func reveal() async {
         guard !reduceMotion else {
-            revealed = text.count
+            revealed = Self.all
             onFinished?()
             return
         }
@@ -96,12 +107,17 @@ struct TypewriterText: View {
         }
 
         for index in 0..<text.count {
-            guard !Task.isCancelled else { return }
+            guard !Task.isCancelled else {
+                // Interrupted mid-word (a cover opened over Home): finish it silently.
+                revealed = Self.all
+                return
+            }
             withAnimation(.easeOut(duration: 0.55)) {
                 revealed = index + 1
             }
             try? await Task.sleep(for: .seconds(letterInterval))
         }
+        revealed = Self.all
         onFinished?()
     }
 }

@@ -15,18 +15,10 @@ struct WeddingShell: View {
     @State private var push = PushRegistrar.shared
     @State private var chat = ChatStore.shared
     @State private var announcementDraft = AnnouncementDraft.shared
-    @State private var admin: AdminSession
-    @State private var checklist: ChecklistStore
+    @State private var admin = AdminSession()
     @State private var selection: AppTab = .home
-    @State private var isHostPresented = false
 
     @Environment(\.scenePhase) private var scenePhase
-
-    init() {
-        let session = AdminSession()
-        _admin = State(initialValue: session)
-        _checklist = State(initialValue: ChecklistStore(session: session))
-    }
 
     var body: some View {
         @Bindable var push = push
@@ -56,36 +48,17 @@ struct WeddingShell: View {
         }
         .animation(.calm, value: isReadingThread)
         .overlay(alignment: .top) {
-            ScreenChrome(showsCrest: selection == .home, onHost: { isHostPresented = true })
+            ScreenChrome(showsCrest: selection == .home, onHost: { admin.requestEntry() })
         }
-        .overlay {
-            if admin.isPromptPresented {
-                CouplePasscodePrompt()
-                    .transition(.opacity.combined(with: .scale(scale: 0.97)))
-            }
-        }
-        .animation(.calm, value: admin.isPromptPresented)
         .sheet(isPresented: $push.isExplainerPresented) {
             NotificationExplainerSheet()
                 .environment(push)
         }
         .fullScreenCover(isPresented: $admin.isAdminPresented) {
-            AdminRootView()
+            CoupleAreaView()
                 .environment(store)
+                .environment(content)
                 .environment(admin)
-                .environment(checklist)
-        }
-        .fullScreenCover(isPresented: $isHostPresented) {
-            HostHomeView(openChecklist: {
-                isHostPresented = false
-                Task { @MainActor in
-                    try? await Task.sleep(for: .milliseconds(450))
-                    admin.requestEntry()
-                }
-            })
-            .environment(store)
-            .environment(content)
-            .environment(admin)
         }
         .fullScreenCover(isPresented: $router.isNotificationsPresented) {
             NotificationsView()
@@ -139,8 +112,6 @@ struct WeddingShell: View {
     private func openPendingLanding() {
         guard let landing = router.pending else { return }
         router.pending = nil
-        isHostPresented = false
-        admin.isPromptPresented = false
         admin.isAdminPresented = false
 
         switch landing {

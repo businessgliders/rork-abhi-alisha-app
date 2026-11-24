@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// Every announcement \(ActiveWedding.couple) have sent, as a deck of paper cards: the newest
-/// fully open at the front, the ones before it tucked above as strips. Guests read;
+/// Every announcement the couple have sent, as a notice board: the newest pinned to a
+/// gold easel, the earlier ones listed beneath it. Guests read;
 /// an admin (profile role = admin) gets a gold "+ New announcement" button in the
 /// header, which opens a full sheet to write in before the send is confirmed.
 /// Opens instantly from the saved copy, then refreshes quietly.
@@ -144,28 +144,31 @@ struct AnnouncementsView: View {
     // MARK: - The deck
 
     private var content: some View {
-        ScrollView {
-            VStack(spacing: 0) {
-                if updates.records.isEmpty {
-                    emptyCard
-                        .padding(.top, 34)
-                } else {
-                    AnnouncementDeck(
-                        records: updates.records,
-                        events: store.events,
-                        isUnread: { updates.isUnread($0) },
-                        onRoute: route
-                    )
-                    .padding(.top, 12)
+        GeometryReader { proxy in
+            ScrollView {
+                VStack(spacing: 0) {
+                    if updates.records.isEmpty {
+                        emptyCard
+                            .padding(.top, 34)
+                    } else {
+                        AnnouncementEasel(
+                            records: updates.records,
+                            events: store.events,
+                            stageHeight: max(proxy.size.height * 0.45, 300),
+                            isUnread: { updates.isUnread($0) },
+                            onRoute: route
+                        )
+                        .padding(.top, 18)
+                    }
                 }
+                .padding(.horizontal, 14)
+                .padding(.bottom, FloatingTabBar.contentReserve + 16)
+                .readableWidth(560)
             }
-            .padding(.horizontal, 14)
-            .padding(.bottom, FloatingTabBar.contentReserve + 16)
-            .readableWidth(680)
+            .scrollIndicators(.hidden)
+            .refreshable { await updates.refresh() }
+            .animation(.calm, value: updates.records)
         }
-        .scrollIndicators(.hidden)
-        .refreshable { await updates.refresh() }
-        .animation(.calm, value: updates.records)
     }
 
     /// Following an announcement's link goes exactly where tapping its notification would.

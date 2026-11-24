@@ -164,6 +164,16 @@ final class HostAPI {
     }
 
     func joinCode(weddingID: String) async throws -> String? {
+        // The live code lives in wedding_codes; older weddings may only have it on the row.
+        if let codes = try? await client.from("wedding_codes")
+            .select("join_code")
+            .eq("wedding_id", value: weddingID)
+            .limit(1)
+            .execute(),
+           let code = MilniJSON.rows(codes.data).first.flatMap({ MilniJSON.string($0["join_code"]) }),
+           !code.isEmpty {
+            return code
+        }
         let response = try await client.from("weddings")
             .select("join_code")
             .eq("id", value: weddingID)

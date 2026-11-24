@@ -392,7 +392,7 @@ struct HostRowPressStyle: ButtonStyle {
 }
 
 /// One person waiting to be let in: Approve, or swipe left to decline.
-private struct PendingRow: View {
+struct PendingRow: View {
     let member: HostMember
     let isBusy: Bool
     let approve: () -> Void

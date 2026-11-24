@@ -81,12 +81,6 @@ struct ExperienceView: View {
                     PhotosAndMaps(photos: content.resortPhotos, stay: stay)
                         .padding(.top, 18)
 
-                    if let pdf = stay.pdf {
-                        FullMapLink(pdfURL: pdf)
-                            .padding(.horizontal, 22)
-                            .padding(.top, 14)
-                    }
-
                     if !stay.amenities.isEmpty {
                         SectionHeading(text: "Amenities")
                             .padding(.horizontal, 22)
@@ -317,42 +311,3 @@ struct ExperienceUpdatesCard: View {
     }
 }
 
-/// Opens the resort's official map PDF, kept on the phone once it has loaded.
-private struct FullMapLink: View {
-    let pdfURL: URL
-    @State private var isShowingPDF = false
-
-    var body: some View {
-        Button {
-            BrandHaptics.soft()
-            isShowingPDF = true
-        } label: {
-            HStack(spacing: 8) {
-                Image(systemName: "doc.richtext")
-                    .font(.system(size: 12, weight: .light))
-                Text("View full map (PDF)")
-                    .font(BrandLabel.font(size: 11, weight: .semibold))
-                    .tracking(1.3)
-                    .textCase(.uppercase)
-                Spacer(minLength: 6)
-                Image(systemName: "arrow.up.right")
-                    .font(.system(size: 10, weight: .regular))
-            }
-            .foregroundStyle(BrandPalette.goldDeep)
-            .padding(.horizontal, 18)
-            .frame(minHeight: 46)
-            .background(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(BrandPalette.card)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .stroke(BrandPalette.gold.opacity(0.4), lineWidth: 1)
-            )
-        }
-        .buttonStyle(PressableStyle())
-        .fullScreenCover(isPresented: $isShowingPDF) {
-            ResortPDFViewer(pdfURL: pdfURL)
-        }
-    }
-}

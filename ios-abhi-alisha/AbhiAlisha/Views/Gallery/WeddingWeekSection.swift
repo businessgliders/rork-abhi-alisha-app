@@ -46,7 +46,7 @@ struct WeddingWeekSection: View {
         VStack(alignment: .leading, spacing: 0) {
             header
 
-            if session.isAdmin {
+            if WeddingContext.shared.canUploadWeddingPhotos {
                 WeddingUploadProgress()
                     .padding(.top, 14)
             }
@@ -70,7 +70,7 @@ struct WeddingWeekSection: View {
                 .environment(schedule)
         }
         .alert("Wedding Week", isPresented: Binding(
-            get: { photoStore.notice != nil && session.isAdmin },
+            get: { photoStore.notice != nil && WeddingContext.shared.canUploadWeddingPhotos },
             set: { if !$0 { photoStore.notice = nil } }
         )) {
             Button("OK", role: .cancel) { photoStore.notice = nil }
@@ -92,7 +92,7 @@ struct WeddingWeekSection: View {
                     .foregroundStyle(BrandPalette.ink)
             }
             Spacer(minLength: 0)
-            if session.isAdmin {
+            if WeddingContext.shared.canUploadWeddingPhotos {
                 AddWeddingPhotosButton(source: $addSource)
             }
         }

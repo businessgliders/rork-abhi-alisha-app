@@ -91,6 +91,91 @@ final class WeddingContext {
 
     var theme: WeddingTheme { snapshot.resolvedTheme }
 
+    // MARK: - What guests may do
+
+    /// The couple's choices for guests. A setting that was never saved counts as on.
+    struct GuestSettings: Codable, Equatable, Sendable {
+        var chat = true
+        var dms = true
+        var uploads = true
+        var autoApprove = true
+    }
+
+    private(set) var guestSettings = GuestSettings()
+
+    /// Hosts always keep every tool; guests follow the couple's choices.
+    var canGuestChat: Bool { isHost || guestSettings.chat }
+    var canGuestDM: Bool { isHost || guestSettings.dms }
+    var canGuestUpload: Bool { isHost || guestSettings.uploads }
+
+    /// Who sees the Wedding Week upload button: the couple, and approved guests while
+    /// the couple allows guest photos.
+    var canUploadWeddingPhotos: Bool {
+        let session = ChatSession.shared
+        if session.isAdmin { return true }
+        return !isSample && guestSettings.uploads && session.isFamilyMember
+    }
+
+    private static func guestSettingsKey(_ id: String) -> String {
+        "milni.guestSettings.\(id.lowercased())"
+    }
+
+    /// Shows a change at once, before (or after) it reaches the server.
+    func applyGuestSettings(_ settings: GuestSettings) {
+        guestSettings = settings
+        if let data = try? JSONEncoder().encode(settings) {
+            defaults.set(data, forKey: Self.guestSettingsKey(weddingID))
+        }
+    }
+
+    private func restoreGuestSettings(for id: String) {
+        if let data = defaults.data(forKey: Self.guestSettingsKey(id)),
+           let saved = try? JSONDecoder().decode(GuestSettings.self, from: data) {
+            guestSettings = saved
+        } else {
+            guestSettings = GuestSettings()
+        }
+    }
+
+    func refreshGuestSettings() async {
+        guard !isSample, !weddingID.isEmpty else { return }
+        let id = weddingID
+        guard let response = try? await ChatBackend.client.from("weddings")
+            .select("settings,auto_approve")
+            .eq("id", value: id)
+            .limit(1)
+            .execute(),
+              let row = MilniJSON.rows(response.data).first,
+              id == weddingID else { return }
+        applyGuestSettings(Self.guestSettings(from: row))
+    }
+
+    static func guestSettings(from row: [String: Any]) -> GuestSettings {
+        let settings = row["settings"] as? [String: Any] ?? [:]
+        func flag(_ key: String) -> Bool { (settings[key] as? Bool) ?? true }
+        return GuestSettings(
+            chat: flag("guest_chat"),
+            dms: flag("guest_dms"),
+            uploads: flag("guest_photo_uploads"),
+            autoApprove: (row["auto_approve"] as? Bool) ?? true
+        )
+    }
+
+    /// After leaving or deleting the open wedding: go to another one, or start over.
+    func didLeaveCurrentWedding() async {
+        let leftID = weddingID.lowercased()
+        await refreshMyWeddings()
+        myWeddings.removeAll { $0.id.lowercased() == leftID }
+        if let next = myWeddings.first {
+            open(next)
+        } else {
+            defaults.removeObject(forKey: Key.currentWeddingID)
+            role = nil
+            status = nil
+            goToOnboarding(.choose)
+        }
+    }
+
     /// The theme's appearance: forced light or dark, or nil to follow the phone.
     /// Midnight always runs dark.
     var colorScheme: ColorScheme? {
@@ -220,7 +305,7 @@ final class WeddingContext {
     }
 
     private func show(_ incoming: WeddingSnapshot, sample: Bool, role: String? = nil, status: String? = nil) {
-        var snapshot = incoming
+        var snapshot = incoming.keepingNames(from: self.snapshot)
         // A list row may arrive without the theme: keep the one already saved for it.
         if snapshot.theme == nil, snapshot.id.lowercased() == self.snapshot.id.lowercased() {
             snapshot.theme = self.snapshot.theme
@@ -243,6 +328,8 @@ final class WeddingContext {
         if previousID.lowercased() != snapshot.id.lowercased() {
             Task { await Self.resetStoresForNewWedding() }
         }
+        restoreGuestSettings(for: snapshot.id)
+        if !sample { Task { await self.refreshGuestSettings() } }
         withAnimation(.easeInOut(duration: 0.7)) {
             self.snapshot = snapshot
             if changed { shellKey = UUID() }
@@ -265,7 +352,8 @@ final class WeddingContext {
     func refreshCurrent() async {
         guard !isSample else { return }
         if let fresh = try? await MilniAPI.shared.wedding(id: weddingID), !fresh.id.isEmpty {
-            let snapshot = fresh.snapshot
+            var snapshot = fresh.snapshot.keepingNames(from: self.snapshot)
+            if snapshot.theme == nil { snapshot.theme = self.snapshot.theme }
             if snapshot != self.snapshot {
                 let presetChanged = snapshot.resolvedTheme != self.snapshot.resolvedTheme
                 ActiveWedding.save(snapshot)
@@ -279,6 +367,7 @@ final class WeddingContext {
             }
         }
         await refreshMembership()
+        await refreshGuestSettings()
         await refreshMyWeddings()
     }
 

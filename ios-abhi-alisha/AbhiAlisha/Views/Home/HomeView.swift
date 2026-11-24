@@ -72,6 +72,9 @@ struct HomeView: View {
         .onAppear {
             syncMatch()
             openRSVPIfAsked()
+            // Back on Home (after the couple's area, say): bring the wedding row up to
+            // date, keeping the last good names if the load fails.
+            Task { await WeddingContext.shared.refreshCurrent() }
         }
         .onChange(of: router.pendingRSVP) { _, _ in
             openRSVPIfAsked()
@@ -279,6 +282,10 @@ private struct HeroHeader: View {
     let heroPhotos: [GalleryPhoto]
     var isThankYou = false
 
+    /// Always the current wedding row (`partner_one` / `partner_two`), observed so the
+    /// names redraw the moment it changes.
+    private var wedding: WeddingSnapshot { WeddingContext.shared.snapshot }
+
     var body: some View {
         // Only the photograph runs under the side safe areas (the status strip on a
         // wide screen); the names and countdown stay inside them.
@@ -361,12 +368,12 @@ private struct HeroHeader: View {
             }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(ActiveWedding.snapshot.coupleNamesSpoken)
+        .accessibilityLabel(wedding.coupleNamesSpoken)
     }
 
     private var firstName: some View {
         TypewriterText(
-            text: ActiveWedding.snapshot.partnerOne,
+            text: wedding.partnerOne,
             spec: .heroNames,
             color: Color(hex: 0xFDFAF3),
             startDelay: 0.75,
@@ -376,7 +383,7 @@ private struct HeroHeader: View {
 
     private var secondName: some View {
         TypewriterText(
-            text: ActiveWedding.snapshot.partnerTwo,
+            text: wedding.partnerTwo,
             spec: .heroNames,
             color: Color(hex: 0xFDFAF3),
             startDelay: 1.85,

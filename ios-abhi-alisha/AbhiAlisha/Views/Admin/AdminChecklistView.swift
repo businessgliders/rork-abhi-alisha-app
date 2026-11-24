@@ -1,9 +1,9 @@
 import SwiftUI
 
-/// The wedding-day checklist: a gold completion ring, tasks grouped by category, tap to
-/// tick, swipe to delete. Everything works offline and syncs when the signal returns.
+/// The wedding's checklist: a gold completion ring, tasks grouped by category, tap to
+/// tick, swipe to delete, hold and drag to reorder. Shared live with every co-host.
 struct AdminChecklistView: View {
-    @Environment(ChecklistStore.self) private var checklist
+    @Environment(WeddingTasksStore.self) private var checklist
 
     @State private var composing: ComposeTarget?
 
@@ -53,6 +53,16 @@ struct AdminChecklistView: View {
                         text: "Your checklist will appear here once you're connected.",
                         symbol: "checklist"
                     )
+                } else if let message = checklist.errorMessage {
+                    AdminNote(text: message, symbol: "exclamationmark.circle")
+                        .transition(.opacity)
+                }
+
+                if checklist.totalCount > 1 {
+                    Text("Hold a task and drag to reorder it.")
+                        .brandFont(.bodySmall)
+                        .foregroundStyle(BrandPalette.body.opacity(0.75))
+                        .frame(maxWidth: .infinity, alignment: .center)
                 }
             }
             .plainRow()
@@ -88,6 +98,10 @@ struct AdminChecklistView: View {
                             }
                         }
                     }
+                    .onMove { source, destination in
+                        BrandHaptics.tick()
+                        checklist.move(in: section.name, from: source, to: destination)
+                    }
                 } header: {
                     SectionHeader(section: section)
                 }
@@ -99,9 +113,7 @@ struct AdminChecklistView: View {
                 .plainRow(vertical: 0)
         }
         .animation(.calm, value: canSuggest)
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            lockBar
-        }
+        .animation(.calm, value: checklist.errorMessage)
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
         .scrollIndicators(.hidden)
@@ -119,7 +131,6 @@ struct AdminChecklistView: View {
             }
         }
         .task {
-            checklist.start()
             await checklist.refresh()
         }
         .refreshable {
@@ -131,26 +142,6 @@ struct AdminChecklistView: View {
     /// list can never land on top of tasks that simply haven't loaded yet.
     private var canSuggest: Bool {
         checklist.totalCount == 0 && checklist.hasLoadedFromServer
-    }
-
-    /// The way out of the couple's area, resting just above the glass bar.
-    private var lockBar: some View {
-        AdminLockFooter()
-            .padding(.top, 18)
-            .padding(.bottom, FloatingTabBar.barHeight + FloatingTabBar.edgeInset + 2)
-            .frame(maxWidth: .infinity)
-            .background {
-                LinearGradient(
-                    stops: [
-                        .init(color: BrandPalette.background.opacity(0), location: 0),
-                        .init(color: BrandPalette.background, location: 0.3)
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .ignoresSafeArea(edges: .bottom)
-                .allowsHitTesting(false)
-            }
     }
 
     private var suggestedButton: some View {
@@ -171,7 +162,7 @@ struct AdminChecklistView: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(PressableStyle())
-        .accessibilityHint("Adds fifteen common wedding tasks, grouped by when they're due")
+        .accessibilityHint("Adds a set of common wedding tasks, grouped by when they're due")
     }
 
     private var addButton: some View {

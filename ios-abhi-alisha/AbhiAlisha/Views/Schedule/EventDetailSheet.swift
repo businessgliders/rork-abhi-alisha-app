@@ -74,7 +74,7 @@ struct EventDetailSheet: View {
                     }
                     .padding(.top, 34)
 
-                    if session.isAdmin, !event.isFarewell {
+                    if WeddingContext.shared.canUploadWeddingPhotos, !event.isFarewell {
                         section(title: "Wedding Week photos") {
                             weddingPhotosAdmin
                         }

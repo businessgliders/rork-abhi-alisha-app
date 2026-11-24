@@ -80,6 +80,23 @@ nonisolated struct WeddingSnapshot: Codable, Equatable, Sendable {
 
     var timeZone: TimeZone { TimeZone(identifier: timezone) ?? .current }
 
+    /// This snapshot, with any blank names or title filled from the last good copy of the
+    /// same wedding, so a partial or failed load can never blank the couple's names.
+    func keepingNames(from previous: WeddingSnapshot) -> WeddingSnapshot {
+        guard previous.id.lowercased() == id.lowercased() else { return self }
+        var merged = self
+        if merged.partnerOne.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            merged.partnerOne = previous.partnerOne
+        }
+        if merged.partnerTwo.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            merged.partnerTwo = previous.partnerTwo
+        }
+        if merged.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            merged.title = previous.title
+        }
+        return merged
+    }
+
     /// The venue line: "AVA Resort Cancún", else the city, else nothing.
     var placeLine: String? {
         if let venueName = venueName?.trimmingCharacters(in: .whitespacesAndNewlines), !venueName.isEmpty {

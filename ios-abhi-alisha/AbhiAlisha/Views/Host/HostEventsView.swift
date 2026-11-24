@@ -30,7 +30,7 @@ struct HostEventsView: View {
             } else if events.isEmpty {
                 VStack(spacing: 14) {
                     HostEmptyLine(text: "No celebrations yet.")
-                    Button("Add the first one") { editing = .blank(sort: 0) }
+                    Button("Add your first celebration") { editing = .blank(sort: 0) }
                         .buttonStyle(.milniPrimary)
                 }
                 .listRowBackground(Color.clear)

@@ -246,6 +246,7 @@ struct ConversationListView: View {
             .buttonStyle(PressableStyle())
             .accessibilityHint("From \(ActiveWedding.couple), read only")
 
+            if WeddingContext.shared.canGuestChat {
             Button(action: openQuestions) {
                 ChannelRow(
                     badge: .questions,
@@ -259,7 +260,10 @@ struct ConversationListView: View {
             }
             .buttonStyle(PressableStyle())
             .accessibilityHint(session.isSignedIn ? "Open to every guest" : "Asks for your name, then opens the chat")
+            .transition(.opacity)
+            }
         }
+        .animation(.calm, value: WeddingContext.shared.canGuestChat)
     }
 
     private var announcementPreview: String {
@@ -312,8 +316,10 @@ struct ConversationListView: View {
                     Eyebrow(text: "The family", size: 9.5)
                         .padding(.leading, 4)
 
-                    newMessageButton
-                        .padding(.top, 12)
+                    if WeddingContext.shared.canGuestDM {
+                        newMessageButton
+                            .padding(.top, 12)
+                    }
 
                     list
                         .padding(.top, 12)
