@@ -16,6 +16,8 @@ struct ExperienceView: View {
     @State private var isShowingVenues = false
     @State private var isShowingToast = false
     @State private var isShowingPacking = false
+    @State private var isConfirmingSignOut = false
+    @State private var isConfirmingDelete = false
 
     private static let topAnchor = "experience.top"
     private static let resortAnchor = "experience.resort"
@@ -48,6 +50,8 @@ struct ExperienceView: View {
             PackingListView()
                 .environment(schedule)
         }
+        // The same confirmations behind Chat → … → Delete Account, reached from here.
+        .chatAccountDialogs(isConfirmingSignOut: $isConfirmingSignOut, isConfirmingDelete: $isConfirmingDelete)
     }
 
     private var hasVenues: Bool { VenueMapPlot.hasAnyVenue(in: schedule.events) }
@@ -79,6 +83,17 @@ struct ExperienceView: View {
             detail: String(localized: "Made from your events, dress codes and the forecast.")
         ) {
             isShowingPacking = true
+        }
+    }
+
+    /// Opens the same confirmation the Chat menu shows, then runs the same deletion.
+    private var deleteAccountLink: some View {
+        ExperienceRow(
+            symbol: "person.crop.circle",
+            title: String(localized: "Delete Account"),
+            detail: String(localized: "Removes your name and every chat message, permanently.")
+        ) {
+            isConfirmingDelete = true
         }
     }
 
@@ -124,6 +139,16 @@ struct ExperienceView: View {
                     toastLink
                     WalletPassButton()
                         .padding(.top, 4)
+                }
+                .padding(.horizontal, 22)
+                .padding(.top, 18)
+
+                SectionHeading(text: "Account")
+                    .padding(.horizontal, 22)
+                    .padding(.top, 42)
+
+                VStack(spacing: 12) {
+                    deleteAccountLink
                 }
                 .padding(.horizontal, 22)
                 .padding(.top, 18)
