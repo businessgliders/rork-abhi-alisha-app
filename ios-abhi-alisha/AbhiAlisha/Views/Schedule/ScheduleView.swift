@@ -424,12 +424,12 @@ struct ScheduleView: View {
         }
     }
 
-    /// Warms every day's weather up front so stepping between cards never shows a gap.
+    /// Warms every outdoor event's weather up front so stepping between cards never shows a gap.
+    /// Indoor events never get a chip.
     private func prefetchWeather() async {
         for event in events {
-            guard let date = event.startsAt, weatherByEvent[event.id] == nil,
-                  let place = WeatherPlace.forEvent(event),
-                  let weather = await WeatherService.shared.weather(for: date, at: place) else { continue }
+            guard weatherByEvent[event.id] == nil,
+                  let weather = await Self.weather(for: event) else { continue }
             withAnimation(.softFade) {
                 weatherByEvent[event.id] = weather
             }
@@ -437,11 +437,19 @@ struct ScheduleView: View {
     }
 
     private func loadWeatherForSelection() async {
-        guard let event = selectedEvent, let date = event.startsAt else { return }
-        guard weatherByEvent[event.id] == nil, let place = WeatherPlace.forEvent(event),
-              let weather = await WeatherService.shared.weather(for: date, at: place) else { return }
+        guard let event = selectedEvent, weatherByEvent[event.id] == nil,
+              let weather = await Self.weather(for: event) else { return }
         withAnimation(.softFade) {
             weatherByEvent[event.id] = weather
         }
+    }
+
+    /// Apple Weather for one outdoor event, also shelved for the widgets.
+    static func weather(for event: ScheduleEvent) async -> DayWeather? {
+        guard event.isOutdoor == true, let date = event.startsAt,
+              let place = WeatherPlace.forEvent(event) else { return nil }
+        let weather = await WeddingWeather.shared.weather(key: event.id, for: date, at: place)
+        WeatherChipShelf.store(weather?.shelfChip, for: event.id)
+        return weather
     }
 }

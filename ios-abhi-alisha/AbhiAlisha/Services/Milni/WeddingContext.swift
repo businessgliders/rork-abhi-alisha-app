@@ -164,6 +164,7 @@ final class WeddingContext {
     /// After leaving or deleting the open wedding: go to another one, or start over.
     func didLeaveCurrentWedding() async {
         let leftID = weddingID.lowercased()
+        SpotlightIndexer.removeWedding(leftID)
         await refreshMyWeddings()
         myWeddings.removeAll { $0.id.lowercased() == leftID }
         if let next = myWeddings.first {

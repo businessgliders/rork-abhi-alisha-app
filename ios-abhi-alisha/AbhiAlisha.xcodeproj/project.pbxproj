@@ -11,6 +11,7 @@
 		XX2F454EBB60C27EB3313AXX /* AbhiAlishaWatchWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = XX9A918967852AE91A553EXX /* AbhiAlishaWatchWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		XX9F62D95E8263ACF0CA07XX /* AbhiAlishaWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = XX877ED8969F1802A998B6XX /* AbhiAlishaWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		XXCB0C833A4E7DDE353CE0XX /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = XX17F496E7391AF4178246XX /* Supabase */; };
+		C11BF0000000000000000001 /* AbhiAlishaClip.app in Embed App Clips */ = {isa = PBXBuildFile; fileRef = C11BF0000000000000000004 /* AbhiAlishaClip.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -49,6 +50,13 @@
 			remoteGlobalIDString = XX170BB40174A02606543BXX;
 			remoteInfo = AbhiAlishaWidget;
 		};
+		C11BF0000000000000000002 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 105FC5722E9EAD3100EA8BCF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C11BF000000000000000000A;
+			remoteInfo = AbhiAlishaClip;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -85,6 +93,17 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 		};
+		C11BF0000000000000000003 /* Embed App Clips */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/AppClips";
+			dstSubfolderSpec = 16;
+			files = (
+				C11BF0000000000000000001 /* AbhiAlishaClip.app in Embed App Clips */,
+			);
+			name = "Embed App Clips";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
@@ -94,6 +113,7 @@
 		XX877ED8969F1802A998B6XX /* AbhiAlishaWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AbhiAlishaWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		XX9A918967852AE91A553EXX /* AbhiAlishaWatchWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = AbhiAlishaWatchWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		XXFECD93F8CE8391DDF12EXX /* AbhiAlishaWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = AbhiAlishaWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		C11BF0000000000000000004 /* AbhiAlishaClip.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AbhiAlishaClip.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -119,6 +139,13 @@
 				AbhiAlishaWidget.entitlements,
 			);
 			target = XX170BB40174A02606543BXX /* AbhiAlishaWidget */;
+		};
+		C11BF0000000000000000005 /* Exceptions for "AbhiAlishaClip" folder in "AbhiAlishaClip" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				AbhiAlishaClip.entitlements,
+			);
+			target = C11BF000000000000000000A /* AbhiAlishaClip */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -172,6 +199,14 @@
 				XX9E3459D161D25BA806C0XX /* Exceptions for "AbhiAlishaWidget" folder in "AbhiAlishaWidget" target */,
 			);
 		};
+		C11BF0000000000000000006 /* AbhiAlishaClip */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = AbhiAlishaClip;
+			sourceTree = "<group>";
+			exceptions = (
+				C11BF0000000000000000005 /* Exceptions for "AbhiAlishaClip" folder in "AbhiAlishaClip" target */,
+			);
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -218,6 +253,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		C11BF0000000000000000007 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -233,6 +275,7 @@
 				XX0E643F35DD50EB1BB2C2XX /* AbhiAlishaWatch */,
 				XX57B8A0AC90CE3D9AB644XX /* AbhiAlishaWatchWidget */,
 				FF8E4C2A91D4480FBA30C62C /* WatchShared */,
+				C11BF0000000000000000006 /* AbhiAlishaClip */,
 			);
 			sourceTree = "<group>";
 		};
@@ -245,6 +288,7 @@
 				XXFECD93F8CE8391DDF12EXX /* AbhiAlishaWidget.appex */,
 				XX877ED8969F1802A998B6XX /* AbhiAlishaWatch.app */,
 				XX9A918967852AE91A553EXX /* AbhiAlishaWatchWidget.appex */,
+				C11BF0000000000000000004 /* AbhiAlishaClip.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -391,6 +435,26 @@
 				FF8E4C2A91D4480FBA30C62C /* WatchShared */,
 			);
 		};
+		C11BF000000000000000000A /* AbhiAlishaClip */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C11BF000000000000000000E /* Build configuration list for PBXNativeTarget "AbhiAlishaClip" */;
+			buildPhases = (
+				C11BF0000000000000000009 /* Sources */,
+				C11BF0000000000000000007 /* Frameworks */,
+				C11BF0000000000000000008 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				C11BF0000000000000000006 /* AbhiAlishaClip */,
+			);
+			name = AbhiAlishaClip;
+			productName = AbhiAlishaClip;
+			productReference = C11BF0000000000000000004 /* AbhiAlishaClip.app */;
+			productType = "com.apple.product-type.application.on-demand-install-capable";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -434,6 +498,7 @@
 				XX170BB40174A02606543BXX /* AbhiAlishaWidget */,
 				XX2A266D0DE95353D76097XX /* AbhiAlishaWatch */,
 				XX5D98368F33E386823FB9XX /* AbhiAlishaWatchWidget */,
+				C11BF000000000000000000A /* AbhiAlishaClip */,
 			);
 			packageReferences = (
 				XXA26CCC1C14E04A80BED3XX /* XCRemoteSwiftPackageReference "supabase-swift" */,
@@ -478,6 +543,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		XXFF0F059C1E5927B468C1XX /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C11BF0000000000000000008 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -529,6 +601,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		C11BF0000000000000000009 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -556,6 +635,11 @@
 			isa = PBXTargetDependency;
 			target = XX5D98368F33E386823FB9XX /* AbhiAlishaWatchWidget */;
 			targetProxy = XX5747B1DA2DED004B3D52XX /* PBXContainerItemProxy */;
+		};
+		C11BF000000000000000000B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = C11BF000000000000000000A /* AbhiAlishaClip */;
+			targetProxy = C11BF0000000000000000002 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -1013,6 +1097,80 @@
 			};
 			name = Release;
 		};
+		C11BF000000000000000000C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = AbhiAlishaClip/AbhiAlishaClip.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "AbhiAlishaClip-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = Milni;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.businessgliders.abhialisha.Clip;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		C11BF000000000000000000D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = AbhiAlishaClip/AbhiAlishaClip.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "AbhiAlishaClip-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = Milni;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.businessgliders.abhialisha.Clip;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -1075,6 +1233,15 @@
 			buildConfigurations = (
 				XX6DA9996569D17D463A14XX /* Debug */,
 				XXA77AD6A2CED9779AB73DXX /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C11BF000000000000000000E /* Build configuration list for PBXNativeTarget "AbhiAlishaClip" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C11BF000000000000000000C /* Debug */,
+				C11BF000000000000000000D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

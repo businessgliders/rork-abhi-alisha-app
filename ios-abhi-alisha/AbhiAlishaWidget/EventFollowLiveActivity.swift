@@ -170,7 +170,8 @@ private struct ActivityFooter: View {
     let context: ActivityViewContext<EventFollowAttributes>
 
     private var lines: [String] {
-        [context.attributes.locationName, context.attributes.dressCode].compactMap { $0 }
+        let weather = WeatherChipShelf.chip(for: context.attributes.eventID)?.text
+        return [context.attributes.locationName, context.attributes.dressCode, weather].compactMap { $0 }
     }
 
     var body: some View {

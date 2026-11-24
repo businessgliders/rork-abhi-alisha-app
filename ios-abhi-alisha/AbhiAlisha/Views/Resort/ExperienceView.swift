@@ -9,9 +9,13 @@ struct ExperienceView: View {
 
     @Environment(ContentStore.self) private var content
     @Environment(DeepLinkRouter.self) private var router
+    @Environment(ScheduleStore.self) private var schedule
 
     @State private var isShowingOutfits = false
     @State private var isShowingQuestions = false
+    @State private var isShowingVenues = false
+    @State private var isShowingToast = false
+    @State private var isShowingPacking = false
 
     private static let topAnchor = "experience.top"
     private static let resortAnchor = "experience.resort"
@@ -30,6 +34,51 @@ struct ExperienceView: View {
         .fullScreenCover(isPresented: $isShowingQuestions) {
             QuestionsView()
                 .environment(content)
+        }
+        .fullScreenCover(isPresented: $isShowingVenues) {
+            VenuesMapView()
+                .environment(schedule)
+        }
+        .sheet(isPresented: $isShowingToast) {
+            ToastWriterView()
+                .environment(schedule)
+                .environment(content)
+        }
+        .fullScreenCover(isPresented: $isShowingPacking) {
+            PackingListView()
+                .environment(schedule)
+        }
+    }
+
+    private var hasVenues: Bool { VenueMapPlot.hasAnyVenue(in: schedule.events) }
+
+    private var venuesLink: some View {
+        ExperienceRow(
+            symbol: "map",
+            title: String(localized: "The venues"),
+            detail: String(localized: "Every celebration on one map, with directions.")
+        ) {
+            isShowingVenues = true
+        }
+    }
+
+    private var toastLink: some View {
+        ExperienceRow(
+            symbol: "quote.opening",
+            title: String(localized: "Write a toast"),
+            detail: String(localized: "A few words for \(ActiveWedding.couple), drafted privately on your phone.")
+        ) {
+            isShowingToast = true
+        }
+    }
+
+    private var packingLink: some View {
+        ExperienceRow(
+            symbol: "suitcase",
+            title: String(localized: "Packing list"),
+            detail: String(localized: "Made from your events, dress codes and the forecast.")
+        ) {
+            isShowingPacking = true
         }
     }
 
@@ -68,6 +117,13 @@ struct ExperienceView: View {
                     MyOutfitsHomeCard { isShowingOutfits = true }
                     ExperienceUpdatesCard()
                     questionsLink
+                    if hasVenues && !showsResort {
+                        venuesLink
+                    }
+                    packingLink
+                    toastLink
+                    WalletPassButton()
+                        .padding(.top, 4)
                 }
                 .padding(.horizontal, 22)
                 .padding(.top, 18)
@@ -77,6 +133,12 @@ struct ExperienceView: View {
                         .padding(.horizontal, 22)
                         .padding(.top, 46)
                         .id(Self.resortAnchor)
+
+                    if hasVenues {
+                        venuesLink
+                            .padding(.horizontal, 22)
+                            .padding(.top, 18)
+                    }
 
                     PhotosAndMaps(photos: content.resortPhotos, stay: stay)
                         .padding(.top, 18)

@@ -20,6 +20,19 @@ struct EventDetailSheet: View {
     @State private var session = ChatSession.shared
     @State private var photoStore = WeddingPhotoStore.shared
     @State private var addSource: WeddingAddSource?
+    @State private var loadedWeather: DayWeather?
+    @State private var isWritingToast = false
+
+    /// The reception is where toasts happen.
+    private var invitesToast: Bool {
+        event.title.localizedCaseInsensitiveContains("reception")
+    }
+
+    /// The weather the schedule already had, else what this sheet fetched itself.
+    private var shownWeather: DayWeather? {
+        guard event.isOutdoor == true else { return nil }
+        return weather ?? loadedWeather
+    }
 
     var body: some View {
         NavigationStack {
@@ -73,6 +86,17 @@ struct EventDetailSheet: View {
                         venueBlock
                     }
                     .padding(.top, 34)
+
+                    if invitesToast {
+                        ExperienceRow(
+                            symbol: "quote.opening",
+                            title: String(localized: "Write a toast"),
+                            detail: String(localized: "A few words for tonight, drafted privately on your phone.")
+                        ) {
+                            isWritingToast = true
+                        }
+                        .padding(.top, 34)
+                    }
 
                     if WeddingContext.shared.canUploadWeddingPhotos, !event.isFarewell {
                         section(title: "Wedding Week photos") {
@@ -128,6 +152,15 @@ struct EventDetailSheet: View {
             ResortMapScreen(focusEventID: event.id, returnsToEventID: event.id)
         }
         .weddingPhotoAdder(source: $addSource, originEventID: event.id)
+        .sheet(isPresented: $isWritingToast) {
+            ToastWriterView(eventID: event.id)
+                .environment(store)
+        }
+        .task(id: event.id) {
+            guard weather == nil, event.isOutdoor == true else { return }
+            let fetched = await ScheduleView.weather(for: event)
+            withAnimation(.softFade) { loadedWeather = fetched }
+        }
     }
 
     /// For the couple: how many photos this celebration has, and a way to add more.
@@ -206,9 +239,15 @@ struct EventDetailSheet: View {
         }
     }
 
-    /// Venue name, address, and this celebration's own corner of the resort map.
+    /// The forecast (outdoor events only), venue name and address, the resort map for
+    /// Abhi & Alisha, then the real map with directions and Look Around.
     private var venueBlock: some View {
         VStack(alignment: .leading, spacing: 14) {
+            if let shownWeather {
+                WeatherForecastCard(weather: shownWeather)
+                    .transition(.opacity)
+            }
+
             if event.locationName != nil || event.locationAddress != nil || resortLabel != nil {
                 VStack(alignment: .leading, spacing: 6) {
                     if let name = event.locationName {
@@ -234,6 +273,18 @@ struct EventDetailSheet: View {
 
             if let pin = mapPin {
                 mapExcerpt(pin)
+            }
+
+            if let coordinate = VenueMapPlot.coordinate(for: event) {
+                EventMapCard(
+                    event: event,
+                    number: VenueMapPlot.number(of: event, in: store.events),
+                    coordinate: coordinate
+                )
+            }
+
+            if shownWeather != nil {
+                WeatherAttributionFooter()
             }
         }
     }
@@ -480,9 +531,6 @@ struct EventDetailSheet: View {
 
     private var badges: [Badge] {
         var result: [Badge] = []
-        if let weather {
-            result.append(Badge(text: weather.pillText, tone: .neutral))
-        }
         switch event.ceremonyType {
         case .sikh:
             result.append(Badge(text: "Sikh Ceremony", tone: .sikh))

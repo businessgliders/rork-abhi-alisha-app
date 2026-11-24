@@ -345,6 +345,7 @@ nonisolated struct MilniAPI: Sendable {
         if let photos = row["outfit_images"] as? [[String: Any]] { out["outfit_photos"] = photos }
         if let faqs = details["faqs"] as? [[String: Any]] { out["faqs"] = faqs }
         out["is_active"] = (row["hidden"] as? Bool) != true
+        if let outdoor = row["is_outdoor"] as? Bool { out["is_outdoor"] = outdoor }
         return out
     }
 

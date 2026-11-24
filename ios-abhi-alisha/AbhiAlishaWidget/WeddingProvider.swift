@@ -14,6 +14,8 @@ nonisolated struct EventSummary: Sendable, Hashable {
     let location: String?
     let iconKey: EventIconKey
     let startsAt: Date?
+    /// Apple Weather's line for an outdoor celebration, saved by the app.
+    let weather: WeatherChipShelf.Chip?
 
     init(_ event: ScheduleEvent) {
         id = event.id
@@ -23,6 +25,7 @@ nonisolated struct EventSummary: Sendable, Hashable {
         location = event.locationName
         iconKey = event.iconKey
         startsAt = event.startsAt
+        weather = event.isOutdoor == true ? WeatherChipShelf.chip(for: event.id) : nil
     }
 
     /// Date and time on one line, joined only when both are actually known.

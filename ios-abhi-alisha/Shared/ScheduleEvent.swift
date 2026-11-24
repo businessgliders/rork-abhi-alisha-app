@@ -51,6 +51,8 @@ nonisolated struct ScheduleEvent: Codable, Identifiable, Hashable, Sendable {
     let outfitPhotos: [OutfitPhoto]?
     let faqs: [EventFAQ]?
     let isActive: Bool?
+    /// True when the host marked the event as outdoors; only those get a weather chip.
+    let isOutdoor: Bool?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -75,6 +77,7 @@ nonisolated struct ScheduleEvent: Codable, Identifiable, Hashable, Sendable {
         case outfitPhotos = "outfit_photos"
         case faqs
         case isActive = "is_active"
+        case isOutdoor = "is_outdoor"
     }
 
     init(from decoder: Decoder) throws {
@@ -101,6 +104,7 @@ nonisolated struct ScheduleEvent: Codable, Identifiable, Hashable, Sendable {
         outfitPhotos = try container.decodeIfPresent([OutfitPhoto].self, forKey: .outfitPhotos)
         faqs = try container.decodeIfPresent([EventFAQ].self, forKey: .faqs)
         isActive = try container.decodeIfPresent(Bool.self, forKey: .isActive)
+        isOutdoor = try container.decodeIfPresent(Bool.self, forKey: .isOutdoor)
     }
 
     func encode(to encoder: Encoder) throws {
@@ -127,6 +131,7 @@ nonisolated struct ScheduleEvent: Codable, Identifiable, Hashable, Sendable {
         try container.encodeIfPresent(outfitPhotos, forKey: .outfitPhotos)
         try container.encodeIfPresent(faqs, forKey: .faqs)
         try container.encodeIfPresent(isActive, forKey: .isActive)
+        try container.encodeIfPresent(isOutdoor, forKey: .isOutdoor)
     }
 
     // MARK: - Derived values

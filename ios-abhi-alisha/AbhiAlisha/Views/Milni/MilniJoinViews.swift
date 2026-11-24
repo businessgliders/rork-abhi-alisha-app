@@ -440,6 +440,8 @@ struct MilniWelcomeView: View {
                         .accessibilityElement(children: .combine)
                         MilniBody("\(summary.coupleNames) can't wait to celebrate with you.", alignment: .center)
                             .padding(.top, 4)
+                        WalletPassButton(weddingID: summary.id)
+                            .padding(.top, 10)
                     }
                     .milniSides()
                     .opacity(showText ? 1 : 0)

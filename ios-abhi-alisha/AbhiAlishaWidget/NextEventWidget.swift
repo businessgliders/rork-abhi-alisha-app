@@ -103,6 +103,16 @@ private struct MediumNextEvent: View {
                         .minimumScaleFactor(0.75)
                         .padding(.top, 2)
                 }
+
+                if let weather = event.weather {
+                    Label(weather.text, systemImage: weather.symbol)
+                        .brandFont(.widgetBodySmall)
+                        .foregroundStyle(WidgetPalette.body.opacity(0.85))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.75)
+                        .padding(.top, 2)
+                        .accessibilityLabel(Text(weather.accessibility))
+                }
             }
             .accessibilityElement(children: .combine)
         } else {

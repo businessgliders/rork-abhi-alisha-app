@@ -15,6 +15,9 @@ struct HomeView: View {
     @State private var coverage: CGFloat = 0
     @State private var isShowingOutfits = false
     @State private var phase = WeddingPhase.shared
+    @State private var isShowingVenues = false
+    /// The wedding week's weather at the main venue, from Apple Weather.
+    @State private var weddingWeather: DayWeather?
 
     /// From noon on the day after the reception, Home becomes a thank-you.
     private var isThankYou: Bool { phase.isThankYou(at: store.now) }
@@ -68,6 +71,10 @@ struct HomeView: View {
         .fullScreenCover(isPresented: $isShowingOutfits) {
             MyOutfitsView()
         }
+        .fullScreenCover(isPresented: $isShowingVenues) {
+            VenuesMapView()
+                .environment(store)
+        }
         .animation(.calm, value: isThankYou)
         .onAppear {
             syncMatch()
@@ -82,6 +89,48 @@ struct HomeView: View {
         .task {
             await store.refresh()
         }
+        .task(id: ActiveWedding.snapshot.id) {
+            await loadWeddingWeather()
+        }
+    }
+
+    /// The place line; a button to the venues map whenever any venue can be placed.
+    @ViewBuilder
+    private var placeLine: some View {
+        let place = Text(ActiveWedding.snapshot.placeWithCountry ?? "")
+            .brandFont(.bodySmall)
+            .tracking(0.4)
+        if VenueMapPlot.hasAnyVenue(in: store.events) {
+            Button {
+                BrandHaptics.tick()
+                isShowingVenues = true
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "mappin.and.ellipse")
+                        .font(.system(size: 11, weight: .regular))
+                        .foregroundStyle(BrandPalette.gold)
+                    place
+                        .foregroundStyle(BrandPalette.body.opacity(0.85))
+                        .underline(color: BrandPalette.gold.opacity(0.5))
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(PressableStyle())
+            .accessibilityHint("Opens a map of the venues")
+        } else {
+            place.foregroundStyle(BrandPalette.body.opacity(0.85))
+        }
+    }
+
+    private func loadWeddingWeather() async {
+        guard let place = WeatherPlace.forWedding(),
+              let date = store.mainCeremony?.startsAt ?? ActiveWedding.snapshot.start
+        else {
+            weddingWeather = nil
+            return
+        }
+        let fetched = await WeddingWeather.shared.weather(key: "wedding-" + ActiveWedding.snapshot.id, for: date, at: place)
+        withAnimation(.softFade) { weddingWeather = fetched }
     }
 
     private var contentSheet: some View {
@@ -124,10 +173,25 @@ struct HomeView: View {
 
             VStack(spacing: 12) {
                 GoldRule(width: 30, opacity: 0.55)
-                Text(ActiveWedding.snapshot.placeWithCountry ?? "")
+                placeLine
+
+                if let weddingWeather, !isThankYou {
+                    Label {
+                        Text(weddingWeather.pillText)
+                    } icon: {
+                        Image(systemName: weddingWeather.symbolName)
+                            .symbolRenderingMode(.multicolor)
+                    }
                     .brandFont(.bodySmall)
                     .foregroundStyle(BrandPalette.body.opacity(0.85))
-                    .tracking(0.4)
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(Text("Weather for the wedding: \(weddingWeather.accessibilityText)"))
+                    .transition(.opacity)
+
+                    WeatherAttributionFooter()
+                        .frame(maxWidth: 220)
+                        .fixedSize(horizontal: true, vertical: false)
+                }
             }
             .padding(.top, 6)
 

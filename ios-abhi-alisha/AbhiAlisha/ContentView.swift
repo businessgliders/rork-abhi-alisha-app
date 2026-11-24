@@ -1,3 +1,4 @@
+import CoreSpotlight
 import SwiftUI
 
 /// Root shell: the five sections stay alive behind a floating Liquid Glass tab bar,
@@ -65,6 +66,22 @@ struct WeddingShell: View {
             NotificationsView()
                 .environment(updates)
         }
+        .fullScreenCover(isPresented: Binding(
+            get: { router.pendingOutfitEventID != nil },
+            set: { if !$0 { router.pendingOutfitEventID = nil } }
+        )) {
+            if let eventID = router.pendingOutfitEventID {
+                NavigationStack {
+                    OutfitLookView(eventID: eventID)
+                        .toolbar {
+                            ToolbarItem(placement: .topBarTrailing) {
+                                Button("Close") { router.pendingOutfitEventID = nil }
+                            }
+                        }
+                }
+                .environment(store)
+            }
+        }
         .tint(BrandPalette.goldDeep)
         .environment(store)
         .environment(content)
@@ -97,6 +114,10 @@ struct WeddingShell: View {
         }
         .onAppear(perform: openPendingLanding)
         .onAppear { admin.consumeRequest() }
+        .onChange(of: store.events) { _, _ in reindexSpotlight() }
+        .onChange(of: content.faqs) { _, _ in reindexSpotlight() }
+        .onChange(of: updates.records) { _, _ in reindexSpotlight() }
+        .onAppear(perform: reindexSpotlight)
         .onChange(of: areaRequest.pending) { _, pending in
             guard pending != nil else { return }
             admin.consumeRequest()
@@ -132,6 +153,11 @@ struct WeddingShell: View {
             // Already open? Then the tap simply keeps it where it is.
             router.isNotificationsPresented = true
         }
+    }
+
+    /// Keeps Spotlight in step with the open wedding.
+    private func reindexSpotlight() {
+        SpotlightIndexer.reindex(events: store.events, faqs: content.faqs, announcements: updates.records)
     }
 
     /// A conversation, or the admin's announcement composer, fills the screen to the
@@ -196,9 +222,21 @@ struct ContentView: View {
             guard let url = activity.webpageURL else { return }
             if !context.handleCohostLink(url) { _ = context.handleJoinLink(url) }
         }
+        .onContinueUserActivity(CSSearchableItemActionType) { activity in
+            guard let identifier = activity.userInfo?[CSSearchableItemActivityIdentifier] as? String,
+                  let target = SpotlightIndexer.target(from: identifier) else { return }
+            Task {
+                // Let a cold launch finish loading the saved wedding first.
+                for _ in 0..<50 where context.stage == .launching {
+                    try? await Task.sleep(for: .milliseconds(100))
+                }
+                await SpotlightIndexer.open(target)
+            }
+        }
         .task {
             ChatSession.shared.start()
             await context.bootstrap()
+            ClipHandoff.openIfWaiting(in: context)
         }
     }
 }

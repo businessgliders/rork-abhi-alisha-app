@@ -13,5 +13,6 @@ struct AbhiAlishaWidgetBundle: WidgetBundle {
         CountdownWidget()
         NextEventWidget()
         EventFollowLiveActivity()
+        NextEventControl()
     }
 }

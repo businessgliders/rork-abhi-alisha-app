@@ -496,6 +496,8 @@ final class ChatSession {
     }
 
     private func becomeSignedOut() async {
+        SpotlightIndexer.removeAll()
+        WalletPassService.shared.forget()
         await clearLocalState()
         withAnimation(.calm) { phase = .signedOut }
     }

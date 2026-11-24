@@ -37,6 +37,8 @@ final class DeepLinkRouter {
     var pendingRSVP = false
     /// An announcement asked for a part of the Resort page.
     var pendingResortSection: ResortSection?
+    /// Siri or Shortcuts asked for the guest's saved look for one celebration.
+    var pendingOutfitEventID: String?
     /// Where a notification tap wants to land, held until the root view can act on it.
     var pending: Landing?
     /// The screen of past updates, raised over whichever tab is showing.
