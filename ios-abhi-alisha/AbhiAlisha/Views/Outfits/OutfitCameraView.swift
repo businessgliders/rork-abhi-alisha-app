@@ -82,7 +82,7 @@ struct OutfitCameraView: View {
         } label: {
             ZStack {
                 Circle()
-                    .stroke(Color(hex: 0xE0C982), lineWidth: 2)
+                    .stroke(BrandPalette.goldPale, lineWidth: 2)
                     .frame(width: 78, height: 78)
                 Circle()
                     .fill(Color(hex: 0xFFFBF1))
@@ -132,7 +132,7 @@ struct OutfitCameraView: View {
         VStack(spacing: 14) {
             Image(systemName: "camera")
                 .font(.system(size: 26, weight: .ultraLight))
-                .foregroundStyle(Color(hex: 0xE0C982))
+                .foregroundStyle(BrandPalette.goldPale)
             Text(title)
                 .brandFont(.eventTitleSmall)
                 .foregroundStyle(Color(hex: 0xFDFAF3))

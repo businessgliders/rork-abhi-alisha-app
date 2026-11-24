@@ -10,6 +10,8 @@ struct ScreenChrome: View {
     static let contentReserve: CGFloat = 58
 
     let showsCrest: Bool
+    /// Opens the host area; the pill shows only to the couple and co-hosts.
+    var onHost: (() -> Void)? = nil
 
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
@@ -20,9 +22,16 @@ struct ScreenChrome: View {
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             if showsCrest {
-                WeddingSwitcherCapsule()
-                    .fixedSize()
-                    .padding(.top, isWide ? 10 : 6)
+                HStack(spacing: 8) {
+                    WeddingSwitcherCapsule()
+                        .fixedSize()
+                    if WeddingContext.shared.isHost, let onHost {
+                        HostPill(action: onHost)
+                            .fixedSize()
+                            .transition(.opacity)
+                    }
+                }
+                .padding(.top, isWide ? 10 : 6)
             }
 
             Spacer(minLength: 0)
@@ -77,23 +86,30 @@ struct CrestWatermark: View {
         max(0.75, (width / 116) * 1.2)
     }
 
+    private var theme: WeddingTheme { ActiveWedding.snapshot.resolvedTheme }
+
     var body: some View {
         Group {
-            switch finish {
-            case .pressed(let surface):
-                ZStack {
-                    crest(BrandPalette.embossShadow.opacity(0.6))
-                        .offset(x: depth, y: depth)
+            if theme.hasBundledCrest || theme.crestURL != nil {
+                switch finish {
+                case .pressed(let surface):
+                    ZStack {
+                        crest(BrandPalette.embossShadow.opacity(0.6))
+                            .offset(x: depth, y: depth)
 
-                    crest(BrandPalette.embossLight.opacity(0.9))
-                        .offset(x: -depth, y: -depth)
+                        crest(BrandPalette.embossLight.opacity(0.9))
+                            .offset(x: -depth, y: -depth)
 
-                    crest(surface)
+                        crest(surface)
+                    }
+
+                case .lit:
+                    crest(Color(hex: 0xFDFAF3).opacity(0.4))
+                        .shadow(color: Color.black.opacity(0.35), radius: 12, y: 3)
                 }
-
-            case .lit:
-                crest(Color(hex: 0xFDFAF3).opacity(0.4))
-                    .shadow(color: Color.black.opacity(0.35), radius: 12, y: 3)
+            } else {
+                WeddingMonogram(width: width * 0.66, isLit: finish == .lit)
+                    .frame(width: width)
             }
         }
         .frame(width: width)
@@ -103,29 +119,70 @@ struct CrestWatermark: View {
 
     @ViewBuilder
     private func crest(_ color: Color) -> some View {
-        let wedding = ActiveWedding.snapshot
-        if wedding.isAbhiAlisha {
+        if let url = theme.crestURL {
+            AsyncImage(url: url) { phase in
+                if let image = phase.image {
+                    image
+                        .renderingMode(.template)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .foregroundStyle(color)
+                } else {
+                    Color.clear.aspectRatio(1, contentMode: .fit)
+                }
+            }
+        } else {
             Image("crest")
                 .renderingMode(.template)
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .foregroundStyle(color)
-        } else {
-            // Every other couple gets their initials in a double ring.
+        }
+    }
+}
+
+/// For a wedding without a crest: the couple's two initials in the theme's display face
+/// inside a thin accent ring, with the year beneath.
+struct WeddingMonogram: View {
+    var width: CGFloat
+    var isLit: Bool = false
+
+    private var wedding: WeddingSnapshot { ActiveWedding.snapshot }
+
+    private var year: String? {
+        guard let start = wedding.start else { return nil }
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = wedding.timeZone
+        return String(calendar.component(.year, from: start))
+    }
+
+    private var letters: String {
+        let initials = wedding.initials
+        guard initials.count == 2 else { return initials }
+        return "\(initials.prefix(1))\u{2009}&\u{2009}\(initials.suffix(1))"
+    }
+
+    var body: some View {
+        let ring = isLit ? Color(hex: 0xFDFAF3).opacity(0.7) : BrandPalette.gold
+        let ink = isLit ? Color(hex: 0xFDFAF3).opacity(0.92) : BrandPalette.goldDeep
+        VStack(spacing: width * 0.06) {
             ZStack {
-                Circle().strokeBorder(color, lineWidth: max(1, width / 90))
-                Circle().strokeBorder(color, lineWidth: max(0.6, width / 160)).padding(width * 0.07)
-                Text(wedding.initials.count == 2
-                     ? "\(wedding.initials.prefix(1))&\(wedding.initials.suffix(1))"
-                     : wedding.initials)
-                    .font(Milni.cormorant(width * 0.3, weight: 500, italic: true))
-                    .foregroundStyle(color)
+                Circle().strokeBorder(ring, lineWidth: max(0.75, width / 110))
+                Text(letters)
+                    .font(Font(BrandFont.themedFont(.playfairItalic, size: width * 0.28, weight: 500, textStyle: .title2, maxSize: width * 0.28)))
+                    .foregroundStyle(ink)
                     .minimumScaleFactor(0.5)
                     .lineLimit(1)
-                    .padding(width * 0.16)
+                    .padding(width * 0.14)
             }
-            .frame(width: width * 0.62, height: width * 0.62)
-            .frame(width: width)
+            .frame(width: width, height: width)
+            if let year {
+                Text(year)
+                    .font(BrandLabel.font(size: max(8, width * 0.1), weight: .semibold))
+                    .tracking(max(1, width * 0.03))
+                    .foregroundStyle(ink.opacity(0.85))
+            }
         }
+        .shadow(color: isLit ? Color.black.opacity(0.3) : .clear, radius: 10, y: 2)
     }
 }

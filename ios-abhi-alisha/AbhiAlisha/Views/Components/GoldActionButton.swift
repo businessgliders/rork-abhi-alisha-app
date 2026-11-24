@@ -36,7 +36,7 @@ struct GoldActionButton: View {
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .fill(
                         LinearGradient(
-                            colors: [Color(hex: 0xC2A24C), Color(hex: 0xA9873C)],
+                            colors: [BrandPalette.gold, BrandPalette.goldDeep],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
@@ -44,7 +44,7 @@ struct GoldActionButton: View {
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .stroke(Color(hex: 0xE0C982).opacity(0.5), lineWidth: 0.75)
+                    .stroke(BrandPalette.goldPale.opacity(0.5), lineWidth: 0.75)
             )
             .opacity(isEnabled ? 1 : 0.45)
         }

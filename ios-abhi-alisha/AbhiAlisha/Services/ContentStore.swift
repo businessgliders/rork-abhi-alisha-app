@@ -18,6 +18,8 @@ final class ContentStore {
     private(set) var storyChapters: [StoryChapter] = []
     private(set) var contentItems: [WeddingContentItem] = []
     private(set) var loveLetter: LoveLetter?
+    /// The wedding's own stay row (photos, maps, amenities), when it has one.
+    private(set) var stayRow: StayInfo?
 
     private let galleryCache = JSONDiskCache(filename: "gallery-photos.json")
     private let categoryCache = JSONDiskCache(filename: "gallery-categories.json")
@@ -26,6 +28,7 @@ final class ContentStore {
     private let storyCache = JSONDiskCache(filename: "story-timeline.json")
     private let contentCache = JSONDiskCache(filename: "wedding-content.json")
     private let letterCache = JSONDiskCache(filename: "love-letter.json")
+    private let stayCache = JSONDiskCache(filename: "stay-info.json")
 
     private var didRefresh = false
     private var isRefreshing = false
@@ -55,6 +58,9 @@ final class ContentStore {
         }
         if let letters = letterCache.load(LoveLetter.self) {
             loveLetter = LoveLetter.firstActive(from: letters)
+        }
+        if let stays = stayCache.load(StayInfo.self) {
+            stayRow = stays.first
         }
     }
 
@@ -108,6 +114,13 @@ final class ContentStore {
                 letterCache.clear()
                 loveLetter = nil
             }
+            if let stayData = content.stay, let info = try? JSONDecoder().decode(StayInfo.self, from: stayData) {
+                if let list = try? JSONEncoder().encode([info]) { stayCache.save(list) }
+                stayRow = info
+            } else if !isSample {
+                stayCache.clear()
+                stayRow = nil
+            }
             didRefresh = true
         } catch {
             print("[ContentStore] content refresh failed")
@@ -135,6 +148,16 @@ final class ContentStore {
     func allSectionsInReadingOrder() -> [FaqSection] {
         populatedSections([.important, .payment, .transfer, .cancellation, .resort, .general])
     }
+
+    /// What "Where we're staying" shows: the wedding's stay row, else A&A's bundled
+    /// content, else nothing (the section is hidden).
+    var stay: StayInfo? {
+        if let stayRow { return stayRow }
+        return ActiveWedding.snapshot.isAbhiAlisha ? StayInfo.abhiAlishaBundled : nil
+    }
+
+    /// Re-reads content on the next refresh (after a host saves something).
+    func invalidate() { didRefresh = false }
 
     /// The resort map the couple published on their schedule page.
     var resortMap: WeddingContentItem? {

@@ -32,6 +32,13 @@ final class WeddingContext {
     var onboardingEntry: OnboardingEntry = .splash
     /// A join code from a link, waiting for the onboarding flow to pick it up.
     var pendingJoinCode: String?
+    /// A co-host invite from a link, waiting to be accepted.
+    var pendingCohostInvite: CohostInvite?
+
+    struct CohostInvite: Identifiable, Equatable {
+        let code: String
+        var id: String { code }
+    }
 
     enum OnboardingEntry: Equatable {
         case splash
@@ -82,19 +89,20 @@ final class WeddingContext {
         return ["host", "cohost", "co-host", "co_host"].contains(role) && status?.lowercased() == "approved"
     }
 
-    var theme: BrandThemeColors { BrandTheme.colors(for: snapshot.preset) }
+    var theme: WeddingTheme { snapshot.resolvedTheme }
 
-    /// Midnight always runs dark; blush and emerald always light; ivory follows the phone.
+    /// The theme's appearance: forced light or dark, or nil to follow the phone.
+    /// Midnight always runs dark.
     var colorScheme: ColorScheme? {
-        switch snapshot.preset.lowercased() {
-        case "midnight": return .dark
-        case "blush", "emerald": return .light
-        default: return nil
+        switch snapshot.resolvedTheme.forcedDark {
+        case true?: return .dark
+        case false?: return .light
+        case nil: return nil
         }
     }
 
     private init() {
-        BrandTheme.preset = snapshot.preset
+        BrandTheme.theme = snapshot.resolvedTheme
     }
 
     // MARK: - Launch
@@ -211,7 +219,12 @@ final class WeddingContext {
         withAnimation(.easeInOut(duration: 0.6)) { stage = .wedding }
     }
 
-    private func show(_ snapshot: WeddingSnapshot, sample: Bool, role: String? = nil, status: String? = nil) {
+    private func show(_ incoming: WeddingSnapshot, sample: Bool, role: String? = nil, status: String? = nil) {
+        var snapshot = incoming
+        // A list row may arrive without the theme: keep the one already saved for it.
+        if snapshot.theme == nil, snapshot.id.lowercased() == self.snapshot.id.lowercased() {
+            snapshot.theme = self.snapshot.theme
+        }
         let changed = snapshot.id.lowercased() != self.snapshot.id.lowercased() || sample != isSample || stage != .wedding
         let previousID = self.snapshot.id
         self.role = role
@@ -225,7 +238,7 @@ final class WeddingContext {
             defaults.set(snapshot.id.lowercased(), forKey: Key.currentWeddingID)
         }
         ActiveWedding.save(snapshot)
-        BrandTheme.preset = snapshot.preset
+        BrandTheme.theme = snapshot.resolvedTheme
 
         if previousID.lowercased() != snapshot.id.lowercased() {
             Task { await Self.resetStoresForNewWedding() }
@@ -254,9 +267,9 @@ final class WeddingContext {
         if let fresh = try? await MilniAPI.shared.wedding(id: weddingID), !fresh.id.isEmpty {
             let snapshot = fresh.snapshot
             if snapshot != self.snapshot {
-                let presetChanged = snapshot.preset != self.snapshot.preset
+                let presetChanged = snapshot.resolvedTheme != self.snapshot.resolvedTheme
                 ActiveWedding.save(snapshot)
-                BrandTheme.preset = snapshot.preset
+                BrandTheme.theme = snapshot.resolvedTheme
                 withAnimation(.easeInOut(duration: 0.7)) {
                     self.snapshot = snapshot
                     if presetChanged { shellKey = UUID() }
@@ -354,16 +367,40 @@ final class WeddingContext {
         partnerTwo: String,
         start: Date,
         end: Date,
-        preset: String
+        preset: String,
+        venue: CoupleVenue? = nil,
+        events: [(title: String, kind: String)] = []
     ) async throws -> WeddingSummary {
+        let timezone = venue?.timeZone ?? .current
         let id = try await MilniAPI.shared.createWedding(
             partnerOne: partnerOne,
             partnerTwo: partnerTwo,
             start: start,
             end: end,
-            timezone: .current,
+            timezone: timezone,
             preset: preset
         )
+        // The venue and the full preset theme are written onto the new row.
+        var fields: [String: AnyJSON] = ["theme": HostAPI.anyJSON(WeddingTheme.preset(preset).json)]
+        if let venue {
+            fields["venue_name"] = .string(venue.name)
+            fields["address"] = venue.address.isEmpty ? .null : .string(venue.address)
+            fields["city"] = venue.city.isEmpty ? .null : .string(venue.city)
+            fields["country"] = venue.country.isEmpty ? .null : .string(venue.country)
+            fields["lat"] = .double(venue.latitude)
+            fields["lng"] = .double(venue.longitude)
+            fields["timezone"] = .string(timezone.identifier)
+        }
+        do {
+            try await HostAPI.shared.updateWedding(weddingID: id, fields: fields)
+        } catch {
+            print("[Milni] venue/theme update failed")
+        }
+        do {
+            try await HostAPI.shared.insertStarterEvents(weddingID: id, events: events)
+        } catch {
+            print("[Milni] starter events failed")
+        }
         var summary: WeddingSummary
         if let fresh = try? await MilniAPI.shared.wedding(id: id) {
             summary = fresh
@@ -379,8 +416,11 @@ final class WeddingContext {
                 "partner_two": partnerTwo,
                 "start_date": formatter.string(from: start),
                 "end_date": formatter.string(from: end),
-                "timezone": TimeZone.current.identifier,
-                "theme": ["preset": preset],
+                "timezone": timezone.identifier,
+                "venue_name": venue?.name ?? NSNull(),
+                "city": venue?.city ?? NSNull(),
+                "country": venue?.country ?? NSNull(),
+                "theme": WeddingTheme.preset(preset).json,
             ])
         }
         summary.role = "host"
@@ -428,6 +468,47 @@ final class WeddingContext {
             goToOnboarding(.joinCode)
         }
         return true
+    }
+
+    // MARK: - Co-host invites
+
+    /// `milni://cohost/CODE` or `https://milniapp.com/c/CODE`.
+    nonisolated static func cohostCode(from url: URL) -> String? {
+        let parts = url.pathComponents.filter { $0 != "/" }
+        let candidate: String?
+        if url.scheme?.lowercased() == "milni" {
+            if url.host?.lowercased() == "cohost" {
+                candidate = parts.first
+            } else if parts.first?.lowercased() == "cohost" {
+                candidate = parts.dropFirst().first
+            } else {
+                candidate = nil
+            }
+        } else if let host = url.host?.lowercased(), host.hasSuffix("milniapp.com"), parts.first?.lowercased() == "c" {
+            candidate = parts.dropFirst().first
+        } else {
+            candidate = nil
+        }
+        guard let raw = candidate?.trimmingCharacters(in: .whitespacesAndNewlines), raw.count >= 4, raw.count <= 64,
+              raw.allSatisfy({ $0.isLetter || $0.isNumber || $0 == "-" || $0 == "_" }) else { return nil }
+        return raw
+    }
+
+    /// A co-host link opened from anywhere: shown as an invitation sheet.
+    func handleCohostLink(_ url: URL) -> Bool {
+        guard let code = Self.cohostCode(from: url) else { return false }
+        pendingCohostInvite = CohostInvite(code: code)
+        return true
+    }
+
+    /// Accepts a co-host invite, then opens that wedding as a co-host.
+    func acceptCohost(code: String) async throws {
+        let weddingID = try await HostAPI.shared.acceptCohostInvite(code: code)
+        if let weddingID, !weddingID.isEmpty, weddingID.lowercased() != self.weddingID.lowercased() || stage != .wedding {
+            try await open(weddingID: weddingID)
+        }
+        await refreshMembership()
+        await refreshMyWeddings()
     }
 
     /// Before a push opens its screen: switch to the wedding it was sent from.

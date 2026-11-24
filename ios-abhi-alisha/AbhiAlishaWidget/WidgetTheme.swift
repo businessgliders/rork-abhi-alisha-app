@@ -59,12 +59,8 @@ struct WidgetCrest: View {
     var opacity: Double = 0.13
 
     var body: some View {
-        Image("crest")
-            .renderingMode(.template)
-            .resizable()
-            .aspectRatio(contentMode: .fit)
+        CrestGlyph(color: WidgetPalette.gold.opacity(opacity), allowsRemote: false)
             .frame(width: width)
-            .foregroundStyle(WidgetPalette.gold.opacity(opacity))
             .accessibilityHidden(true)
     }
 }

@@ -75,6 +75,44 @@ enum BrandFont {
         }
         return metrics.scaledFont(for: base)
     }
+
+    /// The same as `uiFont`, with the open wedding's theme fonts swapped in: the display
+    /// faces become the theme's display font, the Cormorant body faces its body font.
+    static func themedFont(
+        _ face: BrandTypeface,
+        size: CGFloat,
+        weight: CGFloat? = nil,
+        textStyle: UIFont.TextStyle = .body,
+        maxSize: CGFloat? = nil
+    ) -> UIFont {
+        let theme = BrandTheme.theme
+        var resolved = face
+        var size = size
+        var weight = weight
+        var maxSize = maxSize
+        switch face {
+        case .playfairItalic, .playfair:
+            if theme.displayIsPlayfair {
+                resolved = theme.displayIsItalic ? .playfairItalic : .playfair
+            } else {
+                // Cormorant runs small on the line: nudge it up so headings keep their presence.
+                resolved = theme.displayIsItalic ? .cormorantItalic : .cormorant
+                size *= 1.1
+                maxSize = maxSize.map { $0 * 1.1 }
+                weight = 450
+            }
+        case .cormorant, .cormorantItalic:
+            if theme.bodyIsInter {
+                resolved = .inter
+                size *= 0.84
+                maxSize = maxSize.map { $0 * 0.84 }
+                weight = 400
+            }
+        case .script, .inter:
+            break
+        }
+        return uiFont(resolved, size: size, weight: weight, textStyle: textStyle, maxSize: maxSize)
+    }
 }
 
 struct BrandFontSpec {
@@ -99,7 +137,7 @@ struct BrandFontSpec {
     }
 
     var resolved: Font {
-        Font(BrandFont.uiFont(face, size: size, weight: weight, textStyle: textStyle, maxSize: maxSize))
+        Font(BrandFont.themedFont(face, size: size, weight: weight, textStyle: textStyle, maxSize: maxSize))
     }
 
     var lineSpacing: CGFloat { size * 0.32 }
@@ -140,9 +178,22 @@ extension BrandFontSpec {
     static let bodySmall = BrandFontSpec(.cormorant, size: 17, weight: 500, textStyle: .callout, maxSize: 26)
 }
 
-/// Small letterspaced SF Pro caps used for labels and eyebrows.
+/// Small letterspaced caps used for labels and eyebrows: Inter for the presets, the
+/// system face for custom themes.
 enum BrandLabel {
     static func font(size: CGFloat = 11, weight: Font.Weight = .semibold) -> Font {
-        .system(size: size, weight: weight, design: .default)
+        guard BrandTheme.theme.labelIsInter else { return .system(size: size, weight: weight, design: .default) }
+        return Font(BrandFont.uiFont(.inter, size: size, weight: interWeight(weight), textStyle: .caption1, maxSize: size * 1.4))
+    }
+
+    private static func interWeight(_ weight: Font.Weight) -> CGFloat {
+        switch weight {
+        case .ultraLight, .thin, .light: return 300
+        case .regular: return 400
+        case .medium: return 500
+        case .semibold: return 600
+        case .bold, .heavy, .black: return 700
+        default: return 500
+        }
     }
 }

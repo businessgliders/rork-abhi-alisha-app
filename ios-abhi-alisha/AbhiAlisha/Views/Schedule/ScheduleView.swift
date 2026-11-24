@@ -181,7 +181,7 @@ struct ScheduleView: View {
                         .fill(
                             isAdded
                                 ? AnyShapeStyle(LinearGradient(
-                                    colors: [Color(hex: 0xC2A24C), Color(hex: 0xA9873C)],
+                                    colors: [BrandPalette.gold, BrandPalette.goldDeep],
                                     startPoint: .leading,
                                     endPoint: .trailing
                                 ))

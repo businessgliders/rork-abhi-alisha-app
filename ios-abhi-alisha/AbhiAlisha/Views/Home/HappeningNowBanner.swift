@@ -92,7 +92,7 @@ struct HappeningNowBanner: View {
                 Capsule(style: .continuous)
                     .fill(
                         LinearGradient(
-                            colors: [Color(hex: 0xC2A24C), Color(hex: 0xA9873C)],
+                            colors: [BrandPalette.gold, BrandPalette.goldDeep],
                             startPoint: .leading,
                             endPoint: .trailing
                         )
@@ -100,7 +100,7 @@ struct HappeningNowBanner: View {
             )
             .overlay(
                 Capsule(style: .continuous)
-                    .stroke(Color(hex: 0xE0C982).opacity(0.5), lineWidth: 0.75)
+                    .stroke(BrandPalette.goldPale.opacity(0.5), lineWidth: 0.75)
             )
         }
         .buttonStyle(PressableStyle())

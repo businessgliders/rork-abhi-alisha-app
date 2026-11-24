@@ -154,7 +154,7 @@ struct MilniCoupleDatesView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    MilniLabel("Step two of four")
+                    MilniLabel("Step one of four")
                         .padding(.top, 20)
                         .milniEntrance(0)
                     MilniHeadline(first: "When is", second: "the wedding week?", size: 42)
@@ -259,10 +259,7 @@ struct MilniCoupleDatesView: View {
 struct MilniMoodView: View {
     @Binding var draft: CoupleDraft
     let back: () -> Void
-    let created: (WeddingSummary) -> Void
-
-    @State private var working = false
-    @State private var error: String?
+    let next: () -> Void
 
     private let names = ["ivory": "Ivory", "blush": "Blush", "emerald": "Emerald", "midnight": "Midnight"]
 
@@ -304,24 +301,13 @@ struct MilniMoodView: View {
             .padding(.bottom, 18)
             .milniEntrance(3)
 
-            if let error {
-                Text(error)
-                    .font(Milni.inter(14))
-                    .foregroundStyle(theme.isDark ? Color(hex: 0xE8A196) : Color(hex: 0x9A3B2E))
-                    .padding(.bottom, 10)
-            }
-
             Button {
-                create()
+                BrandHaptics.soft()
+                next()
             } label: {
-                if working {
-                    ProgressView().tint(background)
-                } else {
-                    Text("Looks beautiful")
-                }
+                Text("Looks beautiful")
             }
             .buttonStyle(MilniButtonStyle(kind: .primary, ink: ink, paper: background))
-            .disabled(working)
             .padding(.bottom, 8)
             .milniEntrance(4)
         }
@@ -338,7 +324,9 @@ struct MilniMoodView: View {
             "end_date": Self.day(draft.end),
             "timezone": TimeZone.current.identifier,
         ])
-        return summary.dateRange ?? ""
+        let dates = summary.dateRange ?? ""
+        guard let city = draft.venue?.city, !city.isEmpty else { return dates }
+        return dates.isEmpty ? city : "\(dates) · \(city)"
     }
 
     static func day(_ date: Date) -> String {
@@ -386,36 +374,9 @@ struct MilniMoodView: View {
         .accessibilityLabel(names[preset] ?? preset)
         .accessibilityAddTraits(selected ? .isSelected : [])
     }
-
-    private func create() {
-        guard !working else { return }
-        guard ChatSession.shared.isSignedIn, !ChatSession.shared.isAnonymous else {
-            error = "Sign in with Apple to create a wedding."
-            return
-        }
-        BrandHaptics.soft()
-        working = true
-        error = nil
-        Task {
-            do {
-                let summary = try await WeddingContext.shared.create(
-                    partnerOne: draft.partnerOne,
-                    partnerTwo: draft.partnerTwo,
-                    start: draft.start,
-                    end: draft.end,
-                    preset: draft.preset
-                )
-                created(summary)
-            } catch {
-                print("[Milni] create wedding failed: \(error)")
-                self.error = "We couldn't create your wedding just now. Please try again."
-            }
-            working = false
-        }
-    }
 }
 
-// MARK: - Step four: ready
+// MARK: - Ready
 
 struct MilniReadyView: View {
     let summary: WeddingSummary

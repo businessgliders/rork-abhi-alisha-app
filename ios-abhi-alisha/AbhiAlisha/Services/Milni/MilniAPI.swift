@@ -15,6 +15,7 @@ nonisolated struct WeddingSummary: Identifiable, Hashable, Sendable {
     var city: String?
     var country: String?
     var preset: String
+    var theme: WeddingTheme?
     var coverURLs: [String]
     var role: String?
     var status: String?
@@ -79,6 +80,9 @@ nonisolated struct WeddingSummary: Identifiable, Hashable, Sendable {
         city = MilniJSON.string(wedding["city"])
         country = MilniJSON.string(wedding["country"])
         preset = MilniJSON.preset(wedding["theme"])
+        // The join and list RPCs may send only a preset: keep the full theme only when
+        // the row carried one, so a richer saved snapshot isn't replaced by a guess.
+        theme = wedding["theme"] == nil || wedding["theme"] is NSNull ? nil : WeddingTheme.parse(wedding["theme"])
         coverURLs = (wedding["cover_urls"] as? [Any])?.compactMap { MilniJSON.string($0) } ?? []
         role = MilniJSON.string(row["role"]) ?? MilniJSON.string(wedding["role"])
         status = MilniJSON.string(row["status"]) ?? MilniJSON.string(wedding["status"])
@@ -106,7 +110,8 @@ nonisolated struct WeddingSummary: Identifiable, Hashable, Sendable {
             mainEventRef: mainEventRef,
             rsvpURL: rsvpURL,
             latitude: latitude,
-            longitude: longitude
+            longitude: longitude,
+            theme: theme
         )
     }
 }
@@ -239,14 +244,13 @@ nonisolated struct MilniAPI: Sendable {
     }
 
     private struct CreateParams: Encodable, Sendable {
-        struct Theme: Encodable, Sendable { let preset: String }
         let p_title: String
         let p_partner_one: String
         let p_partner_two: String
         let p_start_date: String
         let p_end_date: String
         let p_timezone: String
-        let p_theme: Theme
+        let p_theme: AnyJSON
     }
 
     func createWedding(
@@ -269,7 +273,7 @@ nonisolated struct MilniAPI: Sendable {
             p_start_date: formatter.string(from: start),
             p_end_date: formatter.string(from: end),
             p_timezone: timezone.identifier,
-            p_theme: .init(preset: preset)
+            p_theme: HostAPI.anyJSON(WeddingTheme.preset(preset).json)
         )
         let response = try await client.rpc("create_wedding", params: params).execute()
         if let id = ChatBackend.decodeID(response.data) { return id.lower }
@@ -312,9 +316,19 @@ nonisolated struct MilniAPI: Sendable {
             let kindIcons = [
                 "welcome": "flutes", "cocktails": "flutes", "party": "flutes",
                 "haldi": "paisley", "mehndi": "paisley", "sangeet": "paisley",
-                "reception": "sparkle", "farewell": "sun", "brunch": "sun"
+                "reception": "sparkle", "farewell": "sun", "brunch": "sun",
+                "sikh": "arch", "hindu": "mandap"
             ]
-            if let icon = MilniJSON.string(details["icon_key"]) ?? kindIcons[kind] { out["icon_key"] = icon }
+            if let icon = MilniJSON.string(details["icon_key"]) ?? kindIcons[kind] {
+                out["icon_key"] = icon
+            } else if kind == "ceremony" {
+                // Anand Karaj reads as the arch, pheras as the mandap; any other ceremony the mandap.
+                let inferred = EventIconKey.inferred(fromTitle: MilniJSON.string(row["title"]) ?? "")
+                out["icon_key"] = inferred == .arch ? EventIconKey.arch.rawValue : EventIconKey.mandap.rawValue
+            } else {
+                // custom and anything new: the closest line motif from the title.
+                out["icon_key"] = EventIconKey.inferred(fromTitle: MilniJSON.string(row["title"]) ?? "").rawValue
+            }
         }
         if let ceremony = MilniJSON.string(details["ceremony_type"]) { out["ceremony_type"] = ceremony }
         if let sort = MilniJSON.double(row["sort"]) { out["sort_order"] = sort }
@@ -353,6 +367,7 @@ nonisolated struct MilniAPI: Sendable {
         var story: Data
         var items: Data
         var letter: Data?
+        var stay: Data?
     }
 
     func content(weddingID: String) async throws -> Content {
@@ -375,6 +390,7 @@ nonisolated struct MilniAPI: Sendable {
         var story: [[String: Any]] = []
         var items: [[String: Any]] = []
         var letter: [[String: Any]] = []
+        var stay: [String: Any]?
 
         for (index, url) in covers.enumerated() {
             gallery.append([
@@ -421,8 +437,8 @@ nonisolated struct MilniAPI: Sendable {
                 faqs.append(faq)
             case "family":
                 var member: [String: Any] = ["id": id, "sort_order": sort, "is_active": true]
-                member["role"] = title
-                member["name"] = body
+                member["name"] = title
+                member["role"] = body
                 member["photo"] = MilniJSON.string(data["photo"])
                 member["initials"] = MilniJSON.string(data["initials"])
                 family.append(member.compactMapValues { $0 })
@@ -435,7 +451,7 @@ nonisolated struct MilniAPI: Sendable {
                 story.append(chapter.compactMapValues { $0 })
             case "custom":
                 let key = MilniJSON.string(data["key"])
-                if key == "love_letter" {
+                if key == "letter" || key == "love_letter" {
                     var entry: [String: Any] = ["id": id, "is_active": true]
                     entry["date_line"] = MilniJSON.string(data["date_line"])
                     entry["salutation"] = MilniJSON.string(data["salutation"]) ?? title
@@ -451,6 +467,10 @@ nonisolated struct MilniAPI: Sendable {
                     item["image_url"] = MilniJSON.string(data["image_url"])
                     items.append(item.compactMapValues { $0 })
                 }
+            case "stay":
+                if stay == nil, StayInfo.isPlaceRow(data) {
+                    stay = StayInfo.shapedRow(id: id, title: title, data: data)
+                }
             default:
                 continue
             }
@@ -463,7 +483,8 @@ nonisolated struct MilniAPI: Sendable {
             family: MilniJSON.encode(family),
             story: MilniJSON.encode(story),
             items: MilniJSON.encode(items),
-            letter: letter.isEmpty ? nil : MilniJSON.encode(letter)
+            letter: letter.isEmpty ? nil : MilniJSON.encode(letter),
+            stay: stay.flatMap { try? JSONSerialization.data(withJSONObject: $0) }
         )
     }
 

@@ -192,7 +192,7 @@ struct ConversationListView: View {
                     .foregroundStyle(Color(hex: 0xFFFBF1))
 
                 Text(count == 1 ? "1 person waiting to join" : "\(count) people waiting to join")
-                    .font(Font(BrandFont.uiFont(.playfairItalic, size: 18, weight: 500, textStyle: .headline, maxSize: 26)))
+                    .font(Font(BrandFont.themedFont(.playfairItalic, size: 18, weight: 500, textStyle: .headline, maxSize: 26)))
                     .foregroundStyle(Color(hex: 0xFFFBF1))
                     .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -206,7 +206,7 @@ struct ConversationListView: View {
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
                     .fill(
                         LinearGradient(
-                            colors: [Color(hex: 0xC2A24C), Color(hex: 0xA9873C)],
+                            colors: [BrandPalette.gold, BrandPalette.goldDeep],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
@@ -214,7 +214,7 @@ struct ConversationListView: View {
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .stroke(Color(hex: 0xE0C982).opacity(0.5), lineWidth: 0.75)
+                    .stroke(BrandPalette.goldPale.opacity(0.5), lineWidth: 0.75)
             )
         }
         .buttonStyle(PressableStyle())

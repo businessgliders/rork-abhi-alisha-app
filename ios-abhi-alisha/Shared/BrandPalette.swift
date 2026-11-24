@@ -26,15 +26,20 @@ nonisolated struct BrandThemeColors: Sendable, Equatable {
     var accentPale: UInt32 { Self.mix(accent, background, 0.45) }
 }
 
-/// The four presets a couple can choose from. Ivory is the house style.
+/// The four presets a couple can choose from, and the theme in use right now.
 nonisolated enum BrandTheme {
-    static let ivory = BrandThemeColors(background: 0xF7F3EC, card: 0xFFFDF8, accent: 0xB08D57, ink: 0x17130F, accentText: 0x7A5C2E, isDark: false)
-    static let blush = BrandThemeColors(background: 0xF6E9E6, card: 0xFFF8F6, accent: 0xB56E6E, ink: 0x3A2326, accentText: 0x8A4A4C, isDark: false)
-    static let emerald = BrandThemeColors(background: 0xE5EDE8, card: 0xF6FAF7, accent: 0x3F6E5A, ink: 0x14281F, accentText: 0x2E5544, isDark: false)
-    static let midnight = BrandThemeColors(background: 0x1B2033, card: 0x232A42, accent: 0xC9A96A, ink: 0xF4EBDC, accentText: 0xC9B48D, isDark: true)
+    static let ivory = colors(WeddingTheme.ivoryLight, isDark: false)
+    static let blush = colors(WeddingTheme.blushLight, isDark: false)
+    static let emerald = colors(WeddingTheme.emeraldLight, isDark: false)
+    static let midnight = colors(WeddingTheme.midnightTokens, isDark: true)
 
-    static let presetIDs = ["ivory", "blush", "emerald", "midnight"]
+    static let presetIDs = WeddingTheme.presetIDs
 
+    static func colors(_ tokens: WeddingTheme.Tokens, isDark: Bool) -> BrandThemeColors {
+        BrandThemeColors(background: tokens.bg, card: tokens.card, accent: tokens.accent, ink: tokens.ink, accentText: tokens.accentText, isDark: isDark)
+    }
+
+    /// A preset's light look (its only look for midnight), for previews and pickers.
     static func colors(for preset: String) -> BrandThemeColors {
         switch preset.lowercased() {
         case "blush": return blush
@@ -45,15 +50,15 @@ nonisolated enum BrandTheme {
     }
 
     private static let lock = NSLock()
-    nonisolated(unsafe) private static var override: String?
+    nonisolated(unsafe) private static var override: WeddingTheme?
 
-    /// The preset in use: the app sets it when a wedding opens; the widgets read the
+    /// The theme in use: the app sets it when a wedding opens; the widgets read the
     /// current wedding's.
-    static var preset: String {
+    static var theme: WeddingTheme {
         get {
             lock.lock()
             defer { lock.unlock() }
-            return override ?? ActiveWedding.snapshot.preset
+            return override ?? ActiveWedding.snapshot.resolvedTheme
         }
         set {
             lock.lock()
@@ -62,34 +67,39 @@ nonisolated enum BrandTheme {
         }
     }
 
-    static var current: BrandThemeColors { colors(for: preset) }
+    static var preset: String { theme.preset }
+
+    static var current: BrandThemeColors {
+        let theme = theme
+        let dark = theme.forcedDark ?? false
+        return colors(theme.tokens(dark: dark), isDark: dark)
+    }
 }
 
 /// The wedding's colour palette. Every colour resolves at draw time from the current
-/// wedding's preset. Ivory keeps warm, low-glare counterparts in dark mode; the other
-/// presets hold their own colours whatever the phone's setting.
+/// wedding's theme and the light or dark setting it follows.
 enum BrandPalette {
-    static let gold = themed(light: 0xC2A24C, dark: 0xD3B463) { $0.accent }
-    static let goldDeep = themed(light: 0xA9873C, dark: 0xBE9A48) { $0.accentText }
-    static let goldPale = themed(light: 0xE3CE92, dark: 0xEBD9A6) { $0.accentPale }
+    static let gold = themed { $0.accent }
+    static let goldDeep = themed { $0.accentText }
+    static let goldPale = themed { WeddingTheme.mix($0.accent, $0.bg, 0.45) }
 
-    static let ink = themed(light: 0x2B2622, dark: 0xF3EDE1) { $0.ink }
-    static let body = themed(light: 0x6D6459, dark: 0xB6AB9A) { $0.body }
+    static let ink = themed { $0.ink }
+    static let body = themed { $0.muted }
 
-    /// Muted warm grey-brown for unselected tab items — never pure grey.
-    static let tabInactive = themed(light: 0x8B8175, dark: 0x968C7E) { $0.muted }
+    /// Muted tone for unselected tab items.
+    static let tabInactive = themed { WeddingTheme.mix($0.muted, $0.bg, 0.22) }
 
-    static let background = themed(light: 0xFBF8F2, dark: 0x14110E) { $0.background }
-    static let card = themed(light: 0xFFFFFF, dark: 0x1E1A16) { $0.card }
-    static let hairline = themed(light: 0xECE4D5, dark: 0x342E26) { $0.hairline }
+    static let background = themed { $0.bg }
+    static let card = themed { $0.card }
+    static let hairline = themed { $0.hairline }
 
-    /// Warm ink used behind the hero photograph while it loads.
-    static let heroFallback = Color(hex: 0x1B211F)
+    /// Behind the hero photograph while it loads.
+    static let heroFallback = themedFull { tokens, dark in dark ? tokens.card : WeddingTheme.mix(tokens.ink, 0x000000, 0.2) }
 
     /// The two edges of a letterpress impression: the shadow gathering in the recess and
-    /// the light catching the lip of it. Warm on paper, near-black on the dark palette.
-    static let embossShadow = adaptive(light: 0x9C8862, dark: 0x000000)
-    static let embossLight = adaptive(light: 0xFFFFFF, dark: 0x6C6152)
+    /// the light catching the lip of it.
+    static let embossShadow = themedFull { tokens, dark in dark ? 0x000000 : WeddingTheme.mix(tokens.accent, tokens.ink, 0.35) }
+    static let embossLight = themedFull { tokens, dark in dark ? WeddingTheme.mix(tokens.muted, tokens.bg, 0.45) : 0xFFFFFF }
 
     /// A muted, dusty red for things that have slipped past their day.
     static let overdue = adaptive(light: 0xA65A4E, dark: 0xD68B7E)
@@ -97,26 +107,25 @@ enum BrandPalette {
     static let sikhAmber = adaptive(light: 0xD79A2B, dark: 0xE3A93C)
     static let hinduGarnet = adaptive(light: 0x8E2C3B, dark: 0xB9455A)
 
+    /// Whether the theme is drawing dark right now, for the given traits.
+    static func isDark(_ traits: UITraitCollection) -> Bool {
+        BrandTheme.theme.forcedDark ?? (traits.userInterfaceStyle == .dark)
+    }
+
     private static func adaptive(light: UInt32, dark: UInt32) -> Color {
         Color(UIColor { traits in
-            traits.userInterfaceStyle == .dark ? UIColor(hex: dark) : UIColor(hex: light)
+            isDark(traits) ? UIColor(hex: dark) : UIColor(hex: light)
         })
     }
 
-    /// Ivory in light mode uses the house colours; ivory in dark mode keeps the warm
-    /// dark palette; every other preset uses its own colours.
-    private static func themed(
-        light: UInt32,
-        dark: UInt32,
-        _ pick: @escaping @Sendable (BrandThemeColors) -> UInt32
-    ) -> Color {
+    private static func themed(_ pick: @escaping @Sendable (WeddingTheme.Tokens) -> UInt32) -> Color {
+        themedFull { tokens, _ in pick(tokens) }
+    }
+
+    private static func themedFull(_ pick: @escaping @Sendable (WeddingTheme.Tokens, Bool) -> UInt32) -> Color {
         Color(UIColor { traits in
-            let preset = BrandTheme.preset.lowercased()
-            if preset == "ivory" || !BrandTheme.presetIDs.contains(preset) {
-                if traits.userInterfaceStyle == .dark { return UIColor(hex: dark) }
-                return UIColor(hex: pick(BrandTheme.ivory))
-            }
-            return UIColor(hex: pick(BrandTheme.colors(for: preset)))
+            let dark = isDark(traits)
+            return UIColor(hex: pick(BrandTheme.theme.tokens(dark: dark), dark))
         })
     }
 }

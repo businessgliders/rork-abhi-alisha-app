@@ -12,13 +12,21 @@ private struct ResortSlide: Identifiable, Hashable {
 /// collates a run of photos — which leaves room for both maps to stand beside it.
 struct PhotosAndMaps: View {
     let photos: [GalleryPhoto]
+    let stay: StayInfo
 
     @State private var lightbox: LightboxContext?
     @State private var isShowingResortMap = false
     @State private var isShowingWingMap = false
+    @State private var remoteMap: RemoteMapItem?
 
     private static let rowHeight: CGFloat = 320
     private static let mapsWidth: CGFloat = 132
+
+    /// A&A's pinned resort map is drawn on the bundled artwork, so it keeps using it.
+    private var usesBundledMaps: Bool { ActiveWedding.snapshot.isAbhiAlisha }
+
+    private var hasResortMap: Bool { usesBundledMaps || stay.resortMap != nil }
+    private var hasWingMap: Bool { usesBundledMaps || stay.wingMap != nil }
 
     /// The couple's published photography first, then anything filed under a resort
     /// category, with duplicates dropped.
@@ -26,7 +34,7 @@ struct PhotosAndMaps: View {
         var seen = Set<String>()
         var result: [ResortSlide] = []
 
-        for url in ResortMedia.photos where seen.insert(url.absoluteString).inserted {
+        for url in stay.photoURLs where seen.insert(url.absoluteString).inserted {
             result.append(ResortSlide(id: url.absoluteString, url: url))
         }
         for photo in photos {
@@ -42,30 +50,48 @@ struct PhotosAndMaps: View {
         return HStack(alignment: .top, spacing: 12) {
             PhotoDeck(slides: deck) { position in
                 lightbox = LightboxContext(
-                    title: ActiveWedding.place,
+                    title: stay.title,
                     items: deck.map(\.url),
                     startIndex: position
                 )
             }
 
-            VStack(spacing: 12) {
-                MapPlate(
-                    title: "Resort Map",
-                    localImageName: ResortMapArtwork.imageName,
-                    remoteURL: nil,
-                    imageAlignment: .center,
-                    action: { isShowingResortMap = true }
-                )
+            if hasResortMap || hasWingMap {
+                VStack(spacing: 12) {
+                    if hasResortMap {
+                        MapPlate(
+                            title: "Resort Map",
+                            localImageName: usesBundledMaps ? ResortMapArtwork.imageName : nil,
+                            remoteURL: usesBundledMaps ? nil : stay.resortMap,
+                            imageAlignment: .center,
+                            action: {
+                                if usesBundledMaps {
+                                    isShowingResortMap = true
+                                } else if let url = stay.resortMap {
+                                    remoteMap = RemoteMapItem(title: "Resort map", url: url)
+                                }
+                            }
+                        )
+                    }
 
-                MapPlate(
-                    title: "Wing Map",
-                    localImageName: WingMapArtwork.imageName,
-                    remoteURL: nil,
-                    imageAlignment: .center,
-                    action: { isShowingWingMap = true }
-                )
+                    if hasWingMap {
+                        MapPlate(
+                            title: "Wing Map",
+                            localImageName: usesBundledMaps ? WingMapArtwork.imageName : nil,
+                            remoteURL: usesBundledMaps ? nil : stay.wingMap,
+                            imageAlignment: .center,
+                            action: {
+                                if usesBundledMaps {
+                                    isShowingWingMap = true
+                                } else if let url = stay.wingMap {
+                                    remoteMap = RemoteMapItem(title: "Wing map", url: url)
+                                }
+                            }
+                        )
+                    }
+                }
+                .frame(width: Self.mapsWidth)
             }
-            .frame(width: Self.mapsWidth)
         }
         .frame(height: Self.rowHeight)
         .padding(.horizontal, 22)
@@ -76,7 +102,10 @@ struct PhotosAndMaps: View {
             ResortMapScreen()
         }
         .fullScreenCover(isPresented: $isShowingWingMap) {
-            WingMapViewer()
+            WingMapViewer(pdfURL: stay.pdf)
+        }
+        .fullScreenCover(item: $remoteMap) { item in
+            RemoteMapViewer(item: item, pdfURL: stay.pdf)
         }
     }
 }

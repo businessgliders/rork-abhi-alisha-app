@@ -18,6 +18,7 @@ struct WeddingShell: View {
     @State private var admin: AdminSession
     @State private var checklist: ChecklistStore
     @State private var selection: AppTab = .home
+    @State private var isHostPresented = false
 
     @Environment(\.scenePhase) private var scenePhase
 
@@ -55,7 +56,7 @@ struct WeddingShell: View {
         }
         .animation(.calm, value: isReadingThread)
         .overlay(alignment: .top) {
-            ScreenChrome(showsCrest: selection == .home)
+            ScreenChrome(showsCrest: selection == .home, onHost: { isHostPresented = true })
         }
         .overlay {
             if admin.isPromptPresented {
@@ -74,6 +75,18 @@ struct WeddingShell: View {
                 .environment(admin)
                 .environment(checklist)
         }
+        .fullScreenCover(isPresented: $isHostPresented) {
+            HostHomeView(openChecklist: {
+                isHostPresented = false
+                Task { @MainActor in
+                    try? await Task.sleep(for: .milliseconds(450))
+                    admin.requestEntry()
+                }
+            })
+            .environment(store)
+            .environment(content)
+            .environment(admin)
+        }
         .fullScreenCover(isPresented: $router.isNotificationsPresented) {
             NotificationsView()
                 .environment(updates)
@@ -87,7 +100,8 @@ struct WeddingShell: View {
         .environment(admin)
         .onOpenURL { url in
             // Join links are handled by the root gate.
-            guard WeddingContext.joinCode(from: url) == nil else { return }
+            guard WeddingContext.joinCode(from: url) == nil,
+                  WeddingContext.cohostCode(from: url) == nil else { return }
             // Where a tap on a widget, or on the Live Activity, lands.
             guard let tab = router.handle(url) else { return }
             withAnimation(.calm) { selection = tab }
@@ -115,6 +129,7 @@ struct WeddingShell: View {
             WeddingPhotoStore.shared.resumeUploads()
             Task { await push.offerIfNeeded(isSample: WeddingContext.shared.isSample) }
             await content.refreshIfNeeded()
+            await StayMigration.runIfNeeded(content: content)
         }
     }
 
@@ -124,6 +139,7 @@ struct WeddingShell: View {
     private func openPendingLanding() {
         guard let landing = router.pending else { return }
         router.pending = nil
+        isHostPresented = false
         admin.isPromptPresented = false
         admin.isAdminPresented = false
 
@@ -193,12 +209,15 @@ struct ContentView: View {
                 context.closeFlow()
             }
         }
+        .sheet(item: Bindable(context).pendingCohostInvite) { invite in
+            CohostAcceptView(invite: invite)
+        }
         .onOpenURL { url in
-            _ = context.handleJoinLink(url)
+            if !context.handleCohostLink(url) { _ = context.handleJoinLink(url) }
         }
         .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { activity in
             guard let url = activity.webpageURL else { return }
-            _ = context.handleJoinLink(url)
+            if !context.handleCohostLink(url) { _ = context.handleJoinLink(url) }
         }
         .task {
             ChatSession.shared.start()

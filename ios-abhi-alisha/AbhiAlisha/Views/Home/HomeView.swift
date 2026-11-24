@@ -6,6 +6,7 @@ struct HomeView: View {
     @Environment(ScheduleStore.self) private var store
     @Environment(ContentStore.self) private var content
     @Environment(DeepLinkRouter.self) private var router
+    @Environment(\.openURL) private var openURL
 
     @State private var isShowingRSVP = false
     /// The party this guest last found, remembered between launches.
@@ -99,6 +100,10 @@ struct HomeView: View {
 
                 if ActiveWedding.snapshot.isAbhiAlisha {
                     rsvpBlock
+                } else if let link = rsvpLink {
+                    rsvpBar(hint: "Opens the couple's RSVP page in Safari") {
+                        openURL(link)
+                    }
                 }
 
                 if let next = store.nextEvent {
@@ -169,8 +174,10 @@ struct HomeView: View {
             )
             .transition(.opacity.combined(with: .move(edge: .top)))
         } else {
-            rsvpBar
-                .transition(.opacity)
+            rsvpBar(hint: "Look up your reply by the name on your invitation") {
+                isShowingRSVP = true
+            }
+            .transition(.opacity)
         }
     }
 
@@ -211,10 +218,18 @@ struct HomeView: View {
         PushRegistrar.shared.guestNameMayHaveChanged()
     }
 
-    private var rsvpBar: some View {
+    /// The couple's own RSVP page, when they set one.
+    private var rsvpLink: URL? {
+        guard let text = ActiveWedding.snapshot.rsvpURL?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !text.isEmpty else { return nil }
+        let full = text.lowercased().hasPrefix("http") ? text : "https://" + text
+        return URL(string: full)
+    }
+
+    private func rsvpBar(hint: String, action: @escaping () -> Void) -> some View {
         Button {
             BrandHaptics.soft()
-            isShowingRSVP = true
+            action()
         } label: {
             HStack(spacing: 12) {
                 Text("Find your RSVP details")
@@ -232,7 +247,7 @@ struct HomeView: View {
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .fill(
                         LinearGradient(
-                            colors: [Color(hex: 0xC2A24C), Color(hex: 0xA9873C)],
+                            colors: [BrandPalette.gold, BrandPalette.goldDeep],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
@@ -240,11 +255,11 @@ struct HomeView: View {
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .stroke(Color(hex: 0xE0C982).opacity(0.5), lineWidth: 0.75)
+                    .stroke(BrandPalette.goldPale.opacity(0.5), lineWidth: 0.75)
             )
         }
         .buttonStyle(PressableStyle())
-        .accessibilityHint("Look up your reply by the name on your invitation")
+        .accessibilityHint(hint)
     }
 }
 

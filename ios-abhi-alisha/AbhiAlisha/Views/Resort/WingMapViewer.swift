@@ -9,6 +9,7 @@ enum WingMapArtwork {
 
 /// The wing map full screen: pinch, pan, double tap. Fully offline.
 struct WingMapViewer: View {
+    var pdfURL: URL? = WingMapArtwork.pdfURL
     @Environment(\.dismiss) private var dismiss
 
     @State private var scale: CGFloat = 1
@@ -98,6 +99,7 @@ struct WingMapViewer: View {
                     .tracking(0.6)
                     .foregroundStyle(Color(hex: 0x6D6459))
 
+                if pdfURL != nil {
                 Button {
                     BrandHaptics.soft()
                     isShowingPDF = true
@@ -113,15 +115,16 @@ struct WingMapViewer: View {
                     .foregroundStyle(Color(hex: 0xFFFBF1))
                     .padding(.horizontal, 20)
                     .frame(minHeight: 44)
-                    .background(Capsule(style: .continuous).fill(Color(hex: 0xA9873C)))
+                    .background(Capsule(style: .continuous).fill(BrandPalette.goldDeep))
                 }
                 .buttonStyle(PressableStyle())
+                }
             }
             .padding(.bottom, 18)
         }
         .statusBarHidden()
         .fullScreenCover(isPresented: $isShowingPDF) {
-            ResortPDFViewer()
+            ResortPDFViewer(pdfURL: pdfURL)
         }
     }
 
@@ -136,6 +139,7 @@ struct WingMapViewer: View {
 /// The resort's official map PDF, read in-app. Once loaded it is kept on the phone, so
 /// later visits open instantly and offline.
 struct ResortPDFViewer: View {
+    var pdfURL: URL? = WingMapArtwork.pdfURL
     @Environment(\.dismiss) private var dismiss
 
     private enum Stage: Equatable {
@@ -193,7 +197,7 @@ struct ResortPDFViewer: View {
                         .font(BrandLabel.font(size: 13, weight: .medium))
                         .foregroundStyle(BrandPalette.goldDeep)
                 }
-                if let url = WingMapArtwork.pdfURL, case .ready = stage {
+                if let url = pdfURL, case .ready = stage {
                     ToolbarItem(placement: .topBarLeading) {
                         ShareLink(item: url) {
                             Image(systemName: "square.and.arrow.up")
@@ -207,12 +211,16 @@ struct ResortPDFViewer: View {
     }
 
     private func load() async {
-        if let cached = ResortPDFCache.cached() {
+        guard let pdfURL else {
+            stage = .failed
+            return
+        }
+        if let cached = ResortPDFCache.cached(for: pdfURL) {
             stage = .ready(cached)
             return
         }
         stage = .loading
-        if let data = await ResortPDFCache.download() {
+        if let data = await ResortPDFCache.download(pdfURL) {
             withAnimation(.softFade) { stage = .ready(data) }
         } else {
             withAnimation(.softFade) { stage = .failed }
@@ -222,18 +230,24 @@ struct ResortPDFViewer: View {
 
 /// Keeps the downloaded PDF in Caches.
 nonisolated enum ResortPDFCache {
-    private static var fileURL: URL? {
-        FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first?
-            .appendingPathComponent("ava-resort-cancun-map.pdf")
+    private static func fileURL(for url: URL) -> URL? {
+        let name = url.lastPathComponent.isEmpty ? "stay-map.pdf" : url.lastPathComponent
+        var hash: UInt64 = 1_469_598_103_934_665_603
+        for byte in url.absoluteString.utf8 { hash = (hash ^ UInt64(byte)) &* 1_099_511_628_211 }
+        let folder = String(hash % 1_000_000_000)
+        guard let base = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first else { return nil }
+        // Keep A&A's existing cached file name so it opens offline right after the update.
+        if url == WingMapArtwork.pdfURL { return base.appendingPathComponent("ava-resort-cancun-map.pdf") }
+        return base.appendingPathComponent("stay-pdf-\(folder)-\(name)")
     }
 
-    static func cached() -> Data? {
-        guard let fileURL, let data = try? Data(contentsOf: fileURL), PDFDocument(data: data) != nil else { return nil }
+    static func cached(for url: URL) -> Data? {
+        guard let fileURL = fileURL(for: url), let data = try? Data(contentsOf: fileURL), PDFDocument(data: data) != nil else { return nil }
         return data
     }
 
-    static func download() async -> Data? {
-        guard let url = WingMapArtwork.pdfURL else { return nil }
+    static func download(_ url: URL) async -> Data? {
+        let fileURL = fileURL(for: url)
         do {
             let (data, response) = try await URLSession.shared.data(from: url)
             guard (response as? HTTPURLResponse)?.statusCode == 200, PDFDocument(data: data) != nil else { return nil }

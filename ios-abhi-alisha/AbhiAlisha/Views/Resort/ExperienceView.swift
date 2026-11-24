@@ -51,7 +51,7 @@ struct ExperienceView: View {
     }
 
     /// "Where we're staying" is AVA Resort Cancún: Abhi & Alisha's wedding only.
-    private var showsResort: Bool { ActiveWedding.snapshot.isAbhiAlisha }
+    private var showsResort: Bool { content.stay != nil }
 
     private var page: some View {
         ScrollView {
@@ -72,25 +72,29 @@ struct ExperienceView: View {
                 .padding(.horizontal, 22)
                 .padding(.top, 18)
 
-                if showsResort {
+                if let stay = content.stay {
                     resortHeading
                         .padding(.horizontal, 22)
                         .padding(.top, 46)
                         .id(Self.resortAnchor)
 
-                    PhotosAndMaps(photos: content.resortPhotos)
+                    PhotosAndMaps(photos: content.resortPhotos, stay: stay)
                         .padding(.top, 18)
 
-                    FullMapLink()
-                        .padding(.horizontal, 22)
-                        .padding(.top, 14)
+                    if let pdf = stay.pdf {
+                        FullMapLink(pdfURL: pdf)
+                            .padding(.horizontal, 22)
+                            .padding(.top, 14)
+                    }
 
-                    SectionHeading(text: "Amenities")
-                        .padding(.horizontal, 22)
-                        .padding(.top, 42)
+                    if !stay.amenities.isEmpty {
+                        SectionHeading(text: "Amenities")
+                            .padding(.horizontal, 22)
+                            .padding(.top, 42)
 
-                    AmenityRow(amenities: ResortAmenity.all)
-                        .padding(.top, 18)
+                        AmenityRow(amenities: stay.resortAmenities)
+                            .padding(.top, 18)
+                    }
                 }
             }
             .padding(.top, ScreenChrome.contentReserve)
@@ -315,6 +319,7 @@ struct ExperienceUpdatesCard: View {
 
 /// Opens the resort's official map PDF, kept on the phone once it has loaded.
 private struct FullMapLink: View {
+    let pdfURL: URL
     @State private var isShowingPDF = false
 
     var body: some View {
@@ -347,7 +352,7 @@ private struct FullMapLink: View {
         }
         .buttonStyle(PressableStyle())
         .fullScreenCover(isPresented: $isShowingPDF) {
-            ResortPDFViewer()
+            ResortPDFViewer(pdfURL: pdfURL)
         }
     }
 }

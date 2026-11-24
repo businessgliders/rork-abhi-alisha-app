@@ -156,11 +156,7 @@ private struct PushPreview: View {
                 .fill(Color(hex: 0xFBF8F2))
                 .frame(width: 38, height: 38)
                 .overlay {
-                    Image("crest")
-                        .renderingMode(.template)
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .foregroundStyle(Color(hex: 0xA9873C))
+                    CrestGlyph(color: BrandPalette.goldDeep)
                         .padding(5)
                 }
 

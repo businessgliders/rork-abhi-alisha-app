@@ -42,11 +42,7 @@ struct ChannelBadge: View {
             .overlay {
                 switch kind {
                 case .announcements:
-                    Image("crest")
-                        .renderingMode(.template)
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .foregroundStyle(Color(hex: 0xFFFBF1))
+                    CrestGlyph(color: Color(hex: 0xFFFBF1))
                         .padding(size * 0.2)
                 case .questions:
                     Image(systemName: "bubble.left.and.bubble.right")
@@ -68,7 +64,7 @@ struct ChannelBadge: View {
         switch kind {
         case .announcements:
             AnyShapeStyle(LinearGradient(
-                colors: [Color(hex: 0xC2A24C), Color(hex: 0xA9873C)],
+                colors: [BrandPalette.gold, BrandPalette.goldDeep],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             ))
@@ -113,15 +109,11 @@ struct ChatAvatar: View {
             .frame(width: size, height: size)
             .overlay {
                 if showsCrest {
-                    Image("crest")
-                        .renderingMode(.template)
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .foregroundStyle(BrandPalette.goldDeep)
+                    CrestGlyph(color: BrandPalette.goldDeep)
                         .padding(size * 0.2)
                 } else {
                     Text(initials)
-                        .font(Font(BrandFont.uiFont(.playfairItalic, size: size * 0.38, weight: 500, maxSize: size * 0.38)))
+                        .font(Font(BrandFont.themedFont(.playfairItalic, size: size * 0.38, weight: 500, maxSize: size * 0.38)))
                         .foregroundStyle(BrandPalette.goldDeep)
                         .lineLimit(1)
                         .minimumScaleFactor(0.6)

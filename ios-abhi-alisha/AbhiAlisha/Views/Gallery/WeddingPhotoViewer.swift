@@ -189,7 +189,7 @@ struct WeddingPhotoViewer: View {
         .foregroundStyle(Color.white)
         .frame(width: 132, height: 46)
         .background(Capsule().fill(Color.white.opacity(0.14)))
-        .overlay(Capsule().stroke(Color(hex: 0xE0C982).opacity(0.55), lineWidth: 0.75))
+        .overlay(Capsule().stroke(BrandPalette.goldPale.opacity(0.55), lineWidth: 0.75))
     }
 
     private func save() {

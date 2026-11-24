@@ -14,7 +14,9 @@ struct OnboardingFlow: View {
         case coupleSignIn
         case coupleNames
         case coupleDates
+        case coupleWhere
         case coupleMood
+        case coupleWeek
         case coupleReady(WeddingSummary)
 
         /// Order used to decide which way a step slides.
@@ -30,8 +32,10 @@ struct OnboardingFlow: View {
             case .coupleSignIn: return 3
             case .coupleNames: return 4
             case .coupleDates: return 5
-            case .coupleMood: return 6
-            case .coupleReady: return 7
+            case .coupleWhere: return 6
+            case .coupleMood: return 7
+            case .coupleWeek: return 8
+            case .coupleReady: return 9
             }
         }
     }
@@ -181,10 +185,18 @@ struct OnboardingFlow: View {
             }
         case .coupleDates:
             MilniCoupleDatesView(draft: $draft, back: { go(.coupleNames) }) {
+                go(.coupleWhere)
+            }
+        case .coupleWhere:
+            MilniWhereView(draft: $draft, back: { go(.coupleDates) }) {
                 go(.coupleMood)
             }
         case .coupleMood:
-            MilniMoodView(draft: $draft, back: { go(.coupleDates) }) { summary in
+            MilniMoodView(draft: $draft, back: { go(.coupleWhere) }) {
+                go(.coupleWeek)
+            }
+        case .coupleWeek:
+            MilniWeekView(draft: $draft, back: { go(.coupleMood) }) { summary in
                 go(.coupleReady(summary))
             }
         case .coupleReady(let summary):
@@ -249,6 +261,9 @@ struct CoupleDraft: Equatable {
     var start: Date = Calendar.current.startOfDay(for: Date().addingTimeInterval(60 * 60 * 24 * 180))
     var end: Date = Calendar.current.startOfDay(for: Date().addingTimeInterval(60 * 60 * 24 * 183))
     var preset = "ivory"
+    var venue: CoupleVenue?
+    var selectedEvents: [String] = ["Welcome party", "Ceremony", "Reception"]
+    var customEvents: [String] = []
 
     var namesReady: Bool {
         !partnerOne.trimmingCharacters(in: .whitespaces).isEmpty

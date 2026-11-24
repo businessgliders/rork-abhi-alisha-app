@@ -248,9 +248,9 @@ private struct ResortMapMarker: View {
     @State private var pulses = false
 
     private static let cream = Color(hex: 0xFDFAF3)
-    private static let gold = Color(hex: 0xC2A24C)
-    private static let goldDeep = Color(hex: 0xA9873C)
-    private static let numeral = Color(hex: 0x8A6C2C)
+    private static let gold = BrandPalette.gold
+    private static let goldDeep = BrandPalette.goldDeep
+    private static let numeral = BrandPalette.goldDeep
 
     private var diameter: CGFloat {
         if isCurrent { return 34 }

@@ -519,13 +519,13 @@ struct ChatThreadView: View {
                         .background(
                             Circle().fill(
                                 LinearGradient(
-                                    colors: [Color(hex: 0xC2A24C), Color(hex: 0xA9873C)],
+                                    colors: [BrandPalette.gold, BrandPalette.goldDeep],
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
                                 )
                             )
                         )
-                        .overlay(Circle().stroke(Color(hex: 0xE0C982).opacity(0.5), lineWidth: 0.75))
+                        .overlay(Circle().stroke(BrandPalette.goldPale.opacity(0.5), lineWidth: 0.75))
                         .opacity(canSend ? 1 : 0.4)
                         .scaleEffect(canSend ? 1 : 0.92)
                         .animation(.calm, value: canSend)

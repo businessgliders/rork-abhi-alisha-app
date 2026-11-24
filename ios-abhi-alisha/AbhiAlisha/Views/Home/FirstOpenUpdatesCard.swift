@@ -23,7 +23,7 @@ struct FirstOpenUpdatesCard: View {
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Get schedule updates")
-                        .font(Font(BrandFont.uiFont(.playfairItalic, size: 21, weight: 500, textStyle: .headline, maxSize: 30)))
+                        .font(Font(BrandFont.themedFont(.playfairItalic, size: 21, weight: 500, textStyle: .headline, maxSize: 30)))
                         .foregroundStyle(Color(hex: 0xFFFBF1))
                         .fixedSize(horizontal: false, vertical: true)
 
@@ -65,7 +65,7 @@ struct FirstOpenUpdatesCard: View {
                             .tracking(1.3)
                             .textCase(.uppercase)
                     }
-                    .foregroundStyle(Color(hex: 0x8A6C2C))
+                    .foregroundStyle(BrandPalette.goldDeep)
                     .frame(maxWidth: .infinity, minHeight: 46)
                     .background(Capsule(style: .continuous).fill(Color(hex: 0xFFFBF1)))
                     .contentShape(Capsule(style: .continuous))
@@ -80,7 +80,7 @@ struct FirstOpenUpdatesCard: View {
             RoundedRectangle(cornerRadius: 24, style: .continuous)
                 .fill(
                     LinearGradient(
-                        colors: [Color(hex: 0xC9AA55), Color(hex: 0xA9873C), Color(hex: 0x94742F)],
+                        colors: [BrandPalette.gold, BrandPalette.goldDeep, BrandPalette.goldDeep],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
@@ -88,7 +88,7 @@ struct FirstOpenUpdatesCard: View {
         )
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .stroke(Color(hex: 0xE9D598).opacity(0.7), lineWidth: 0.75)
+                .stroke(BrandPalette.goldPale.opacity(0.7), lineWidth: 0.75)
         )
         .shadow(color: Color.black.opacity(0.22), radius: 26, x: 0, y: 14)
         .frame(maxWidth: 460)

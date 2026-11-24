@@ -21,6 +21,14 @@ nonisolated struct WeddingSnapshot: Codable, Equatable, Sendable {
     var rsvpURL: String? = nil
     var latitude: Double? = nil
     var longitude: Double? = nil
+    /// The full `weddings.theme`. Older saved snapshots have none and fall back to the preset.
+    var theme: WeddingTheme? = nil
+
+    /// The theme to paint with: the saved one, else the preset's built-in look.
+    var resolvedTheme: WeddingTheme {
+        if let theme { return theme }
+        return isAbhiAlisha ? .abhiAlishaFallback : WeddingTheme.preset(preset)
+    }
 
     /// The wedding every earlier build of this app was made for. Its caches keep their
     /// original file names, so an existing guest never loses what is already on disk.

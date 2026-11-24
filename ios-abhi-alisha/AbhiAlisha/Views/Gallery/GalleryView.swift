@@ -254,7 +254,7 @@ private struct PlayGlyph: View {
             .foregroundStyle(Color(hex: 0xFDFAF3))
             .frame(width: 46, height: 46)
             .background(Circle().fill(Color.black.opacity(0.34)))
-            .overlay(Circle().stroke(Color(hex: 0xE0C982).opacity(0.75), lineWidth: 1))
+            .overlay(Circle().stroke(BrandPalette.goldPale.opacity(0.75), lineWidth: 1))
             .allowsHitTesting(false)
     }
 }
