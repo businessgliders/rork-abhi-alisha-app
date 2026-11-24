@@ -26,15 +26,19 @@ struct AnnouncementsView: View {
     private var canCompose: Bool { session.isAdmin }
 
     var body: some View {
-        VStack(spacing: 0) {
-            header
-            content
-        }
-        .background(BrandPalette.background.ignoresSafeArea())
-        .overlay(alignment: .top) {
-            if let toast {
-                ChatToast(text: toast)
-                    .padding(.top, 70)
+        content
+            // The header lives in the safe area itself, so on the folding iPhone's
+            // outer screen — where the sensor housing takes an edge and the top inset
+            // is small — it can never rise above the visible area. The background
+            // still runs under the status bar; the content does not.
+            .safeAreaInset(edge: .top, spacing: 0) { header }
+            .background(BrandPalette.background.ignoresSafeArea())
+            .overlay(alignment: .top) {
+                if let toast {
+                    ChatToast(text: toast)
+                    // The header now counts as safe area, so the toast sits just
+                    // beneath it without a hard-coded status-bar height.
+                    .padding(.top, 10)
                     .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
@@ -72,7 +76,16 @@ struct AnnouncementsView: View {
 
     // MARK: - Header
 
+    /// Narrow windows (the closed folding iPhone, a Split View pane) collapse the
+    /// gold button to an icon-only circle instead of squeezing the words.
     private var header: some View {
+        ViewThatFits(in: .horizontal) {
+            headerRow { newAnnouncementButton }
+            headerRow { compactNewAnnouncementButton }
+        }
+    }
+
+    private func headerRow<Compose: View>(@ViewBuilder compose: () -> Compose) -> some View {
         HStack(spacing: 10) {
             ChatBackButton()
 
@@ -88,7 +101,7 @@ struct AnnouncementsView: View {
                 Text("From \(ActiveWedding.couple)")
                     .font(BrandLabel.font(size: 11, weight: .medium))
                     .foregroundStyle(BrandPalette.body)
-                    .lineLimit(2)
+                    .lineLimit(1)
                     .truncationMode(.tail)
             }
             .layoutPriority(1)
@@ -97,7 +110,7 @@ struct AnnouncementsView: View {
             Spacer(minLength: 8)
 
             if canCompose {
-                newAnnouncementButton
+                compose()
             }
         }
         .padding(.horizontal, 8)
@@ -153,6 +166,31 @@ struct AnnouncementsView: View {
                     )
             )
             .contentShape(Capsule(style: .continuous))
+        }
+        .buttonStyle(PressableStyle())
+        .accessibilityLabel("New announcement")
+    }
+
+    /// The same action as a 44 pt circle, for widths too narrow for the words.
+    private var compactNewAnnouncementButton: some View {
+        Button {
+            BrandHaptics.soft()
+            isComposing = true
+        } label: {
+            Image(systemName: "plus")
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(Color(hex: 0xFFFBF1))
+                .frame(width: 44, height: 44)
+                .background(
+                    Circle().fill(
+                        LinearGradient(
+                            colors: [BrandPalette.gold, BrandPalette.goldDeep],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                )
+                .contentShape(Circle())
         }
         .buttonStyle(PressableStyle())
         .accessibilityLabel("New announcement")

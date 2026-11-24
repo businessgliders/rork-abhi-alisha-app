@@ -188,7 +188,7 @@ nonisolated enum ClipLink {
 /// "Invitation found" after it's installed. Only the join code is kept, never anything
 /// about the guest.
 nonisolated enum ClipHandoffWriter {
-    static let suite = "group.com.businessgliders.abhialisha"
+    static let suite = "group.com.businessgliders.milni"
     static let codeKey = "clip.handoff.code"
     static let dateKey = "clip.handoff.date"
 

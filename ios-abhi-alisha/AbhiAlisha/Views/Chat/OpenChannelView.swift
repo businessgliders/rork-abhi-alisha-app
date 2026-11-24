@@ -45,7 +45,6 @@ struct OpenChannelView: View {
 
     private var opening: some View {
         VStack(spacing: 0) {
-            topBar
             Spacer(minLength: 0)
             VStack(spacing: 18) {
                 BreathingCrest(width: 84)
@@ -55,12 +54,14 @@ struct OpenChannelView: View {
             }
             Spacer(minLength: 0)
         }
+        // The bar lives in the safe area itself, so it stays clear of the folding
+        // iPhone's sensor housing and every Split View pane.
+        .safeAreaInset(edge: .top, spacing: 0) { topBar }
         .background(BrandPalette.background.ignoresSafeArea())
     }
 
     private func note(title: String, line: String?) -> some View {
         VStack(spacing: 0) {
-            topBar
             Spacer(minLength: 0)
             VStack(spacing: 14) {
                 IconWatermark(key: .paisley, size: 70, opacity: 0.3)
@@ -81,6 +82,7 @@ struct OpenChannelView: View {
             .accessibilityElement(children: .combine)
             Spacer(minLength: 0)
         }
+        .safeAreaInset(edge: .top, spacing: 0) { topBar }
         .background(BrandPalette.background.ignoresSafeArea())
     }
 

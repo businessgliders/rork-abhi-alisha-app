@@ -3,7 +3,7 @@ import Foundation
 /// An invitation opened in the App Clip, waiting in the shared App Group for the full
 /// app's first launch. Read once, then cleared; ignored after two weeks.
 enum ClipHandoff {
-    private static let suite = "group.com.businessgliders.abhialisha"
+    private static let suite = "group.com.businessgliders.milni"
     private static let codeKey = "clip.handoff.code"
     private static let dateKey = "clip.handoff.date"
 

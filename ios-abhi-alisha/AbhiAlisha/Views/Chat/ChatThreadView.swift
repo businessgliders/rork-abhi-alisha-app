@@ -73,11 +73,11 @@ struct ChatThreadView: View {
     private var thread: ChatThreadState? { store.threads[conversationID] }
 
     var body: some View {
-        VStack(spacing: 0) {
-            header
-            messagesView
-        }
-        .background(BrandPalette.background.ignoresSafeArea())
+        messagesView
+            // The header lives in the safe area itself, so it stays fully visible on
+            // the folding iPhone's outer screen and in Split View panes.
+            .safeAreaInset(edge: .top, spacing: 0) { header }
+            .background(BrandPalette.background.ignoresSafeArea())
         .safeAreaInset(edge: .bottom, spacing: 0) {
             composer
         }
@@ -85,7 +85,7 @@ struct ChatThreadView: View {
         .overlay(alignment: .top) {
             if let toast {
                 ChatToast(text: toast)
-                    .padding(.top, 70)
+                    .padding(.top, 10)
                     .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
@@ -178,6 +178,8 @@ struct ChatThreadView: View {
                         .brandFont(.chatName)
                         .foregroundStyle(BrandPalette.ink)
                         .lineLimit(1)
+                        .minimumScaleFactor(0.75)
+                        .truncationMode(.tail)
 
                     if isGroupLike {
                         Text(memberLine)
