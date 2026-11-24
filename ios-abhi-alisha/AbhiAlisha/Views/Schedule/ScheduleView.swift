@@ -338,13 +338,7 @@ struct ScheduleView: View {
     }
 
     private var emptyState: some View {
-        VStack(spacing: 14) {
-            IconWatermark(key: .sparkle, size: 76, opacity: 0.4)
-            Text("The schedule will appear here soon.")
-                .brandFont(.bodyItalic)
-                .foregroundStyle(BrandPalette.body)
-        }
-        .frame(maxWidth: .infinity)
+        WeddingEmptyState()
     }
 
     nonisolated private static let calendarSpace = "schedule.calendarButton"
@@ -406,6 +400,8 @@ struct ScheduleView: View {
 
     /// Warms every day's weather up front so stepping between cards never shows a gap.
     private func prefetchWeather() async {
+        // Forecasts use the Cancún venue coordinates, so only that wedding shows weather for now.
+        guard ActiveWedding.snapshot.isSampleWedding else { return }
         for event in events {
             guard let date = event.startsAt, weatherByEvent[event.id] == nil else { continue }
             let weather = await WeatherService.shared.weather(for: date)
@@ -416,6 +412,7 @@ struct ScheduleView: View {
     }
 
     private func loadWeatherForSelection() async {
+        guard ActiveWedding.snapshot.isSampleWedding else { return }
         guard let event = selectedEvent, let date = event.startsAt else { return }
         guard weatherByEvent[event.id] == nil else { return }
         let weather = await WeatherService.shared.weather(for: date)

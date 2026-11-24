@@ -7,6 +7,8 @@ nonisolated struct WeddingTimeline: Sendable {
 
     /// Shared cache first, bundled snapshot second. One of the two always answers.
     static func load() -> WeddingTimeline {
+        // The app may have switched weddings since this process last looked.
+        ActiveWedding.reload()
         let cache = ScheduleCache.shared
         if let cached = cache.load(), !cached.isEmpty {
             return WeddingTimeline(events: cached)

@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Every announcement Abhi & Alisha have sent, as a deck of paper cards: the newest
+/// Every announcement \(ActiveWedding.couple) have sent, as a deck of paper cards: the newest
 /// fully open at the front, the ones before it tucked above as strips. Guests read;
 /// an admin (profile role = admin) gets a gold "+ New announcement" button in the
 /// header, which opens a full sheet to write in before the send is confirmed.
@@ -84,7 +84,7 @@ struct AnnouncementsView: View {
                     .foregroundStyle(BrandPalette.ink)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
-                Text("From Abhi & Alisha")
+                Text("From \(ActiveWedding.couple)")
                     .font(BrandLabel.font(size: 11, weight: .medium))
                     .foregroundStyle(BrandPalette.body)
                     .lineLimit(1)
@@ -203,7 +203,7 @@ struct AnnouncementsView: View {
     private var emptyCard: some View {
         VStack(spacing: 14) {
             IconWatermark(key: .sparkle, size: 64, opacity: 0.3)
-            Text("Announcements from Abhi & Alisha will appear here")
+            Text("Announcements from \(ActiveWedding.couple) will appear here")
                 .brandFont(.bodyItalic)
                 .foregroundStyle(BrandPalette.body)
                 .multilineTextAlignment(.center)

@@ -115,16 +115,20 @@ nonisolated struct WatchSchedule: Sendable {
 nonisolated struct WatchScheduleCache: Sendable {
     /// Must match the group named in both watch targets' entitlements.
     private static let appGroup = "group.com.businessgliders.abhialisha"
-    private static let fileName = "watch-schedule-events.json"
+    /// Abhi & Alisha keep the original file name, so existing watches keep their copy.
+    private var fileName: String {
+        let wedding = WatchWedding.current
+        return wedding.isSample ? "watch-schedule-events.json" : "watch-schedule-events-\(wedding.id.lowercased()).json"
+    }
 
     private var fileURL: URL? {
         if let container = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: Self.appGroup) {
-            return container.appendingPathComponent(Self.fileName)
+            return container.appendingPathComponent(fileName)
         }
         return FileManager.default
             .urls(for: .cachesDirectory, in: .userDomainMask)
             .first?
-            .appendingPathComponent(Self.fileName)
+            .appendingPathComponent(fileName)
     }
 
     /// Raw JSON is cached verbatim so a future field never gets dropped by this build.
@@ -150,6 +154,8 @@ nonisolated struct WatchScheduleCache: Sendable {
     /// The snapshot shipped inside the watch bundle, used on a first launch with no
     /// signal — the same copy the iPhone app ships with.
     func loadBundledSnapshot() -> [WatchEvent] {
+        // The bundled copy is Abhi & Alisha's schedule; any other wedding starts empty.
+        guard WatchWedding.current.isSample else { return [] }
         guard let url = Bundle.main.url(forResource: "schedule_snapshot", withExtension: "json") else {
             print("[WatchScheduleCache] bundled snapshot missing")
             return []
@@ -185,26 +191,84 @@ nonisolated enum WatchScheduleDecoder {
     }
 }
 
-/// The watch's own line to the couple's base44 schedule — public, no key, the same
-/// endpoint the phone reads.
+/// The watch's own line to the current wedding's schedule in Supabase: the public
+/// events table, read with the publishable key, exactly as the phone reads it.
 nonisolated enum WatchScheduleFetcher {
-    private static let url = URL(string: "https://aawedding.base44.app/api/entities/ScheduleEvent")!
+    private static let baseURL = "https://lrowuakbxuoynlyxlmnr.supabase.co"
+    private static let publishableKey = "sb_publishable_hZduLD-YAv3B-IIu9Igy7g_oMRvZTvT"
 
-    /// Returns the decoded events plus the raw payload, so the cache can keep fields
-    /// this build doesn't know about yet.
-    static func fetch() async throws -> (events: [WatchEvent], raw: Data) {
+    /// Returns the decoded events plus the mapped payload, which is what gets cached.
+    static func fetch(for wedding: WatchWedding = .current) async throws -> (events: [WatchEvent], raw: Data) {
+        var components = URLComponents(string: "\(baseURL)/rest/v1/events")!
+        components.queryItems = [
+            URLQueryItem(name: "select", value: "*"),
+            URLQueryItem(name: "wedding_id", value: "eq.\(wedding.id.lowercased())"),
+            URLQueryItem(name: "hidden", value: "eq.false"),
+            URLQueryItem(name: "order", value: "starts_at,sort"),
+        ]
+        guard let url = components.url else { throw URLError(.badURL) }
         var request = URLRequest(url: url)
         request.timeoutInterval = 12
         request.cachePolicy = .reloadIgnoringLocalCacheData
         request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.setValue(publishableKey, forHTTPHeaderField: "apikey")
+        request.setValue("Bearer \(publishableKey)", forHTTPHeaderField: "Authorization")
 
         let (data, response) = try await URLSession.shared.data(for: request)
         if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
             throw URLError(.badServerResponse)
         }
-        let events = WatchScheduleDecoder.decode(data)
-        guard !events.isEmpty else { throw URLError(.cannotDecodeContentData) }
-        return (events, data)
+        let rows = (try JSONSerialization.jsonObject(with: data) as? [[String: Any]]) ?? []
+        let mapped = rows.map { row(from: $0, zone: wedding.timeZone) }
+        let raw = try JSONSerialization.data(withJSONObject: mapped)
+        return (WatchScheduleDecoder.decode(raw), raw)
+    }
+
+    /// One Supabase events row in the shape the watch already decodes.
+    private static func row(from row: [String: Any], zone: TimeZone) -> [String: Any] {
+        let details = (row["details"] as? [String: Any]) ?? [:]
+        var out: [String: Any] = [:]
+        out["id"] = text(row["ref"]) ?? text(row["id"]) ?? UUID().uuidString
+        out["title"] = text(row["title"]) ?? ""
+        if let starts = text(row["starts_at"]) {
+            out["starts_at"] = starts
+            if let date = WatchEvent.date(from: starts) {
+                out["date"] = text(details["date"]) ?? format(date, "EEEE, MMMM d, yyyy", zone)
+                out["time"] = text(details["time"]) ?? format(date, "h:mm a", zone)
+            }
+        }
+        if let ends = text(row["ends_at"]) { out["ends_at"] = ends }
+        if let icon = text(details["icon_key"]) {
+            out["icon_key"] = icon
+        } else if let kind = text(row["kind"])?.lowercased() {
+            let icons = [
+                "welcome": "flutes", "cocktails": "flutes", "party": "flutes",
+                "haldi": "paisley", "mehndi": "paisley", "sangeet": "paisley",
+                "reception": "sparkle", "farewell": "sun", "brunch": "sun"
+            ]
+            if let icon = icons[kind] { out["icon_key"] = icon }
+        }
+        if let sort = row["sort"] as? Double { out["sort_order"] = sort }
+        else if let sort = row["sort"] as? Int { out["sort_order"] = Double(sort) }
+        if let venue = text(row["venue_name"]) { out["location_name"] = venue }
+        if let dress = text(row["dress_code"]) { out["dress_code"] = dress }
+        if let description = text(row["description"]) { out["description"] = description }
+        out["is_active"] = (row["hidden"] as? Bool) != true
+        return out
+    }
+
+    private static func text(_ value: Any?) -> String? {
+        guard let string = value as? String else { return nil }
+        let trimmed = string.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
+    }
+
+    private static func format(_ date: Date, _ pattern: String, _ zone: TimeZone) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = zone
+        formatter.dateFormat = pattern
+        return formatter.string(from: date)
     }
 }
 
@@ -224,12 +288,23 @@ final class WatchScheduleStore {
         lastUpdated = WatchScheduleCache().lastUpdated
     }
 
+    /// The phone opened another wedding: show its cached copy at once, then fetch.
+    func weddingDidChange() async {
+        events = WatchSchedule.load().events
+        lastUpdated = WatchScheduleCache().lastUpdated
+        WidgetCenter.shared.reloadAllTimelines()
+        await refresh()
+    }
+
     func refresh() async {
         guard !isRefreshing else { return }
         isRefreshing = true
         defer { isRefreshing = false }
 
-        guard let fresh = try? await WatchScheduleFetcher.fetch() else { return }
+        let wedding = WatchWedding.current
+        guard let fresh = try? await WatchScheduleFetcher.fetch(for: wedding) else { return }
+        // The phone may have switched weddings while this was in flight.
+        guard WatchWedding.current == wedding else { return }
         WatchScheduleCache().save(rawData: fresh.raw)
         events = fresh.events
         lastUpdated = Date()

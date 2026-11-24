@@ -71,7 +71,30 @@ final class ChatSession {
         let p_platform: String
     }
 
-    var isAdmin: Bool { me?.isAdmin == true && !isAnonymous }
+    /// This person's place in the open wedding, when the server has told us.
+    private(set) var membershipRole: String?
+    private(set) var membershipStatus: String?
+    private(set) var membershipWeddingID: String?
+    /// Browsing the sample wedding: no chat, no outfits.
+    private(set) var isBrowsingSample = false
+
+    var isAdmin: Bool {
+        guard !isAnonymous, !isBrowsingSample else { return false }
+        if let role = membershipRole?.lowercased() {
+            return ["host", "cohost", "co-host", "co_host"].contains(role)
+                && membershipStatus?.lowercased() == "approved"
+        }
+        return me?.isAdmin == true
+    }
+
+    /// The wedding's membership decides the chat gate once it's known.
+    func setMembership(role: String?, status: String?, weddingID: String, isSample: Bool) {
+        membershipRole = role
+        membershipStatus = status
+        membershipWeddingID = weddingID
+        isBrowsingSample = isSample
+        if let me { apply(me, persist: false) }
+    }
 
     var isSignedIn: Bool { userID != nil }
 
@@ -120,6 +143,7 @@ final class ChatSession {
                 if userID != nil { await clearLocalState() }
                 isAnonymous = anonymous
                 await adopt(session.user.id)
+                if event != .tokenRefreshed { WeddingContext.shared.sessionDidChange() }
             } else if anonymous != isAnonymous {
                 // A guest who just linked Apple: same account, now known to the family chat.
                 withAnimation(.calm) { isAnonymous = anonymous }
@@ -311,11 +335,19 @@ final class ChatSession {
         me = profile
         if persist { ChatCache.save(profile, named: Self.profileCacheName(profile.id)) }
 
-        let next: ChatPhase
+        var next: ChatPhase
         switch profile.access {
         case .approved: next = .approved
         case .blocked: next = .blocked
         case .pending: next = .pending
+        }
+        // Within a wedding, its own membership decides, unless the account is blocked.
+        if next != .blocked, let status = membershipStatus?.lowercased() {
+            switch status {
+            case "approved": next = .approved
+            case "blocked", "removed", "declined", "rejected": next = .blocked
+            default: next = .pending
+            }
         }
         if next != phase {
             withAnimation(.calm) { phase = next }

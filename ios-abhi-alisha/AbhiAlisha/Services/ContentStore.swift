@@ -19,7 +19,6 @@ final class ContentStore {
     private(set) var contentItems: [WeddingContentItem] = []
     private(set) var loveLetter: LoveLetter?
 
-    private let api: WeddingAPI
     private let galleryCache = JSONDiskCache(filename: "gallery-photos.json")
     private let categoryCache = JSONDiskCache(filename: "gallery-categories.json")
     private let faqCache = JSONDiskCache(filename: "faqs.json")
@@ -31,8 +30,7 @@ final class ContentStore {
     private var didRefresh = false
     private var isRefreshing = false
 
-    init(api: WeddingAPI = .shared) {
-        self.api = api
+    init() {
         loadCached()
     }
 
@@ -60,109 +58,66 @@ final class ContentStore {
         }
     }
 
-    /// Refreshes once per launch, quietly.
+    /// Refreshes once per launch, quietly, from the open wedding's content sections.
     func refreshIfNeeded() async {
         guard !didRefresh, !isRefreshing else { return }
         isRefreshing = true
         defer { isRefreshing = false }
 
-        await loadGallery()
-        await loadGalleryCategories()
-        await loadFaqs()
-        await loadFamily()
-        await loadStory()
-        await loadContentItems()
-        await loadLoveLetter()
-
-        didRefresh = true
-    }
-
-    private func apply(gallery photos: [GalleryPhoto]) {
-        let sequence = GalleryPhoto.heroSequence(from: photos)
-        if !sequence.isEmpty { heroPhotos = sequence }
-        resortPhotos = GalleryPhoto.resortSequence(from: photos)
-        galleryPhotos = GalleryPhoto.gallerySequence(from: photos)
-    }
-
-    private func loadGallery() async {
+        let weddingID = ActiveWedding.id
         do {
-            let result = try await api.fetch(GalleryPhoto.self, entity: "GalleryPhoto")
-            guard !result.items.isEmpty else { return }
-            galleryCache.save(result.raw)
-            apply(gallery: result.items)
-        } catch {
-            print("[ContentStore] gallery refresh failed")
-        }
-    }
+            let content = try await MilniAPI.shared.content(weddingID: weddingID)
+            guard weddingID == ActiveWedding.id else { return }
+            let isSample = ActiveWedding.snapshot.isSampleWedding
 
-    private func loadGalleryCategories() async {
-        do {
-            let result = try await api.fetch(GalleryCategory.self, entity: "GalleryCategory")
-            let categories = GalleryCategory.active(from: result.items)
-            guard !categories.isEmpty else { return }
-            categoryCache.save(result.raw)
-            galleryCategories = categories
-        } catch {
-            print("[ContentStore] gallery categories refresh failed")
-        }
-    }
-
-    private func loadFaqs() async {
-        do {
-            let result = try await api.fetch(Faq.self, entity: "Faq")
-            guard !result.items.isEmpty else { return }
-            faqCache.save(result.raw)
-            faqs = result.items
-        } catch {
-            print("[ContentStore] questions refresh failed")
-        }
-    }
-
-    private func loadFamily() async {
-        do {
-            let result = try await api.fetch(FamilyMember.self, entity: "FamilyMember")
-            let members = FamilyMember.active(from: result.items)
-            guard !members.isEmpty else { return }
-            familyCache.save(result.raw)
-            familyMembers = members
-        } catch {
-            print("[ContentStore] family refresh failed")
-        }
-    }
-
-    private func loadStory() async {
-        do {
-            let result = try await api.fetch(StoryChapter.self, entity: "StoryTimeline")
-            let chapters = StoryChapter.timeline(from: result.items)
-            guard !chapters.isEmpty else { return }
-            storyCache.save(result.raw)
-            storyChapters = chapters
-        } catch {
-            print("[ContentStore] story refresh failed")
-        }
-    }
-
-    private func loadContentItems() async {
-        do {
-            let result = try await api.fetch(WeddingContentItem.self, entity: "WeddingContent")
-            let items = WeddingContentItem.active(from: result.items)
-            guard !items.isEmpty else { return }
-            contentCache.save(result.raw)
-            contentItems = items
+            let photos = MilniDecode.list(GalleryPhoto.self, from: content.gallery)
+            if !photos.isEmpty || !isSample {
+                galleryCache.save(content.gallery)
+                apply(gallery: photos)
+            }
+            let categories = GalleryCategory.active(from: MilniDecode.list(GalleryCategory.self, from: content.categories))
+            if !categories.isEmpty || !isSample {
+                categoryCache.save(content.categories)
+                galleryCategories = categories
+            }
+            let questions = MilniDecode.list(Faq.self, from: content.faqs)
+            if !questions.isEmpty || !isSample {
+                faqCache.save(content.faqs)
+                faqs = questions
+            }
+            let members = FamilyMember.active(from: MilniDecode.list(FamilyMember.self, from: content.family))
+            if !members.isEmpty || !isSample {
+                familyCache.save(content.family)
+                familyMembers = members
+            }
+            let chapters = StoryChapter.timeline(from: MilniDecode.list(StoryChapter.self, from: content.story))
+            if !chapters.isEmpty || !isSample {
+                storyCache.save(content.story)
+                storyChapters = chapters
+            }
+            let items = WeddingContentItem.active(from: MilniDecode.list(WeddingContentItem.self, from: content.items))
+            if !items.isEmpty || !isSample {
+                contentCache.save(content.items)
+                contentItems = items
+            }
+            if let letterData = content.letter,
+               let letter = LoveLetter.firstActive(from: MilniDecode.list(LoveLetter.self, from: letterData)) {
+                letterCache.save(letterData)
+                loveLetter = letter
+            } else if !isSample {
+                letterCache.clear()
+                loveLetter = nil
+            }
+            didRefresh = true
         } catch {
             print("[ContentStore] content refresh failed")
         }
     }
 
-    private func loadLoveLetter() async {
-        do {
-            let result = try await api.fetch(LoveLetter.self, entity: "LoveLetter")
-            guard let letter = LoveLetter.firstActive(from: result.items) else { return }
-            letterCache.save(result.raw)
-            loveLetter = letter
-        } catch {
-            print("[ContentStore] letter refresh failed")
-        }
+    private func apply(gallery photos: [GalleryPhoto]) {
+        heroPhotos = GalleryPhoto.heroSequence(from: photos)
+        resortPhotos = GalleryPhoto.resortSequence(from: photos)
+        galleryPhotos = GalleryPhoto.gallerySequence(from: photos)
     }
 
     // MARK: - Derived

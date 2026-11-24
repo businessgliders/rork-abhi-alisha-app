@@ -55,7 +55,7 @@ struct StoryView: View {
 
                             VStack(alignment: .leading, spacing: 4) {
                                 GoldRule(width: 44, alignment: .leading)
-                                Eyebrow(text: "From Abhi & Alisha", size: 10)
+                                Eyebrow(text: "From \(ActiveWedding.couple)", size: 10)
                                     .padding(.top, 14)
                                 Text("The Gallery")
                                     .brandFont(.eventTitle)
@@ -105,7 +105,7 @@ struct StoryView: View {
             VStack(spacing: 18) {
                 IconWatermark(key: .paisley, size: 92, opacity: 0.3)
 
-                Text("Abhi & Alisha are still writing this chapter.")
+                Text("\(ActiveWedding.couple) are still writing this chapter.")
                     .brandFont(.bodyItalic)
                     .foregroundStyle(BrandPalette.body)
                     .multilineTextAlignment(.center)

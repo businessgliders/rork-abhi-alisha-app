@@ -35,7 +35,7 @@ nonisolated enum ChatCache {
         try? data.write(to: url, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
     }
 
-    static func listName(for user: UUID) -> String { "list-\(user.lower).json" }
+    static func listName(for user: UUID) -> String { ActiveWedding.scopedName("list-\(user.lower).json") }
     static func threadName(for user: UUID, conversation: UUID) -> String {
         "thread-\(user.lower)-\(conversation.lower).json"
     }

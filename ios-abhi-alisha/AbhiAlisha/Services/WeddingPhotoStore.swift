@@ -67,14 +67,34 @@ final class WeddingPhotoStore {
 
     // MARK: - Refresh and live updates
 
+    /// Another wedding opened: show its photos from the phone, then read them fresh.
+    func switchWedding() {
+        stopListening()
+        photos = WeddingPhotoDisk.loadPhotos() ?? []
+        hasLoaded = !photos.isEmpty
+        Task { await refresh() }
+    }
+
+    private func stopListening() {
+        listenTasks.forEach { $0.cancel() }
+        listenTasks = []
+        if let channel {
+            self.channel = nil
+            Task { await ChatBackend.client.removeChannel(channel) }
+        }
+    }
+
     func refresh() async {
+        let weddingID = ActiveWedding.id.lowercased()
         do {
             let rows: [WeddingPhoto] = try await client
                 .from("event_photos")
                 .select()
+                .eq("wedding_id", value: weddingID)
                 .order("taken_at", ascending: true)
                 .execute()
                 .value
+            guard weddingID == ActiveWedding.id.lowercased() else { return }
             withAnimation(.calm) {
                 photos = rows
                 hasLoaded = true
@@ -90,9 +110,11 @@ final class WeddingPhotoStore {
 
     private func startListening() {
         guard channel == nil else { return }
-        let channel = client.channel("event-photos")
-        let inserts = channel.postgresChange(InsertAction.self, schema: "public", table: "event_photos")
-        let updates = channel.postgresChange(UpdateAction.self, schema: "public", table: "event_photos")
+        let weddingID = ActiveWedding.id.lowercased()
+        let channel = client.channel("event-photos-\(weddingID)")
+        let filter = RealtimePostgresFilter.eq("wedding_id", value: weddingID)
+        let inserts = channel.postgresChange(InsertAction.self, schema: "public", table: "event_photos", filter: filter)
+        let updates = channel.postgresChange(UpdateAction.self, schema: "public", table: "event_photos", filter: filter)
         let deletes = channel.postgresChange(DeleteAction.self, schema: "public", table: "event_photos")
         self.channel = channel
         listenTasks = [
@@ -165,6 +187,7 @@ final class WeddingPhotoStore {
             guard let eventID = item.eventID else { return nil }
             return WeddingUploadJob(
                 id: UUID(),
+                weddingID: ActiveWedding.id.lowercased(),
                 eventID: eventID,
                 caption: item.caption.trimmed.nonEmpty,
                 isCover: item.isCover,
@@ -277,6 +300,7 @@ final class WeddingPhotoStore {
                 try await clearCover(for: job.eventID)
             }
             let insert = WeddingPhotoInsert(
+                wedding_id: job.resolvedWeddingID,
                 event_id: job.eventID,
                 photo_path: job.photoPath,
                 thumb_path: job.thumbPath,
@@ -292,7 +316,7 @@ final class WeddingPhotoStore {
                 .execute()
                 .value
             ImageCache.shared.prefetch([row.thumbURL].compactMap { $0 })
-            ingest(row)
+            if job.resolvedWeddingID.lowercased() == ActiveWedding.id.lowercased() { ingest(row) }
             return (true, nil)
         } catch {
             let message = Self.describe(error, timedOut: Task.isCancelled)
@@ -456,7 +480,7 @@ nonisolated enum WeddingPhotoDisk {
         return folder
     }
 
-    private static var photosURL: URL? { folder?.appending(path: "photos.json") }
+    private static var photosURL: URL? { folder?.appending(path: ActiveWedding.scopedName("photos.json")) }
     private static var queueURL: URL? { folder?.appending(path: "queue.json") }
 
     static func loadPhotos() -> [WeddingPhoto]? { load(photosURL) }

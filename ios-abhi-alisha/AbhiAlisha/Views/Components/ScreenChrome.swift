@@ -13,6 +13,11 @@ struct ScreenChrome: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 0) {
+            if showsCrest {
+                WeddingSwitcherCapsule()
+                    .padding(.top, 6)
+            }
+
             Spacer(minLength: 0)
 
             if showsCrest {
@@ -89,11 +94,31 @@ struct CrestWatermark: View {
         .accessibilityHidden(true)
     }
 
+    @ViewBuilder
     private func crest(_ color: Color) -> some View {
-        Image("crest")
-            .renderingMode(.template)
-            .resizable()
-            .aspectRatio(contentMode: .fit)
-            .foregroundStyle(color)
+        let wedding = ActiveWedding.snapshot
+        if wedding.isSampleWedding {
+            Image("crest")
+                .renderingMode(.template)
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .foregroundStyle(color)
+        } else {
+            // Every other couple gets their initials in a double ring.
+            ZStack {
+                Circle().strokeBorder(color, lineWidth: max(1, width / 90))
+                Circle().strokeBorder(color, lineWidth: max(0.6, width / 160)).padding(width * 0.07)
+                Text(wedding.initials.count == 2
+                     ? "\(wedding.initials.prefix(1))&\(wedding.initials.suffix(1))"
+                     : wedding.initials)
+                    .font(Milni.cormorant(width * 0.3, weight: 500, italic: true))
+                    .foregroundStyle(color)
+                    .minimumScaleFactor(0.5)
+                    .lineLimit(1)
+                    .padding(width * 0.16)
+            }
+            .frame(width: width * 0.62, height: width * 0.62)
+            .frame(width: width)
+        }
     }
 }

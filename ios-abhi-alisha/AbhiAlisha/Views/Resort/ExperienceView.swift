@@ -117,7 +117,7 @@ struct ExperienceView: View {
         VStack(alignment: .leading, spacing: 10) {
             SectionHeading(text: "Where we're staying")
 
-            Text("AVA Resort Cancún")
+            Text(ActiveWedding.place)
                 .brandFont(.eventTitleSmall)
                 .foregroundStyle(BrandPalette.ink)
                 .padding(.top, 6)
@@ -137,7 +137,7 @@ struct ExperienceView: View {
             title: "Questions & Answers",
             detail: count == 0
                 ? "Travel, payments, transfers and more."
-                : "\(count) answers from Abhi & Alisha, all searchable."
+                : "\(count) answers from \(ActiveWedding.couple), all searchable."
         ) {
             isShowingQuestions = true
         }

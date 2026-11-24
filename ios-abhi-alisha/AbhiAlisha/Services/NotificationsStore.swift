@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import Supabase
 
 /// Offline-first store for the announcements the couple has sent to every guest.
 ///
@@ -23,20 +24,67 @@ final class NotificationsStore {
     private var justSent: [NotificationRecord] = []
     private(set) var lastOpenedAt: Date?
 
-    private let api: WeddingAPI
     private let cache = JSONDiskCache(filename: "wedding-updates.json")
     private let defaults = UserDefaults.standard
-    private static let lastOpenedKey = "announcements.lastOpenedAt"
+    /// Each wedding remembers its own; Abhi & Alisha keep the original key.
+    private static var lastOpenedKey: String { ActiveWedding.scopedName("announcements.lastOpenedAt") }
 
     private var isRefreshing = false
     private var lastRefresh: Date?
+    private var liveChannel: RealtimeChannelV2?
+    private var liveTask: Task<Void, Never>?
+    private var liveWeddingID: String?
 
-    init(api: WeddingAPI = .shared) {
-        self.api = api
-        if let cached = cache.load(NotificationRecord.self) {
-            serverRecords = NotificationRecord.ordered(cached)
-        }
+    init() {
+        loadLocal()
+    }
+
+    private func loadLocal() {
+        serverRecords = cache.load(NotificationRecord.self).map(NotificationRecord.ordered) ?? []
         lastOpenedAt = defaults.object(forKey: Self.lastOpenedKey) as? Date
+    }
+
+    /// Another wedding opened: show its announcements and listen for its new ones.
+    func switchWedding() {
+        justSent = []
+        lastRefresh = nil
+        loadLocal()
+        stopListening()
+        Task { await refresh() }
+    }
+
+    /// New announcements appear the moment they're sent.
+    func startListening() {
+        let weddingID = ActiveWedding.id
+        guard liveWeddingID != weddingID else { return }
+        stopListening()
+        liveWeddingID = weddingID
+        let channel = ChatBackend.client.channel("announcements-\(weddingID)")
+        let inserts = channel.postgresChange(
+            InsertAction.self,
+            schema: "public",
+            table: "announcements",
+            filter: .eq("wedding_id", value: weddingID)
+        )
+        liveChannel = channel
+        liveTask = Task {
+            for await _ in inserts {
+                await NotificationsStore.shared.refresh()
+            }
+        }
+        Task {
+            do { try await channel.subscribeWithError() } catch { print("[NotificationsStore] live updates unavailable") }
+        }
+    }
+
+    private func stopListening() {
+        liveTask?.cancel()
+        liveTask = nil
+        liveWeddingID = nil
+        if let channel = liveChannel {
+            liveChannel = nil
+            Task { await ChatBackend.client.removeChannel(channel) }
+        }
     }
 
     /// Oldest at the top, like a chat.
@@ -112,11 +160,13 @@ final class NotificationsStore {
         defer { isRefreshing = false }
 
         do {
-            let result = try await api.fetch(NotificationRecord.self, entity: "Notification")
+            let weddingID = ActiveWedding.id
+            let raw = try await MilniAPI.shared.announcements(weddingID: weddingID)
+            guard weddingID == ActiveWedding.id else { return }
             lastRefresh = Date()
-            let fresh = NotificationRecord.ordered(result.items)
-            guard !fresh.isEmpty else { return }
-            cache.save(result.raw)
+            let fresh = NotificationRecord.ordered(MilniDecode.list(NotificationRecord.self, from: raw))
+            if fresh.isEmpty, ActiveWedding.snapshot.isSampleWedding { return }
+            cache.save(raw)
             if fresh != serverRecords { serverRecords = fresh }
             reconcileJustSent()
         } catch {

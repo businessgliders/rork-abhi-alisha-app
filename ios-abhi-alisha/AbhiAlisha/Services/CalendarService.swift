@@ -178,7 +178,7 @@ final class CalendarService {
         entry.title = event.title
         entry.startDate = start
         entry.endDate = event.endsAt ?? start.addingTimeInterval(2 * 3600)
-        entry.timeZone = TimeZone(identifier: "America/Cancun")
+        entry.timeZone = ActiveWedding.snapshot.timeZone
         entry.location = Self.location(for: event)
         entry.notes = event.dressCode
     }
@@ -189,8 +189,8 @@ final class CalendarService {
     }
 
     private static func location(for event: ScheduleEvent) -> String {
-        guard let name = event.locationName else { return "AVA Resort Cancún" }
-        return "\(name), AVA Resort Cancún"
+        guard let name = event.locationName else { return ActiveWedding.place }
+        return "\(name), \(ActiveWedding.place)"
     }
 
     private static func fingerprint(_ event: ScheduleEvent) -> String {

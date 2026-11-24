@@ -42,7 +42,7 @@ struct PhotosAndMaps: View {
         return HStack(alignment: .top, spacing: 12) {
             PhotoDeck(slides: deck) { position in
                 lightbox = LightboxContext(
-                    title: "AVA Resort Cancún",
+                    title: ActiveWedding.place,
                     items: deck.map(\.url),
                     startIndex: position
                 )

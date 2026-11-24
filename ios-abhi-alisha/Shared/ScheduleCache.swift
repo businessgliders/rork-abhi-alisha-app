@@ -11,8 +11,11 @@ nonisolated struct ScheduleCache: Sendable {
 
     private static let fileName = "schedule-events.json"
 
-    private var fileURL: URL? { WeddingGroup.fileURL(Self.fileName) }
-    private var legacyURL: URL? { WeddingGroup.legacyFileURL(Self.fileName) }
+    /// Each wedding keeps its own copy; Abhi & Alisha keep the original name.
+    private var fileURL: URL? { WeddingGroup.fileURL(ActiveWedding.scopedName(Self.fileName)) }
+    private var legacyURL: URL? {
+        ActiveWedding.snapshot.isSampleWedding ? WeddingGroup.legacyFileURL(Self.fileName) : nil
+    }
 
     /// Raw JSON payloads are cached verbatim so a future field never gets dropped by this build.
     func save(rawData: Data) {
@@ -75,6 +78,8 @@ nonisolated struct ScheduleCache: Sendable {
     /// The snapshot shipped inside the app, used on a first launch with no signal.
     /// It is bundled with the widget too, so an empty container is never an empty widget.
     func loadBundledSnapshot() -> [ScheduleEvent] {
+        // The snapshot is Abhi & Alisha's schedule; any other wedding starts empty.
+        guard ActiveWedding.snapshot.isSampleWedding else { return [] }
         guard let url = Bundle.main.url(forResource: "schedule_snapshot", withExtension: "json") else {
             print("[ScheduleCache] bundled snapshot missing")
             return []

@@ -73,7 +73,7 @@ struct WeddingPhotoViewer: View {
             }
             Button("Not now", role: .cancel) {}
         } message: {
-            Text("To save wedding photos, allow Abhi & Alisha to add to your Photos in Settings.")
+            Text("To save wedding photos, allow this app to add to your Photos in Settings.")
         }
     }
 
@@ -157,7 +157,7 @@ struct WeddingPhotoViewer: View {
                     let picture = Image(uiImage: image)
                     ShareLink(
                         item: picture,
-                        preview: SharePreview(current?.caption ?? "Abhi & Alisha · Wedding Week", image: picture)
+                        preview: SharePreview(current?.caption ?? "\(ActiveWedding.couple) · Wedding Week", image: picture)
                     ) {
                         viewerAction(title: "Share", symbol: "square.and.arrow.up", isBusy: false)
                     }

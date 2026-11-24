@@ -9,6 +9,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
     ) -> Bool {
         UNUserNotificationCenter.current().delegate = self
         PushRegistrar.shared.applicationDidLaunch()
+        WatchBridge.shared.activate()
         return true
     }
 
@@ -72,17 +73,34 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         let eventID = DeepLinkRouter.eventIDValue(in: userInfo)
         let conversationID = DeepLinkRouter.conversationIDValue(in: userInfo)
         let opens = DeepLinkRouter.opensValue(in: userInfo)
+        let weddingID = DeepLinkRouter.weddingIDValue(in: userInfo)
         let isChat = opens == "chat"
         let isAnnouncement = opens == "announcements" || opens == "announcement"
         let finish = TapCompletion(completionHandler)
         Self.onMainThread {
+            // Sent from another of my weddings: switch to it first, then open the screen.
+            if let weddingID, weddingID != WeddingContext.shared.weddingID.lowercased() {
+                finish.call()
+                Task {
+                    await WeddingContext.shared.prepareForPush(weddingID: weddingID)
+                    try? await Task.sleep(for: .milliseconds(900))
+                    Self.route(screen: screen, eventID: eventID, conversationID: conversationID, isChat: isChat, isAnnouncement: isAnnouncement)
+                }
+                return
+            }
+            Self.route(screen: screen, eventID: eventID, conversationID: conversationID, isChat: isChat, isAnnouncement: isAnnouncement)
+            finish.call()
+        }
+    }
+
+    private static func route(screen: String?, eventID: String?, conversationID: String?, isChat: Bool, isAnnouncement: Bool) {
+        do {
             // A new announcement brings the feed up to date on its way in.
             Task { await NotificationsStore.shared.refresh() }
             // An older announcement marked only `"opens": "announcements"` opens the feed.
             if isAnnouncement, screen?.nonEmpty == nil {
                 DeepLinkRouter.shared.pendingAnnouncements = true
                 DeepLinkRouter.shared.open(.tab(.chat))
-                finish.call()
                 return
             }
             // A chat message ("opens": "chat") opens its conversation's thread. Without a
@@ -90,11 +108,9 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
             if !isAnnouncement, isChat || conversationID != nil {
                 DeepLinkRouter.shared.pendingConversationID = conversationID.flatMap { UUID(uuidString: $0) }
                 DeepLinkRouter.shared.open(.tab(.chat))
-                finish.call()
                 return
             }
             DeepLinkRouter.shared.open(DeepLinkRouter.landing(forScreen: screen, eventID: eventID))
-            finish.call()
         }
     }
 

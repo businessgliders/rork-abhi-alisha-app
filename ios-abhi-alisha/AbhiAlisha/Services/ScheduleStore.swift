@@ -55,8 +55,11 @@ final class ScheduleStore {
         defer { isRefreshing = false }
 
         do {
+            let weddingID = ActiveWedding.id
             let result = try await service.fetchEvents()
-            guard !result.events.isEmpty else { return }
+            guard weddingID == ActiveWedding.id else { return }
+            // A new wedding may have no events yet; the sample keeps its bundled copy.
+            if result.events.isEmpty, ActiveWedding.snapshot.isSampleWedding { return }
             cache.save(rawData: result.raw)
             events = result.events
             lastUpdated = Date()

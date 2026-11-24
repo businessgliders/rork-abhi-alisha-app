@@ -316,7 +316,7 @@ struct AnnouncementCardBody: View {
             }
 
             if let sentAt = content.sentAt {
-                Text("From Abhi & Alisha · \(sentAt.formatted(.dateTime.month(.abbreviated).day().hour().minute()))")
+                Text("From \(ActiveWedding.couple) · \(sentAt.formatted(.dateTime.month(.abbreviated).day().hour().minute()))")
                     .font(BrandLabel.font(size: 9.5, weight: .medium))
                     .tracking(1.2)
                     .textCase(.uppercase)
@@ -374,7 +374,7 @@ struct AnnouncementStripRow: View {
         }
         .padding(.horizontal, 16)
         .frame(minHeight: 56)
-        .accessibilityLabel("\(isLatest ? "Latest announcement" : "Announcement"): \(record.title ?? "from Abhi & Alisha")")
+        .accessibilityLabel("\(isLatest ? "Latest announcement" : "Announcement"): \(record.title ?? "from \(ActiveWedding.couple)")")
     }
 }
 

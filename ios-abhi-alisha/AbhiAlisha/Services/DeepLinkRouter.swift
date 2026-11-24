@@ -140,4 +140,12 @@ final class DeepLinkRouter {
         }
         return nil
     }
+
+    /// The wedding a push was sent from, so the app can switch to it before opening.
+    nonisolated static func weddingIDValue(in payload: [AnyHashable: Any]) -> String? {
+        if let id = payload["wedding_id"] as? String { return id.nonEmpty?.lowercased() }
+        if let aps = payload["aps"] as? [AnyHashable: Any],
+           let id = aps["wedding_id"] as? String { return id.nonEmpty?.lowercased() }
+        return nil
+    }
 }

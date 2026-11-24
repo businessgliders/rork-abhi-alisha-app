@@ -27,7 +27,7 @@ nonisolated enum OutfitDisk {
     }
 
     private static func itemsURL(for user: UUID) -> URL? {
-        root?.appending(path: "items-\(user.lower).json")
+        root?.appending(path: ActiveWedding.scopedName("items-\(user.lower).json"))
     }
 
     static func loadItems(for user: UUID) -> [OutfitItem]? {

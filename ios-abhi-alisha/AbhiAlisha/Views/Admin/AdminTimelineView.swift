@@ -446,7 +446,7 @@ private struct OptionalDateField: View {
                     .stroke(BrandPalette.gold.opacity(0.3), lineWidth: 1)
             )
 
-            Text("Cancún time")
+            Text("\(ActiveWedding.snapshot.city ?? "Wedding") time")
                 .font(BrandLabel.font(size: 9.5, weight: .medium))
                 .foregroundStyle(BrandPalette.body.opacity(0.6))
         }

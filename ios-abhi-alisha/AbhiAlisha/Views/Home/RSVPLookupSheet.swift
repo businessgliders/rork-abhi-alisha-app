@@ -206,7 +206,7 @@ struct RSVPLookupSheet: View {
                 message = "A few of our guests share that name. Add your last name so we find the right reply."
             case .notFound:
                 match = nil
-                message = "We couldn't find that name just yet. Try the spelling exactly as it appears on your invitation, or send Abhi & Alisha a note and they'll gladly sort it out."
+                message = "We couldn't find that name just yet. Try the spelling exactly as it appears on your invitation, or send \(ActiveWedding.couple) a note and they'll gladly sort it out."
             case .offline:
                 match = nil
                 message = "We couldn't reach the guest list just now. Try again in a moment, once you're back online."

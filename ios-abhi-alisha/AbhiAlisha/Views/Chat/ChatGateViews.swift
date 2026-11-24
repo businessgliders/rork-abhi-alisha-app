@@ -25,8 +25,8 @@ struct FamilyInviteCard: View {
                 .padding(.top, 14)
 
             Text(session.isAnonymous
-                 ? "Your name and messages come with you. Abhi & Alisha welcome each family member in."
-                 : "A private place for the family, small groups and one-to-one chats. Abhi & Alisha welcome each family member in.")
+                 ? "Your name and messages come with you. \(ActiveWedding.couple) welcome each family member in."
+                 : "A private place for the family, small groups and one-to-one chats. \(ActiveWedding.couple) welcome each family member in.")
                 .brandFont(.bodyItalic)
                 .foregroundStyle(BrandPalette.body)
                 .multilineTextAlignment(.center)
@@ -93,7 +93,7 @@ struct FamilyGateCard: View {
                 BreathingCrest(width: 72)
                 Eyebrow(text: "Almost there")
                     .padding(.top, 18)
-                Text("Abhi & Alisha will welcome you in shortly")
+                Text("\(ActiveWedding.couple) will welcome you in shortly")
                     .brandFont(.eventTitleSmall)
                     .foregroundStyle(BrandPalette.ink)
                     .multilineTextAlignment(.center)

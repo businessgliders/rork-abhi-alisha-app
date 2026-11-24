@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// For Abhi & Alisha: everyone waiting to join, with Approve and Decline.
+/// For \(ActiveWedding.couple): everyone waiting to join, with Approve and Decline.
 struct ApprovalsView: View {
     @State private var store = ChatStore.shared
     @State private var working: UUID?
@@ -10,7 +10,7 @@ struct ApprovalsView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                ChatPageHeader(eyebrow: "For Abhi & Alisha", title: "Approvals")
+                ChatPageHeader(eyebrow: "For \(ActiveWedding.couple)", title: "Approvals")
 
                 if store.pendingPeople.isEmpty {
                     ChatEmptyNote(text: "No one is waiting to join right now.", icon: .sun)

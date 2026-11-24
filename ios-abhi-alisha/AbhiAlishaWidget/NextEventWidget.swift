@@ -107,7 +107,7 @@ private struct MediumNextEvent: View {
             .accessibilityElement(children: .combine)
         } else {
             VStack(alignment: .leading, spacing: 8) {
-                WidgetEyebrow(text: "Abhi & Alisha", size: 9)
+                WidgetEyebrow(text: ActiveWedding.couple, size: 9)
                 Text("The celebrations are complete.")
                     .brandFont(.widgetTitleSmall)
                     .foregroundStyle(WidgetPalette.ink)

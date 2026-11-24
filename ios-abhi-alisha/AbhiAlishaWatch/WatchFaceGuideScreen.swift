@@ -167,7 +167,7 @@ struct WatchFaceGuideScreen: View {
             steps: [
                 "Touch and hold your face, swipe all the way left, and tap the plus. Pick Infograph.",
                 "Touch and hold again, tap Edit, and make the dial black with gold as the accent.",
-                "Swipe to the last page, tap the centre slot, and turn the Digital Crown to Abhi & Alisha — the days crest takes the middle.",
+                "Swipe to the last page, tap the centre slot, and turn the Digital Crown to \(WatchWedding.current.coupleNames) — the days crest takes the middle.",
                 "Add the days gauge to a corner, and switch Tint Complications on when the page offers it.",
                 "Press the Digital Crown to save."
             ]
@@ -179,7 +179,7 @@ struct WatchFaceGuideScreen: View {
             steps: [
                 "Touch and hold, swipe to the plus, and pick Infograph Modular.",
                 "In Edit: black dial, gold accent, and Tint Complications on if it's offered.",
-                "On the complications page, tap the big centre slot and choose Abhi & Alisha — it reads Happening now the moment it's true.",
+                "On the complications page, tap the big centre slot and choose \(WatchWedding.current.coupleNames) — it reads Happening now the moment it's true.",
                 "The small circles can take the days crest too."
             ]
         ),
@@ -190,7 +190,7 @@ struct WatchFaceGuideScreen: View {
             steps: [
                 "Touch and hold, swipe to the plus, and pick X-Large.",
                 "In Edit, set the numerals to gold.",
-                "Give its one slot to Abhi & Alisha — far from Cancún it counts the days in giant type; close in, it names the next celebration."
+                "Give its one slot to \(WatchWedding.current.coupleNames) — far from the wedding it counts the days in giant type; close in, it names the next celebration."
             ]
         )
     ]

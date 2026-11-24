@@ -81,7 +81,7 @@ actor WeatherService {
             URLQueryItem(name: "latitude", value: String(latitude)),
             URLQueryItem(name: "longitude", value: String(longitude)),
             URLQueryItem(name: "daily", value: "temperature_2m_max,weather_code"),
-            URLQueryItem(name: "timezone", value: "America/Cancun"),
+            URLQueryItem(name: "timezone", value: Self.dayFormatter.timeZone.identifier),
             URLQueryItem(name: "start_date", value: dayKey),
             URLQueryItem(name: "end_date", value: dayKey)
         ]

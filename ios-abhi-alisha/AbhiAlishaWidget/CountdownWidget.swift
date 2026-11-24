@@ -11,7 +11,7 @@ struct CountdownWidget: Widget {
             CountdownWidgetView(entry: entry)
         }
         .configurationDisplayName("Days to Go")
-        .description("The countdown to Abhi and Alisha's wedding day.")
+        .description("The countdown to the wedding day.")
         .supportedFamilies([.systemSmall, .systemMedium, .accessoryCircular])
         .containerBackgroundRemovable(false)
     }
@@ -67,7 +67,7 @@ nonisolated enum CountdownPhrase: Sendable {
         switch self {
         case .counting(let days): return days == 1 ? "Day" : "Days"
         case .today: return "The Wedding Day"
-        case .married: return "Abhi & Alisha"
+        case .married: return ActiveWedding.couple
         case .couple: return "The Wedding"
         }
     }
@@ -93,7 +93,7 @@ private struct CountdownNumeral: View {
                 Text("Married")
                     .brandFont(wordSpec)
             case .couple:
-                Text("Abhi & Alisha")
+                Text(ActiveWedding.couple)
                     .brandFont(wordSpec)
             }
         }
@@ -119,7 +119,7 @@ private struct SmallCountdown: View {
                 .offset(x: 22, y: 16)
 
             VStack(alignment: .leading, spacing: 0) {
-                WidgetEyebrow(text: "Abhi & Alisha")
+                WidgetEyebrow(text: ActiveWedding.couple)
 
                 Spacer(minLength: 4)
 
@@ -146,8 +146,8 @@ private struct SmallCountdown: View {
         switch phrase {
         case .counting(let days): return "\(days) days until the wedding"
         case .today: return "The wedding is today"
-        case .married: return "Abhi and Alisha are married"
-        case .couple: return "Abhi and Alisha"
+        case .married: return "\(ActiveWedding.snapshot.coupleNamesSpoken) are married"
+        case .couple: return ActiveWedding.snapshot.coupleNamesSpoken
         }
     }
 }
@@ -164,7 +164,7 @@ private struct MediumCountdown: View {
     var body: some View {
         HStack(spacing: 0) {
             VStack(alignment: .leading, spacing: 0) {
-                WidgetEyebrow(text: "Abhi & Alisha")
+                WidgetEyebrow(text: ActiveWedding.couple)
 
                 Spacer(minLength: 4)
 
@@ -220,7 +220,7 @@ private struct MediumCountdown: View {
             }
         } else {
             VStack(alignment: .leading, spacing: 6) {
-                WidgetEyebrow(text: "AVA Resort Cancún")
+                WidgetEyebrow(text: ActiveWedding.place)
                 Text("The celebrations are complete.")
                     .brandFont(.widgetBody)
                     .foregroundStyle(WidgetPalette.body)
@@ -296,8 +296,8 @@ private struct CircularCountdown: View {
         switch phrase {
         case .counting(let days): return "\(days) days until the wedding"
         case .today: return "The wedding is today"
-        case .married: return "Abhi and Alisha are married"
-        case .couple: return "Abhi and Alisha"
+        case .married: return "\(ActiveWedding.snapshot.coupleNamesSpoken) are married"
+        case .couple: return ActiveWedding.snapshot.coupleNamesSpoken
         }
     }
 }

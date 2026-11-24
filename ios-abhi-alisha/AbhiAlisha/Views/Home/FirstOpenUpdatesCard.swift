@@ -27,7 +27,7 @@ struct FirstOpenUpdatesCard: View {
                         .foregroundStyle(Color(hex: 0xFFFBF1))
                         .fixedSize(horizontal: false, vertical: true)
 
-                    Text("Time changes, shuttle calls and moments not to miss, straight from Abhi & Alisha.")
+                    Text("Time changes, shuttle calls and moments not to miss, straight from \(ActiveWedding.couple).")
                         .brandFont(.bodySmall)
                         .foregroundStyle(Color(hex: 0xFFFBF1).opacity(0.88))
                         .fixedSize(horizontal: false, vertical: true)

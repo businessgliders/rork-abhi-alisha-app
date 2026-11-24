@@ -25,7 +25,7 @@ struct WatchScheduleScreen: View {
 
     /// Celebrations are Cancún time, written with their offset — days are grouped there
     /// too, so the list matches the resort whatever timezone the guest last left home in.
-    private static let dayZone = TimeZone(identifier: "America/Cancun") ?? .current
+    private static var dayZone: TimeZone { WatchWedding.current.timeZone }
 
     var body: some View {
         NavigationStack {

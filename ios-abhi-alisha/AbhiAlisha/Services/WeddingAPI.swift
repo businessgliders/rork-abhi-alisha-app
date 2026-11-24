@@ -61,11 +61,13 @@ nonisolated private struct LenientRow<T: Decodable & Sendable>: Decodable, Senda
 nonisolated struct JSONDiskCache: Sendable {
     let filename: String
 
+    /// Each wedding keeps its own copy, resolved at the moment of reading or writing;
+    /// Abhi & Alisha keep the original file names.
     private var fileURL: URL? {
         guard let directory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first else {
             return nil
         }
-        return directory.appendingPathComponent(filename)
+        return directory.appendingPathComponent(ActiveWedding.scopedName(filename))
     }
 
     /// Removes the cached payload, e.g. when a remembered lookup is forgotten.

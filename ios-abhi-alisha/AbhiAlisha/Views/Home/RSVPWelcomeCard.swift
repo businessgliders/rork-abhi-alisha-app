@@ -124,7 +124,7 @@ struct RSVPWelcomeCard: View {
     private var welcomeLine: String {
         switch record.isAttending {
         case true?:
-            return "We can't wait to celebrate with you in Cancún."
+            return "We can't wait to celebrate with you in \(ActiveWedding.snapshot.city ?? ActiveWedding.place)."
         case false?:
             return "We'll miss you — thank you for letting us know."
         default:

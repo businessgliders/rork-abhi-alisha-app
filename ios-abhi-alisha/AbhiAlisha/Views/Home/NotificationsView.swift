@@ -37,7 +37,7 @@ struct NotificationsView: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Eyebrow(text: "From Abhi & Alisha")
+            Eyebrow(text: "From \(ActiveWedding.couple)")
 
             Text("Updates")
                 .brandFont(.screenTitle)

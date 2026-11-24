@@ -71,7 +71,7 @@ struct ResortMapScreen: View {
     private var header: some View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 6) {
-                Eyebrow(text: "AVA Resort Cancún")
+                Eyebrow(text: ActiveWedding.place)
 
                 Text("Resort Map")
                     .brandFont(.eventTitle)

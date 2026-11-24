@@ -77,6 +77,7 @@ nonisolated struct OutfitItem: Codable, Identifiable, Hashable, Sendable {
 
 /// A new row for `outfit_items`; `user_id` is filled in by the server.
 nonisolated struct OutfitItemInsert: Encodable, Sendable {
+    let wedding_id: String
     let event_id: String
     let category: String
     let photo_path: String

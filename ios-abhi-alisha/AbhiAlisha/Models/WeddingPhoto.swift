@@ -72,6 +72,7 @@ nonisolated struct WeddingPhoto: Codable, Identifiable, Hashable, Sendable {
 
 /// A new row for `event_photos`.
 nonisolated struct WeddingPhotoInsert: Encodable, Sendable {
+    let wedding_id: String
     let event_id: String
     let photo_path: String
     let thumb_path: String
@@ -119,6 +120,8 @@ nonisolated struct WeddingUploadJob: Codable, Identifiable, Equatable, Sendable 
     static let maxAttempts = 3
 
     let id: UUID
+    /// The wedding the photo belongs to; photos queued by earlier builds were Abhi & Alisha's.
+    var weddingID: String?
     let eventID: String
     let caption: String?
     let isCover: Bool
@@ -129,8 +132,18 @@ nonisolated struct WeddingUploadJob: Codable, Identifiable, Equatable, Sendable 
     /// The server's own reason for the last failure, kept for the logs.
     var lastError: String?
 
-    var photoPath: String { "\(eventID)/\(id.uuidString.lowercased()).jpg" }
-    var thumbPath: String { "\(eventID)/\(id.uuidString.lowercased())_t.jpg" }
+    var resolvedWeddingID: String { weddingID ?? ActiveWedding.sampleID }
+
+    var photoPath: String {
+        weddingID == nil
+            ? "\(eventID)/\(id.uuidString.lowercased()).jpg"
+            : "\(resolvedWeddingID)/\(id.uuidString.lowercased()).jpg"
+    }
+    var thumbPath: String {
+        weddingID == nil
+            ? "\(eventID)/\(id.uuidString.lowercased())_t.jpg"
+            : "\(resolvedWeddingID)/\(id.uuidString.lowercased())_t.jpg"
+    }
 
     /// Every attempt spent; it now waits for Retry or Remove instead of blocking the queue.
     var isFailed: Bool { attempts >= Self.maxAttempts }

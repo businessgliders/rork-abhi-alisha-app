@@ -69,7 +69,7 @@ struct NotificationExplainerSheet: View {
     private var introduction: String {
         push.isDenied
             ? "Updates are switched off for this app. You can turn them on in Settings whenever you like."
-            : "A gentle note from Abhi & Alisha, only when it matters. Never anything else."
+            : "A gentle note from \(ActiveWedding.couple), only when it matters. Never anything else."
     }
 
     private var bell: some View {

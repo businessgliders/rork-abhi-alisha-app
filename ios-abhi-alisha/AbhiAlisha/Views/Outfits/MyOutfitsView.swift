@@ -13,6 +13,20 @@ struct MyOutfitsView: View {
     }
 
     var body: some View {
+        if WeddingContext.shared.isSample {
+            SampleJoinCard(symbol: "hanger")
+                .overlay(alignment: .topTrailing) {
+                    Button("Close") { dismiss() }
+                        .font(BrandLabel.font(size: 13, weight: .medium))
+                        .foregroundStyle(BrandPalette.goldDeep)
+                        .padding(20)
+                }
+        } else {
+            outfitList
+        }
+    }
+
+    private var outfitList: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {

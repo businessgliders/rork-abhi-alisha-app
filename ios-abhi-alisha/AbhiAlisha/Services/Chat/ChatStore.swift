@@ -60,8 +60,8 @@ final class ChatStore {
     nonisolated private struct NewReport: Encodable, Sendable { let message_id: String; let reporter_id: String; let reason: String }
     nonisolated private struct NewBlock: Encodable, Sendable { let blocker_id: String; let blocked_id: String }
     nonisolated private struct Resolution: Encodable, Sendable { let resolved_at: String }
-    nonisolated private struct DirectParams: Encodable, Sendable { let other_user: String }
-    nonisolated private struct GroupParams: Encodable, Sendable { let group_title: String; let member_ids: [String] }
+    nonisolated private struct DirectParams: Encodable, Sendable { let p_wedding: String; let other_user: String }
+    nonisolated private struct GroupParams: Encodable, Sendable { let p_wedding: String; let group_title: String; let member_ids: [String] }
     nonisolated private struct LeaveParams: Encodable, Sendable { let conv: String }
     nonisolated private struct StatusParams: Encodable, Sendable { let target: String; let new_status: String }
     nonisolated private struct MuteChange: Encodable, Sendable { let muted: Bool }
@@ -80,6 +80,32 @@ final class ChatStore {
             hasLoadedList = true
         }
         startInbox(for: userID)
+    }
+
+    /// Approved people in the open wedding; empty until the server has said.
+    private(set) var memberIDsOfWedding: Set<UUID> = []
+
+    private nonisolated static func approvedMembers(of weddingID: String) async -> Set<UUID>? {
+        guard let response = try? await ChatBackend.client
+            .from("wedding_members")
+            .select("user_id,status")
+            .eq("wedding_id", value: weddingID)
+            .execute() else { return nil }
+        let ids = MilniJSON.rows(response.data)
+            .filter { (MilniJSON.string($0["status"]) ?? "approved").lowercased() == "approved" }
+            .compactMap { MilniJSON.string($0["user_id"]).flatMap(UUID.init(uuidString:)) }
+        return ids.isEmpty ? nil : Set(ids)
+    }
+
+    /// Another wedding opened: the same person, that wedding's conversations.
+    func switchWedding() async {
+        let current = userID
+        await reset()
+        memberIDsOfWedding = []
+        if let current {
+            activate(userID: current)
+            await refreshAll()
+        }
     }
 
     func reset() async {
@@ -139,6 +165,7 @@ final class ChatStore {
     var approvedPeople: [ChatProfile] {
         profiles.values
             .filter { $0.access == .approved && $0.isAnonymous != true && $0.id != userID && !blocked.contains($0.id) }
+            .filter { memberIDsOfWedding.isEmpty || memberIDsOfWedding.contains($0.id) }
             .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
     }
 
@@ -270,6 +297,7 @@ final class ChatStore {
                 fetchedConversations = try await client
                     .from("conversations")
                     .select(ChatConversation.columns)
+                    .eq("wedding_id", value: ActiveWedding.id.lowercased())
                     .in("id", values: Self.filterValues(ids))
                     .execute()
                     .value
@@ -313,7 +341,12 @@ final class ChatStore {
                 .execute()
                 .value) ?? []
 
-            let fetchedPreviews = await Self.latestMessages(in: ids)
+            // Only this wedding's approved members are offered as people to message.
+            let weddingMembers = await Self.approvedMembers(of: ActiveWedding.id.lowercased())
+            let weddingConversationIDs = Set(fetchedConversations.map(\.id))
+            fetchedMembers = fetchedMembers.filter { weddingConversationIDs.contains($0.conversationID) }
+            let scopedIDs = ids.filter { weddingConversationIDs.contains($0) }
+            let fetchedPreviews = await Self.latestMessages(in: scopedIDs)
 
             guard self.userID == userID else { return }
 
@@ -324,7 +357,7 @@ final class ChatStore {
                 for profile in fetchedProfiles { merged[profile.id] = profile }
                 profiles = merged
                 var nextPreviews: [UUID: ChatMessage] = [:]
-                for id in ids {
+                for id in scopedIDs {
                     let local = previews[id]
                     let remote = fetchedPreviews[id]
                     if let local, let remote {
@@ -335,6 +368,7 @@ final class ChatStore {
                 }
                 previews = nextPreviews
                 blocked = Set(blocks.map(\.blockedID))
+                if let weddingMembers { memberIDsOfWedding = weddingMembers }
                 hasLoadedList = true
             }
             persistList()
@@ -816,7 +850,7 @@ final class ChatStore {
         }
         do {
             let response = try await client
-                .rpc("create_direct_conversation", params: DirectParams(other_user: person.lower))
+                .rpc("create_direct_conversation_in", params: DirectParams(p_wedding: ActiveWedding.id.lowercased(), other_user: person.lower))
                 .execute()
             let id = ChatBackend.decodeID(response.data)
             await refreshAll()
@@ -831,7 +865,7 @@ final class ChatStore {
         guard let clean = ChatJSON.clean(title) else { return nil }
         do {
             let response = try await client
-                .rpc("create_group_conversation", params: GroupParams(group_title: clean, member_ids: people.map(\.lower)))
+                .rpc("create_group_conversation_in", params: GroupParams(p_wedding: ActiveWedding.id.lowercased(), group_title: clean, member_ids: people.map(\.lower)))
                 .execute()
             let id = ChatBackend.decodeID(response.data)
             await refreshAll()

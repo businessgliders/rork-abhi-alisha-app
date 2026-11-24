@@ -100,7 +100,7 @@ nonisolated struct EventDraft: Equatable, Sendable {
 
 /// Celebration times are Cancún local, written with their offset ("…T19:00:00-05:00").
 nonisolated enum EventTime {
-    static let zone: TimeZone = TimeZone(identifier: "America/Cancun") ?? .current
+    static var zone: TimeZone { ActiveWedding.snapshot.timeZone }
 
     static func string(from date: Date) -> String {
         let formatter = ISO8601DateFormatter()

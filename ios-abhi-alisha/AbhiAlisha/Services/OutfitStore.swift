@@ -95,6 +95,15 @@ final class OutfitStore {
         }
     }
 
+    /// Another wedding opened: its looks are read fresh.
+    func switchWedding() {
+        items = []
+        uploads = []
+        loadedEventIDs = []
+        userID = nil
+        Task { await refreshAll() }
+    }
+
     /// Signing out forgets every look and photo this phone was holding.
     func reset() {
         userID = nil
@@ -115,6 +124,7 @@ final class OutfitStore {
             let rows: [OutfitItem] = try await ChatBackend.client
                 .from("outfit_items")
                 .select()
+                .eq("wedding_id", value: ActiveWedding.id.lowercased())
                 .eq("event_id", value: eventID)
                 .execute()
                 .value
@@ -137,6 +147,7 @@ final class OutfitStore {
                 .from("outfit_items")
                 .select()
                 .eq("user_id", value: userID.lower)
+                .eq("wedding_id", value: ActiveWedding.id.lowercased())
                 .execute()
                 .value
             items = rows
@@ -165,7 +176,7 @@ final class OutfitStore {
             try await upload(data, to: path)
             OutfitPhotoCache.shared.store(data, for: path)
 
-            let insert = OutfitItemInsert(event_id: eventID, category: category.rawValue, photo_path: path, note: nil)
+            let insert = OutfitItemInsert(wedding_id: ActiveWedding.id.lowercased(), event_id: eventID, category: category.rawValue, photo_path: path, note: nil)
             let row: OutfitItem
             do {
                 row = try await ChatBackend.client

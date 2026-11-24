@@ -76,7 +76,7 @@ struct WeddingComplications: Widget {
         StaticConfiguration(kind: "WeddingComplications", provider: WeddingProvider()) { entry in
             WeddingComplicationView(entry: entry)
         }
-        .configurationDisplayName("Abhi & Alisha")
+        .configurationDisplayName("Wedding countdown")
         .description("Days until the wedding, and whatever is happening next.")
         .supportedFamilies([.accessoryCircular, .accessoryCorner, .accessoryInline, .accessoryRectangular])
     }
@@ -124,7 +124,7 @@ struct WeddingComplicationView: View {
                     .aspectRatio(contentMode: .fit)
                     .frame(width: 22)
                     .foregroundStyle(WatchTheme.gold)
-                    .accessibilityLabel("Abhi and Alisha")
+                    .accessibilityLabel(WatchWedding.current.coupleNamesSpoken)
             }
         }
     }

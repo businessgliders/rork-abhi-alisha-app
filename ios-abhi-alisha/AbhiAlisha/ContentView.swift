@@ -7,7 +7,7 @@ import SwiftUI
 ///
 /// Light and dark are left entirely to iOS: nothing here forces a colour scheme, so
 /// the palette follows the phone's own setting the moment it changes.
-struct ContentView: View {
+struct WeddingShell: View {
     @State private var store = ScheduleStore()
     @State private var content = ContentStore()
     @State private var updates = NotificationsStore.shared
@@ -90,9 +90,16 @@ struct ContentView: View {
         .environment(push)
         .environment(admin)
         .onOpenURL { url in
+            // Join links are handled by the root gate.
+            guard WeddingContext.joinCode(from: url) == nil else { return }
             // Where a tap on a widget, or on the Live Activity, lands.
             guard let tab = router.handle(url) else { return }
             withAnimation(.calm) { selection = tab }
+        }
+        .safeAreaInset(edge: .top, spacing: 0) {
+            if WeddingContext.shared.isSample {
+                SampleWeddingBanner()
+            }
         }
         .onChange(of: router.pending) { _, _ in
             openPendingLanding()
@@ -106,8 +113,8 @@ struct ContentView: View {
         }
         .onAppear(perform: openPendingLanding)
         .task {
-            ChatSession.shared.start()
             store.startClock()
+            NotificationsStore.shared.startListening()
             LiveActivityRegistrar.shared.start()
             WeddingPhotoStore.shared.resumeUploads()
             await content.refreshIfNeeded()
@@ -156,6 +163,44 @@ struct ContentView: View {
             StoryView()
         case .resort:
             ExperienceView(isActive: selection == .resort)
+        }
+    }
+}
+
+/// The app's root: the splash while the saved wedding loads, onboarding when there
+/// is no wedding yet, otherwise the wedding itself. Switching weddings rebuilds the
+/// wedding screens with a cross-fade into the new colours.
+struct ContentView: View {
+    private let context = WeddingContext.shared
+
+    var body: some View {
+        ZStack {
+            switch context.stage {
+            case .launching:
+                MilniSplashView()
+                    .transition(.opacity)
+            case .onboarding:
+                OnboardingFlow()
+                    .transition(.opacity)
+            case .wedding:
+                WeddingShell()
+                    .id(context.shellKey)
+                    .preferredColorScheme(context.colorScheme)
+                    .transition(.opacity)
+            }
+        }
+        .animation(.easeInOut(duration: 0.7), value: context.stage)
+        .animation(.easeInOut(duration: 0.7), value: context.shellKey)
+        .onOpenURL { url in
+            _ = context.handleJoinLink(url)
+        }
+        .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { activity in
+            guard let url = activity.webpageURL else { return }
+            _ = context.handleJoinLink(url)
+        }
+        .task {
+            ChatSession.shared.start()
+            await context.bootstrap()
         }
     }
 }

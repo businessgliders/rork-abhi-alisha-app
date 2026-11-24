@@ -10,6 +10,7 @@ enum BrandTypeface {
     case cormorant
     case cormorantItalic
     case script
+    case inter
 
     var postScriptName: String {
         switch self {
@@ -18,6 +19,7 @@ enum BrandTypeface {
         case .cormorant: return "CormorantGaramond-Light"
         case .cormorantItalic: return "CormorantGaramond-LightItalic"
         case .script: return "GreatVibes-Regular"
+        case .inter: return "Inter-Regular"
         }
     }
 }
@@ -34,7 +36,8 @@ enum BrandFont {
             "PlayfairDisplay",
             "CormorantGaramond",
             "CormorantGaramond-Italic",
-            "GreatVibes-Regular"
+            "GreatVibes-Regular",
+            "Inter"
         ]
         let urls = names.compactMap { Bundle.main.url(forResource: $0, withExtension: "ttf") }
         guard !urls.isEmpty else {

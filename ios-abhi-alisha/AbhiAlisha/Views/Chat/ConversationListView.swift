@@ -92,7 +92,7 @@ struct ConversationListView: View {
     private var menu: some View {
         Menu {
             if session.isFamilyMember, session.isAdmin {
-                Section("For Abhi & Alisha") {
+                Section("For \(ActiveWedding.couple)") {
                     Button {
                         path.append(.approvals)
                     } label: {
@@ -244,7 +244,7 @@ struct ConversationListView: View {
                 )
             }
             .buttonStyle(PressableStyle())
-            .accessibilityHint("From Abhi & Alisha, read only")
+            .accessibilityHint("From \(ActiveWedding.couple), read only")
 
             Button(action: openQuestions) {
                 ChannelRow(
@@ -263,8 +263,8 @@ struct ConversationListView: View {
     }
 
     private var announcementPreview: String {
-        guard let latest = updates.latest else { return "News from Abhi & Alisha will appear here" }
-        return latest.title ?? latest.body ?? "A note from Abhi & Alisha"
+        guard let latest = updates.latest else { return "News from \(ActiveWedding.couple) will appear here" }
+        return latest.title ?? latest.body ?? "A note from \(ActiveWedding.couple)"
     }
 
     private var questionsPreview: String {
@@ -506,7 +506,7 @@ private struct StartFamilyChatButton: View {
     }
 }
 
-/// Explains that Abhi & Alisha welcome each family member in, with Sign in with Apple
+/// Explains that \(ActiveWedding.couple) welcome each family member in, with Sign in with Apple
 /// underneath. Closes itself once the sign-in has gone through.
 private struct FamilySignInSheet: View {
     @State private var session = ChatSession.shared

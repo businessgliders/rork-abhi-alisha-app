@@ -166,7 +166,7 @@ private struct PushPreview: View {
 
             VStack(alignment: .leading, spacing: 1) {
                 HStack(alignment: .firstTextBaseline) {
-                    Text("Abhi & Alisha")
+                    Text(ActiveWedding.couple)
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundStyle(Color.black.opacity(0.55))
                     Spacer(minLength: 6)

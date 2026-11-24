@@ -148,7 +148,7 @@ struct NewMessageSheet: View {
         if people.isEmpty {
             ChatEmptyNote(
                 text: store.approvedPeople.isEmpty
-                    ? "Family members will appear here once Abhi & Alisha welcome them in."
+                    ? "Family members will appear here once \(ActiveWedding.couple) welcome them in."
                     : "No one by that name yet."
             )
         } else {

@@ -61,7 +61,7 @@ struct WingMapViewer: View {
                             }
                         }
                     }
-                    .accessibilityLabel("AVA Resort Cancún map, South Wing and North Wing")
+                    .accessibilityLabel("\(ActiveWedding.place) map, South Wing and North Wing")
             }
             .ignoresSafeArea()
         }

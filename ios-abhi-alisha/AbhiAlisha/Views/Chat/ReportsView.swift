@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// For Abhi & Alisha: every open report, with the message it's about and a Resolve button.
+/// For \(ActiveWedding.couple): every open report, with the message it's about and a Resolve button.
 struct ReportsView: View {
     @State private var store = ChatStore.shared
     @State private var working: UUID?
@@ -8,7 +8,7 @@ struct ReportsView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                ChatPageHeader(eyebrow: "For Abhi & Alisha", title: "Reports")
+                ChatPageHeader(eyebrow: "For \(ActiveWedding.couple)", title: "Reports")
 
                 if store.reports.isEmpty {
                     ChatEmptyNote(text: "Nothing has been reported. All is calm.", icon: .sun)

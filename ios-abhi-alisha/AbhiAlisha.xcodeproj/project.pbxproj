@@ -696,6 +696,7 @@
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "AbhiAlisha-Info.plist";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "Update the wedding celebrations you added to your calendar when their times change.";
 				INFOPLIST_KEY_NSCalendarsWriteOnlyAccessUsageDescription = "Add wedding celebrations to your own calendar so you never miss one.";
@@ -736,6 +737,7 @@
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "AbhiAlisha-Info.plist";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "Update the wedding celebrations you added to your calendar when their times change.";
 				INFOPLIST_KEY_NSCalendarsWriteOnlyAccessUsageDescription = "Add wedding celebrations to your own calendar so you never miss one.";

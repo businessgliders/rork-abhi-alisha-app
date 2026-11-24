@@ -96,10 +96,14 @@ struct HomeView: View {
             } else {
                 HappeningNowBanner(events: store.events)
 
-                rsvpBlock
+                if ActiveWedding.snapshot.isSampleWedding {
+                    rsvpBlock
+                }
 
                 if let next = store.nextEvent {
                     NextEventCard(event: next)
+                } else if store.events.isEmpty && !store.isRefreshing {
+                    WeddingEmptyState()
                 }
 
                 NotifyUpdatesCard()
@@ -111,7 +115,7 @@ struct HomeView: View {
 
             VStack(spacing: 12) {
                 GoldRule(width: 30, opacity: 0.55)
-                Text("AVA Resort Cancún · Mexico")
+                Text(ActiveWedding.snapshot.placeWithCountry ?? "")
                     .brandFont(.bodySmall)
                     .foregroundStyle(BrandPalette.body.opacity(0.85))
                     .tracking(0.4)
@@ -330,12 +334,12 @@ private struct HeroHeader: View {
             }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Abhi and Alisha")
+        .accessibilityLabel(ActiveWedding.snapshot.coupleNamesSpoken)
     }
 
     private var firstName: some View {
         TypewriterText(
-            text: "Abhi",
+            text: ActiveWedding.snapshot.partnerOne,
             spec: .heroNames,
             color: Color(hex: 0xFDFAF3),
             startDelay: 0.75,
@@ -345,7 +349,7 @@ private struct HeroHeader: View {
 
     private var secondName: some View {
         TypewriterText(
-            text: "Alisha",
+            text: ActiveWedding.snapshot.partnerTwo,
             spec: .heroNames,
             color: Color(hex: 0xFDFAF3),
             startDelay: 1.85,

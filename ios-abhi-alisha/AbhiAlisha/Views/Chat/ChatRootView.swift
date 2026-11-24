@@ -13,9 +13,17 @@ struct ChatRootView: View {
     @Environment(DeepLinkRouter.self) private var router
 
     var body: some View {
+        if WeddingContext.shared.isSample {
+            SampleJoinCard()
+        } else {
+            chat
+        }
+    }
+
+    private var chat: some View {
         @Bindable var session = session
 
-        NavigationStack(path: $path) {
+        return NavigationStack(path: $path) {
             ConversationListView(path: $path)
                 .toolbar(.hidden, for: .navigationBar)
                 .navigationDestination(for: ChatRoute.self) { route in
