@@ -248,42 +248,67 @@ extension View {
     }
 
     /// The milni horizontal rhythm.
+    /// Side margins, and on wide screens a centred column about 640pt wide.
     func milniSides() -> some View {
         padding(.horizontal, Milni.sidePadding)
+            .frame(maxWidth: 640 + Milni.sidePadding * 2)
+            .frame(maxWidth: .infinity)
     }
 }
 
 // MARK: - Foil text
 
-/// Gold foil: a champagne gradient with a slow bright sweep crossing it.
+/// Gold foil: one layer only. The text sets the size and shape but is never drawn
+/// itself; an animated champagne gradient, with a bright band crossing it, is masked to
+/// the letters. No second copy of the text sits underneath, so nothing can ghost.
 struct MilniFoil: ViewModifier {
-    var base: [Color] = [Color(hex: 0xA9864E), Color(hex: 0xE6CF9A), Color(hex: 0xB89360)]
+    /// A card's own foil colours; `nil` uses the brand foil, which deepens on light.
+    var base: [Color]? = nil
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.colorScheme) private var colorScheme
+
+    /// On ivory the pale champagne and a bright sweep would wash the letters out, so
+    /// the light version is deeper gold with a softer band.
+    private var isLight: Bool { base == nil && colorScheme == .light }
+
+    private var colors: [Color] {
+        if let base { return base }
+        return isLight
+            ? [Color(hex: 0x8E6C3A), Color(hex: 0xC9A96A), Color(hex: 0x9C7A47)]
+            : [Color(hex: 0xA9864E), Color(hex: 0xE6CF9A), Color(hex: 0xB89360)]
+    }
 
     func body(content: Content) -> some View {
-        TimelineView(.animation(minimumInterval: 1 / 30, paused: reduceMotion)) { context in
-            let t = reduceMotion ? 0.5 : context.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 4.5) / 4.5
-            content
-                .foregroundStyle(
-                    LinearGradient(colors: base, startPoint: .topLeading, endPoint: .bottomTrailing)
-                )
-                .overlay {
-                    LinearGradient(
-                        stops: [
-                            .init(color: .clear, location: 0),
-                            .init(color: .white.opacity(0.75), location: 0.5),
-                            .init(color: .clear, location: 1),
-                        ],
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    )
-                    .frame(width: 90)
-                    .rotationEffect(.degrees(18))
-                    .offset(x: -260 + 520 * t)
-                    .blendMode(.plusLighter)
-                    .mask(content)
+        content
+            .hidden()
+            .overlay {
+                GeometryReader { proxy in
+                    TimelineView(.animation(minimumInterval: 1 / 30, paused: reduceMotion)) { context in
+                        let t = reduceMotion ? 0.5 : context.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 4.5) / 4.5
+                        let width = proxy.size.width
+                        ZStack {
+                            LinearGradient(colors: colors, startPoint: .topLeading, endPoint: .bottomTrailing)
+                            LinearGradient(
+                                stops: [
+                                    .init(color: .white.opacity(0), location: 0),
+                                    .init(color: .white.opacity(isLight ? 0.3 : 0.7), location: 0.5),
+                                    .init(color: .white.opacity(0), location: 1),
+                                ],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                            .frame(width: max(width * 0.3, 60), height: proxy.size.height * 2)
+                            .rotationEffect(.degrees(18))
+                            .offset(x: -width * 0.8 + width * 1.6 * t)
+                            .blendMode(.plusLighter)
+                        }
+                        .frame(width: width, height: proxy.size.height)
+                        .compositingGroup()
+                    }
                 }
-        }
+                .mask(content)
+                .allowsHitTesting(false)
+            }
     }
 }
 
@@ -301,6 +326,8 @@ struct MilniRings: View {
     var showsOuter = true
     var breathes = true
     var delay: Double = 0
+    /// The faint outer halo, faded out as the splash dawns into the intro.
+    var haloOpacity: Double = 1
 
     @State private var first: CGFloat = 0
     @State private var second: CGFloat = 0
@@ -319,6 +346,7 @@ struct MilniRings: View {
                         .stroke(color.opacity(0.35), lineWidth: lineWidth)
                         .frame(width: size * 0.96, height: size * 0.96)
                         .rotationEffect(.degrees(-90))
+                        .opacity(haloOpacity)
                 }
                 Circle()
                     .trim(from: 0, to: first)

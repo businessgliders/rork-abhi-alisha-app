@@ -209,7 +209,7 @@ struct EventDetailSheet: View {
     /// Venue name, address, and this celebration's own corner of the resort map.
     private var venueBlock: some View {
         VStack(alignment: .leading, spacing: 14) {
-            if event.locationName != nil || event.locationAddress != nil || event.resortMapLabel != nil {
+            if event.locationName != nil || event.locationAddress != nil || resortLabel != nil {
                 VStack(alignment: .leading, spacing: 6) {
                     if let name = event.locationName {
                         Text(name)
@@ -222,7 +222,7 @@ struct EventDetailSheet: View {
                             .foregroundStyle(BrandPalette.body)
                             .fixedSize(horizontal: false, vertical: true)
                     }
-                    if let label = event.resortMapLabel {
+                    if let label = resortLabel {
                         Text(label)
                             .font(BrandLabel.font(size: 11, weight: .medium))
                             .tracking(1.2)
@@ -440,13 +440,19 @@ struct EventDetailSheet: View {
         return valid.isEmpty ? nil : valid
     }
 
+    private var resortLabel: String? {
+        ActiveWedding.snapshot.isAbhiAlisha ? event.resortMapLabel : nil
+    }
+
     /// Every plotted celebration, so the number on this pin matches the legend's.
     private var mapPins: [ResortMapPin] {
         ResortMapPlot.pins(from: store.events)
     }
 
     private var mapPin: ResortMapPin? {
-        mapPins.first { $0.id == event.id }
+        // The resort map is AVA's: only Abhi & Alisha's events are placed on it.
+        guard ActiveWedding.snapshot.isAbhiAlisha else { return nil }
+        return mapPins.first { $0.id == event.id }
     }
 
     private var faqs: [EventFAQ]? {

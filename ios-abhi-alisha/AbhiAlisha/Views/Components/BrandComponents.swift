@@ -134,7 +134,7 @@ extension Animation {
 
 /// Keeps reading widths comfortable on iPad without stretching the editorial layout.
 struct ReadableWidth: ViewModifier {
-    var maxWidth: CGFloat = 620
+    var maxWidth: CGFloat = 640
 
     func body(content: Content) -> some View {
         content
@@ -144,7 +144,7 @@ struct ReadableWidth: ViewModifier {
 }
 
 extension View {
-    func readableWidth(_ maxWidth: CGFloat = 620) -> some View {
+    func readableWidth(_ maxWidth: CGFloat = 640) -> some View {
         modifier(ReadableWidth(maxWidth: maxWidth))
     }
 }

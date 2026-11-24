@@ -143,7 +143,7 @@ struct WeddingSwitcherSheet: View {
         BrandHaptics.tick()
         dismiss()
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-            context.goToOnboarding(entry)
+            context.presentFlow(entry)
         }
     }
 

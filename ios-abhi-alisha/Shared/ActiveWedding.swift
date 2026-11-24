@@ -45,6 +45,10 @@ nonisolated struct WeddingSnapshot: Codable, Equatable, Sendable {
 
     var isSampleWedding: Bool { id.lowercased() == ActiveWedding.sampleID }
 
+    /// Abhi & Alisha's own wedding: AVA Resort Cancún's photos, maps, wing guide, PDF and
+    /// amenities, the crest and the RSVP lookup belong to it alone, never to other couples.
+    var isAbhiAlisha: Bool { slug?.lowercased() == "abhi-alisha" || isSampleWedding }
+
     /// "Abhi & Alisha".
     var coupleNames: String {
         let one = partnerOne.trimmingCharacters(in: .whitespacesAndNewlines)

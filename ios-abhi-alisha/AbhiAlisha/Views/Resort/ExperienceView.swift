@@ -42,12 +42,16 @@ struct ExperienceView: View {
             try? await Task.sleep(for: .milliseconds(350))
             switch section {
             case .top:
-                withAnimation(.calm) { proxy.scrollTo(Self.resortAnchor, anchor: .top) }
+                let anchor = showsResort ? Self.resortAnchor : Self.topAnchor
+                withAnimation(.calm) { proxy.scrollTo(anchor, anchor: .top) }
             case .questions:
                 isShowingQuestions = true
             }
         }
     }
+
+    /// "Where we're staying" is AVA Resort Cancún: Abhi & Alisha's wedding only.
+    private var showsResort: Bool { ActiveWedding.snapshot.isAbhiAlisha }
 
     private var page: some View {
         ScrollView {
@@ -68,24 +72,26 @@ struct ExperienceView: View {
                 .padding(.horizontal, 22)
                 .padding(.top, 18)
 
-                resortHeading
-                    .padding(.horizontal, 22)
-                    .padding(.top, 46)
-                    .id(Self.resortAnchor)
+                if showsResort {
+                    resortHeading
+                        .padding(.horizontal, 22)
+                        .padding(.top, 46)
+                        .id(Self.resortAnchor)
 
-                PhotosAndMaps(photos: content.resortPhotos)
-                    .padding(.top, 18)
+                    PhotosAndMaps(photos: content.resortPhotos)
+                        .padding(.top, 18)
 
-                FullMapLink()
-                    .padding(.horizontal, 22)
-                    .padding(.top, 14)
+                    FullMapLink()
+                        .padding(.horizontal, 22)
+                        .padding(.top, 14)
 
-                SectionHeading(text: "Amenities")
-                    .padding(.horizontal, 22)
-                    .padding(.top, 42)
+                    SectionHeading(text: "Amenities")
+                        .padding(.horizontal, 22)
+                        .padding(.top, 42)
 
-                AmenityRow(amenities: ResortAmenity.all)
-                    .padding(.top, 18)
+                    AmenityRow(amenities: ResortAmenity.all)
+                        .padding(.top, 18)
+                }
             }
             .padding(.top, ScreenChrome.contentReserve)
             .padding(.bottom, FloatingTabBar.contentReserve + 24)

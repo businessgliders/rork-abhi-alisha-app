@@ -47,6 +47,7 @@ struct NotificationExplainerSheet: View {
 
                 Button("Not now") {
                     BrandHaptics.tick()
+                    push.snooze()
                     dismiss()
                 }
                 .font(BrandLabel.font(size: 12, weight: .medium))
@@ -64,6 +65,10 @@ struct NotificationExplainerSheet: View {
         .presentationDetents([.fraction(0.86), .large])
         .presentationContentInteraction(.scrolls)
         .presentationDragIndicator(.visible)
+        .onDisappear {
+            // Swiped away without turning updates on counts as "Not now".
+            if !push.isEnabled { push.snooze() }
+        }
     }
 
     private var introduction: String {

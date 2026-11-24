@@ -34,6 +34,7 @@ struct HomeView: View {
                     Color.black
                         .opacity(Double(coverage) * 0.45)
                         .allowsHitTesting(false)
+                        .ignoresSafeArea(edges: .horizontal)
                 }
                 .accessibilityElement(children: .contain)
 
@@ -96,7 +97,7 @@ struct HomeView: View {
             } else {
                 HappeningNowBanner(events: store.events)
 
-                if ActiveWedding.snapshot.isSampleWedding {
+                if ActiveWedding.snapshot.isAbhiAlisha {
                     rsvpBlock
                 }
 
@@ -142,6 +143,7 @@ struct HomeView: View {
             .fill(BrandPalette.background)
             .padding(.bottom, -600)
             .shadow(color: Color.black.opacity(0.18), radius: 18, y: -4)
+            .ignoresSafeArea(edges: .horizontal)
         }
     }
 
@@ -263,6 +265,26 @@ private struct HeroHeader: View {
     var isThankYou = false
 
     var body: some View {
+        // Only the photograph runs under the side safe areas (the status strip on a
+        // wide screen); the names and countdown stay inside them.
+        Color.clear
+            .background {
+                photograph
+                    .ignoresSafeArea(edges: .horizontal)
+            }
+            .overlay(alignment: .top) {
+                DecorativeLightString()
+                    .padding(.top, 38)
+            }
+            .overlay(alignment: .bottom) {
+                heroContent
+                    .padding(.horizontal, 26)
+                    .padding(.bottom, 58)
+                    .readableWidth(560)
+            }
+    }
+
+    private var photograph: some View {
         Color(BrandPalette.heroFallback)
             .overlay {
                 HeroSlideshow(photos: heroPhotos)
@@ -279,16 +301,6 @@ private struct HeroHeader: View {
                     endPoint: .bottom
                 )
                 .allowsHitTesting(false)
-            }
-            .overlay(alignment: .top) {
-                DecorativeLightString()
-                    .padding(.top, 38)
-            }
-            .overlay(alignment: .bottom) {
-                heroContent
-                    .padding(.horizontal, 26)
-                    .padding(.bottom, 58)
-                    .readableWidth(560)
             }
             .clipped()
     }

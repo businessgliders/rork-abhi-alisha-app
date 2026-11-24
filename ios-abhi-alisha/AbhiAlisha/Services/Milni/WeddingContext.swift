@@ -40,6 +40,24 @@ final class WeddingContext {
         case create
     }
 
+    /// Joining or creating another wedding from inside one: shown in its own full-screen
+    /// cover above the app, so nothing underneath (the launch gate, a refresh, a sign-in)
+    /// can replace it halfway through.
+    struct FlowRequest: Identifiable, Equatable {
+        let id = UUID()
+        let entry: OnboardingEntry
+    }
+
+    var flowRequest: FlowRequest?
+
+    func presentFlow(_ entry: OnboardingEntry) {
+        flowRequest = FlowRequest(entry: entry)
+    }
+
+    func closeFlow() {
+        flowRequest = nil
+    }
+
     private let defaults = UserDefaults.standard
     private enum Key {
         static let currentWeddingID = "milni.currentWeddingId"
@@ -317,6 +335,8 @@ final class WeddingContext {
             summary.status = summary.status ?? "pending"
         }
         pendingSummary = summary
+        // Once they land on Home, ask about wedding updates.
+        PushRegistrar.shared.offerAfterJoin()
     }
 
     /// The wedding just joined or created, opened once its welcome screen is done.
@@ -400,7 +420,13 @@ final class WeddingContext {
     func handleJoinLink(_ url: URL) -> Bool {
         guard let code = Self.joinCode(from: url) else { return false }
         pendingJoinCode = code
-        if stage != .onboarding { goToOnboarding(.joinCode) }
+        // The join cover, or onboarding, picks the code up from wherever it is.
+        if flowRequest != nil || stage == .onboarding { return true }
+        if stage == .wedding {
+            presentFlow(.joinCode)
+        } else {
+            goToOnboarding(.joinCode)
+        }
         return true
     }
 

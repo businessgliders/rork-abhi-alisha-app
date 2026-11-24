@@ -90,9 +90,12 @@ struct MilniInvitationCard: View {
             }
         }
         .frame(width: 300, height: 420)
-        .clipShape(.rect(cornerRadius: 6, style: .continuous))
+        // Flatten the card first, so the sheen and the shadow see one surface and never
+        // a second copy of the names.
+        .compositingGroup()
         .milniSheen(period: 3, intensity: 0.16)
         .clipShape(.rect(cornerRadius: 6, style: .continuous))
+        .compositingGroup()
         .shadow(color: Color(hex: 0x17130F, opacity: 0.28), radius: 30, y: 22)
         .shadow(color: Color(hex: 0x17130F, opacity: 0.12), radius: 6, y: 3)
         .accessibilityElement(children: .ignore)

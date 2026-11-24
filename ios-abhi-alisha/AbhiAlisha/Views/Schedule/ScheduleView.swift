@@ -38,7 +38,58 @@ struct ScheduleView: View {
 
     private var events: [ScheduleEvent] { store.events }
 
+    /// A wide but short window (the folding iPhone's inner screen held sideways, or an
+    /// iPad in landscape Split View): the card can't fit with the stepper, so the page
+    /// scrolls instead of sliding under the tab bar.
+    private var isShortLayout: Bool {
+        horizontalSizeClass == .regular && containerSize.height > 0 && containerSize.height < 720
+    }
+
     var body: some View {
+        Group {
+            if isShortLayout {
+                ScrollView {
+                    page
+                }
+                .scrollBounceBehavior(.basedOnSize)
+                .scrollIndicators(.hidden)
+            } else {
+                page
+            }
+        }
+        .crestCorner()
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .onGeometryChange(for: CGSize.self) { $0.size } action: { containerSize = $0 }
+        .background(BrandPalette.background.ignoresSafeArea())
+        .sheet(item: $detailEvent) { event in
+            EventDetailSheet(event: event, weather: weatherByEvent[event.id])
+        }
+        .task {
+            syncToCurrentIfNeeded()
+            await prefetchWeather()
+            await store.refresh()
+        }
+        .onChange(of: store.now) { _, _ in
+            advanceWithTheEvening()
+        }
+        .onChange(of: events.count) { _, _ in
+            clampSelection()
+            syncToCurrentIfNeeded()
+            openPendingEventIfNeeded()
+        }
+        .onChange(of: router.pendingEventID) { _, _ in
+            openPendingEventIfNeeded()
+        }
+        .onAppear(perform: openPendingEventIfNeeded)
+        .task(id: isActive) {
+            await showCalendarTipIfNeeded()
+        }
+        .task(id: selectedEvent?.id) {
+            await loadWeatherForSelection()
+        }
+    }
+
+    private var page: some View {
         VStack(spacing: 0) {
             header
                 .padding(.top, ScreenChrome.contentReserve)
@@ -78,36 +129,6 @@ struct ScheduleView: View {
         .padding(.horizontal, 22)
         .padding(.bottom, FloatingTabBar.contentReserve)
         .readableWidth()
-        .crestCorner()
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .onGeometryChange(for: CGSize.self) { $0.size } action: { containerSize = $0 }
-        .background(BrandPalette.background.ignoresSafeArea())
-        .sheet(item: $detailEvent) { event in
-            EventDetailSheet(event: event, weather: weatherByEvent[event.id])
-        }
-        .task {
-            syncToCurrentIfNeeded()
-            await prefetchWeather()
-            await store.refresh()
-        }
-        .onChange(of: store.now) { _, _ in
-            advanceWithTheEvening()
-        }
-        .onChange(of: events.count) { _, _ in
-            clampSelection()
-            syncToCurrentIfNeeded()
-            openPendingEventIfNeeded()
-        }
-        .onChange(of: router.pendingEventID) { _, _ in
-            openPendingEventIfNeeded()
-        }
-        .onAppear(perform: openPendingEventIfNeeded)
-        .task(id: isActive) {
-            await showCalendarTipIfNeeded()
-        }
-        .task(id: selectedEvent?.id) {
-            await loadWeatherForSelection()
-        }
     }
 
     // MARK: - Sections
@@ -245,7 +266,9 @@ struct ScheduleView: View {
     /// On a tall iPad page, a card with attire photos fills the space and shows them;
     /// one without simply fits its content and sits centred. Elsewhere it always fills.
     private func cardFills(_ event: ScheduleEvent) -> Bool {
-        !isTallLayout || !event.attirePhotos.isEmpty
+        // On a short window the whole page scrolls, so the card shows its copy in full.
+        guard !isShortLayout else { return false }
+        return !isTallLayout || !event.attirePhotos.isEmpty
     }
 
     private var cardCarousel: some View {
@@ -279,6 +302,8 @@ struct ScheduleView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .animation(.calm, value: isTallLayout)
         .offset(x: dragOffset)
+        // On a short window the page scrolls, and a drag here would hold the scroll; the
+        // arrows and the string of lights still step through the events.
         .gesture(
             DragGesture(minimumDistance: 20)
                 .onChanged { value in
@@ -294,7 +319,8 @@ struct ScheduleView: View {
                     } else if value.translation.width > threshold {
                         step(by: -1)
                     }
-                }
+                },
+            including: isShortLayout ? .subviews : .all
         )
     }
 

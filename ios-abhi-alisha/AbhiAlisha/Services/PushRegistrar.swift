@@ -5,9 +5,10 @@ import UserNotifications
 
 /// Wedding updates: when to ask, and telling the couple's backend where to reach this phone.
 ///
-/// On the very first open, once the names finish writing themselves on Home, a short gold
-/// card asks to turn on schedule updates; the system prompt only follows a tap on
-/// "Turn on". The fuller explainer still opens whenever the guest taps "Notify me". The device token is sent to `registerDevice` whenever
+/// When the wedding opens and updates are not yet decided (or are switched off), the
+/// "Stay in the loop" sheet asks; "Not now" keeps it away for a week on this phone, and
+/// a guest who has just joined is always asked once. The system prompt only follows a
+/// tap on "Turn on updates". The device token is sent to `registerDevice` whenever
 /// it (or the guest's name) differs from what was last sent, and failures stay silent.
 @Observable
 final class PushRegistrar {
@@ -15,7 +16,7 @@ final class PushRegistrar {
 
     private(set) var status: UNAuthorizationStatus = .notDetermined
     var isExplainerPresented = false
-    /// The compact first-open card.
+    /// The compact first-open card (retired: the full explainer sheet asks instead).
     var isFirstOpenCardPresented = false
 
     private var deviceToken: String?
@@ -26,6 +27,7 @@ final class PushRegistrar {
         static let launchCount = "push.launchCount"
         static let didOfferOnLaunch = "push.didOfferOnLaunch"
         static let lastRegistration = "push.lastRegistration"
+        static let snoozedUntil = "push.snoozedUntil"
     }
 
     /// Updates are switched on in any form the system allows.
@@ -50,17 +52,53 @@ final class PushRegistrar {
             if isEnabled {
                 // Every launch: the token may have rotated since last time.
                 UIApplication.shared.registerForRemoteNotifications()
-                return
             }
-            guard status == .notDetermined,
-                  launches >= 1,
-                  !defaults.bool(forKey: Key.didOfferOnLaunch) else { return }
-            // Let the names finish writing themselves across the hero first.
-            try? await Task.sleep(for: .seconds(3.6))
-            guard status == .notDetermined, !isExplainerPresented else { return }
-            defaults.set(true, forKey: Key.didOfferOnLaunch)
-            isFirstOpenCardPresented = true
         }
+    }
+
+    // MARK: - Offering the explainer
+
+    /// Shown at most once per launch, however often the wedding screens are rebuilt.
+    private var didOfferThisLaunch = false
+    /// A guest just joined: ask once they land on Home, even inside a snooze.
+    private var pendingJoinOffer = false
+
+    /// A guest has just joined a wedding.
+    func offerAfterJoin() {
+        pendingJoinOffer = true
+    }
+
+    /// Called each time the wedding screens appear. Not yet decided or switched off, and
+    /// not snoozed: the "Stay in the loop" sheet rises after a short pause.
+    func offerIfNeeded(isSample: Bool) async {
+        await refreshStatus()
+        if isEnabled {
+            pendingJoinOffer = false
+            UIApplication.shared.registerForRemoteNotifications()
+            return
+        }
+        guard !isSample, !ScreenshotCapture.isActive else { return }
+        let afterJoin = pendingJoinOffer
+        guard afterJoin || (!didOfferThisLaunch && !isSnoozed) else { return }
+        guard status == .notDetermined || status == .denied else { return }
+
+        // Let the welcome curtain lift and the names write themselves across the hero.
+        try? await Task.sleep(for: .seconds(afterJoin ? 2.4 : 3.2))
+        guard !Task.isCancelled, !isEnabled, !isExplainerPresented else { return }
+        pendingJoinOffer = false
+        didOfferThisLaunch = true
+        defaults.set(true, forKey: Key.didOfferOnLaunch)
+        isExplainerPresented = true
+    }
+
+    /// "Not now": quiet on this phone for a week.
+    func snooze() {
+        defaults.set(Date().addingTimeInterval(7 * 24 * 3600), forKey: Key.snoozedUntil)
+    }
+
+    private var isSnoozed: Bool {
+        guard let until = defaults.object(forKey: Key.snoozedUntil) as? Date else { return false }
+        return until > Date()
     }
 
     func refreshStatus() async {

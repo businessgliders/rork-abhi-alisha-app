@@ -36,13 +36,31 @@ struct OnboardingFlow: View {
         }
     }
 
+    /// Where to start; nil follows the context's onboarding entry.
+    var entry: WeddingContext.OnboardingEntry? = nil
+    /// Set when shown as a cover from inside a wedding: backing out or finishing closes it.
+    var close: (() -> Void)? = nil
+
     private let context = WeddingContext.shared
     private let session = ChatSession.shared
 
-    @State private var step: Step = .splash
+    @State private var step: Step
     @State private var forward = true
     @State private var draft = CoupleDraft()
+    /// The splash has dawned to ivory: the status bar turns dark to match.
+    @State private var dawnLit = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    init(entry: WeddingContext.OnboardingEntry? = nil, close: (() -> Void)? = nil) {
+        self.entry = entry
+        self.close = close
+        // A cover opens straight on its own step, never flashing the splash first.
+        switch entry {
+        case .joinCode: _step = State(initialValue: .code(prefill: nil))
+        case .choose: _step = State(initialValue: .choose)
+        default: _step = State(initialValue: .splash)
+        }
+    }
 
     var body: some View {
         ZStack {
@@ -52,7 +70,7 @@ struct OnboardingFlow: View {
                 .transition(transition)
         }
         .animation(reduceMotion ? .easeInOut(duration: 0.4) : .spring(response: 0.7, dampingFraction: 0.92), value: step)
-        .preferredColorScheme(step.prefersDark ? .dark : .light)
+        .preferredColorScheme(step.prefersDark && !(step == .splash && dawnLit) ? .dark : .light)
         .onAppear(perform: startStep)
         .onChange(of: context.pendingJoinCode) { _, code in
             guard let code else { return }
@@ -82,7 +100,7 @@ struct OnboardingFlow: View {
             step = .code(prefill: code)
             return
         }
-        switch context.onboardingEntry {
+        switch entry ?? context.onboardingEntry {
         case .splash: step = .splash
         case .choose: step = .choose
         case .joinCode: step = .code(prefill: nil)
@@ -94,6 +112,16 @@ struct OnboardingFlow: View {
         session.isSignedIn && !session.isAnonymous ? .coupleNames : .coupleSignIn
     }
 
+    /// Back to the start: the choose screen, or out of the cover.
+    private func backToStart() {
+        if let close { close() } else { go(.choose) }
+    }
+
+    private func finish() {
+        context.enterPending()
+        close?()
+    }
+
     private func go(_ next: Step) {
         forward = next.depth >= step.depth
         step = next
@@ -103,8 +131,16 @@ struct OnboardingFlow: View {
     private var screen: some View {
         switch step {
         case .splash:
-            MilniSplashView(advances: true) {
-                context.hasSeenIntro ? go(.choose) : go(.intro)
+            if context.hasSeenIntro {
+                MilniSplashView(advances: true) {
+                    go(.choose)
+                }
+            } else {
+                // First open: the midnight splash dawns into the intro in one scene.
+                MilniDawnIntro(onLit: { dawnLit = $0 }) {
+                    context.hasSeenIntro = true
+                    go(.choose)
+                }
             }
         case .intro:
             MilniIntroView {
@@ -120,7 +156,7 @@ struct OnboardingFlow: View {
                 sample: { Task { await context.openSample() } }
             )
         case .code(let prefill):
-            MilniCodeEntryView(prefill: prefill, back: { go(.choose) }) { summary, code in
+            MilniCodeEntryView(prefill: prefill, back: backToStart) { summary, code in
                 go(.invitation(summary, code: code))
             }
         case .invitation(let summary, let code):
@@ -133,14 +169,14 @@ struct OnboardingFlow: View {
             }
         case .welcome(let summary, let firstName):
             MilniWelcomeView(summary: summary, firstName: firstName) {
-                context.enterPending()
+                finish()
             }
         case .coupleSignIn:
-            MilniCoupleSignInView(back: { go(.choose) }) {
+            MilniCoupleSignInView(back: backToStart) {
                 go(.coupleNames)
             }
         case .coupleNames:
-            MilniCoupleNamesView(draft: $draft, back: { go(.choose) }) {
+            MilniCoupleNamesView(draft: $draft, back: backToStart) {
                 go(.coupleDates)
             }
         case .coupleDates:
@@ -153,7 +189,7 @@ struct OnboardingFlow: View {
             }
         case .coupleReady(let summary):
             MilniReadyView(summary: summary) {
-                context.enterPending()
+                finish()
             }
         }
     }
@@ -164,6 +200,7 @@ struct OnboardingFlow: View {
         // Already a member: just open it.
         if let known = context.myWeddings.first(where: { $0.id.lowercased() == summary.id.lowercased() }) {
             context.switchTo(known)
+            close?()
             return
         }
         if session.isSignedIn {
@@ -266,6 +303,8 @@ struct MilniSplashView: View {
             withAnimation(.easeOut(duration: 0.9).delay(1.6)) { showTagline = true }
             guard advances else { return }
             try? await Task.sleep(for: .seconds(3))
+            // A cancelled sleep returns at once; never advance a splash that has left.
+            guard !Task.isCancelled else { return }
             done()
         }
     }
@@ -275,6 +314,11 @@ struct MilniSplashView: View {
 
 struct MilniIntroView: View {
     let finish: () -> Void
+    /// Arriving from the splash's dawn: the brand mark and the first chapter's rings are
+    /// drawn by the dawn itself, and everything else waits for `revealed`.
+    var isDawn = false
+    var revealed = true
+    var onChapter: (Int) -> Void = { _ in }
 
     private struct Chapter {
         let number: String
@@ -298,10 +342,19 @@ struct MilniIntroView: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                Text("MILNI")
-                    .font(Milni.inter(12, weight: 600))
-                    .tracking(3.4)
-                    .foregroundStyle(Milni.ink)
+                if isDawn {
+                    // The splash's foil wordmark lands here.
+                    Color.clear
+                        .frame(width: 56, height: 28)
+                        .anchorPreference(key: DawnAnchorKey.self, value: .bounds) { ["brand": $0] }
+                        .accessibilityElement()
+                        .accessibilityLabel("Milni")
+                } else {
+                    Text("MILNI")
+                        .font(Milni.inter(12, weight: 600))
+                        .tracking(3.4)
+                        .foregroundStyle(Milni.ink)
+                }
                 Spacer()
                 Button("Skip") {
                     BrandHaptics.tick()
@@ -310,32 +363,44 @@ struct MilniIntroView: View {
                 .font(Milni.inter(14, weight: 500))
                 .foregroundStyle(Milni.goldText)
                 .frame(minWidth: 44, minHeight: 44)
+                .opacity(revealed ? 1 : 0)
+                .animation(.easeOut(duration: 0.7).delay(isDawn ? 1.8 : 0), value: revealed)
+                .disabled(!revealed)
             }
             .milniSides()
             .padding(.top, 6)
 
             Spacer(minLength: 12)
 
-            IntroDrawing(chapter: index)
-                .id(index)
-                .frame(width: 220, height: 220)
-                .transition(.opacity)
+            ZStack {
+                if revealed {
+                    IntroDrawing(chapter: index, isDawn: isDawn)
+                        .id(index)
+                        .transition(.opacity)
+                }
+            }
+            .frame(width: 220, height: 220)
+            .anchorPreference(key: DawnAnchorKey.self, value: .bounds) { ["drawing": $0] }
 
             Spacer(minLength: 12)
 
-            VStack(alignment: .leading, spacing: 16) {
-                MilniLabel(chapters[index].number)
-                    .milniEntrance(0)
-                Text(chapters[index].title)
-                    .font(Milni.cormorant(40))
-                    .foregroundStyle(Milni.ink)
-                    .lineSpacing(-4)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .milniEntrance(1)
-                MilniBody(chapters[index].body)
-                    .milniEntrance(2)
+            ZStack(alignment: .topLeading) {
+                if revealed {
+                    VStack(alignment: .leading, spacing: 16) {
+                        MilniLabel(chapters[index].number)
+                            .milniEntrance(0, delay: textDelay)
+                        Text(chapters[index].title)
+                            .font(Milni.cormorant(40))
+                            .foregroundStyle(Milni.ink)
+                            .lineSpacing(-4)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .milniEntrance(1, delay: textDelay)
+                        MilniBody(chapters[index].body)
+                            .milniEntrance(2, delay: textDelay)
+                    }
+                    .id("text-\(index)")
+                }
             }
-            .id("text-\(index)")
             .frame(maxWidth: .infinity, alignment: .leading)
             .milniSides()
             .frame(minHeight: 230, alignment: .top)
@@ -366,20 +431,33 @@ struct MilniIntroView: View {
             }
             .milniSides()
             .padding(.bottom, 20)
+            .opacity(revealed ? 1 : 0)
+            .offset(y: revealed ? 0 : 18)
+            .animation(Milni.entrance.delay(isDawn ? textDelay + 0.5 : 0), value: revealed)
+            .allowsHitTesting(revealed)
         }
-        .background(Milni.ivory.ignoresSafeArea())
+        .background((isDawn ? Color.clear : Milni.ivory).ignoresSafeArea())
         .contentShape(Rectangle())
         .gesture(
             DragGesture(minimumDistance: 24).onEnded { value in
+                guard revealed else { return }
                 if value.translation.width < -40 { advance() }
                 if value.translation.width > 40, index > 0 { move(to: index - 1) }
             }
         )
-        .task(id: cycle) {
-            try? await Task.sleep(for: .seconds(4.2))
+        .task(id: revealed ? cycle : -1) {
+            guard revealed else { return }
+            let firstDawn = isDawn && index == 0 && cycle == 0
+            try? await Task.sleep(for: .seconds(firstDawn ? 5.6 : 4.2))
             guard !Task.isCancelled else { return }
             if index < chapters.count - 1 { move(to: index + 1) }
         }
+        .onChange(of: index) { _, next in onChapter(next) }
+    }
+
+    /// After the dawn, the words wait for the mandap's arch to draw first.
+    private var textDelay: Double {
+        isDawn && index == 0 && cycle == 0 ? 1.3 : 0
     }
 
     private func advance() {
@@ -400,13 +478,17 @@ struct MilniIntroView: View {
 /// The chapter's line drawing, drawing itself in gold.
 private struct IntroDrawing: View {
     let chapter: Int
+    /// After the dawn the hairline circle stays away: the splash's rings sit in its place.
+    var isDawn = false
     @State private var progress: CGFloat = 0
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         ZStack {
-            Circle()
-                .stroke(Milni.hairline.opacity(0.6), lineWidth: 0.6)
+            if !(isDawn && chapter == 0) {
+                Circle()
+                    .stroke(Milni.hairline.opacity(0.6), lineWidth: 0.6)
+            }
             shape
                 .trim(from: 0, to: progress)
                 .stroke(Milni.gold, style: StrokeStyle(lineWidth: 1.1, lineCap: .round, lineJoin: .round))

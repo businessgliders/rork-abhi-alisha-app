@@ -7,8 +7,8 @@ nonisolated enum SuggestedChecklist {
     static let dayOf = "Day of"
 
     static let drafts: [ChecklistDraft] = [
-        (beforeYouFly, "Confirm final guest count with AVA's wedding coordinator"),
-        (beforeYouFly, "Send the seating chart to the resort"),
+        (beforeYouFly, "Confirm final guest count with the venue's wedding coordinator"),
+        (beforeYouFly, "Send the seating chart to the venue"),
         (beforeYouFly, "Share shot lists with the photographer and videographer"),
         (beforeYouFly, "Confirm DJ and dhol timings for the Sangeet and Jaggo"),
         (beforeYouFly, "Pack outfits, jewellery and accessories by event"),

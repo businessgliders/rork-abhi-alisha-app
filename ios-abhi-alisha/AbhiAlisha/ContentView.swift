@@ -43,6 +43,10 @@ struct WeddingShell: View {
                 }
             }
             .animation(.softFade, value: selection)
+            // Pinned to the window, so a screen that runs taller on a short wide window
+            // (the folding iPhone's inner screen) can never push the chrome or the tab
+            // bar outside the safe area.
+            .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity)
 
             if !isReadingThread {
                 FloatingTabBar(selection: $selection)
@@ -60,14 +64,6 @@ struct WeddingShell: View {
             }
         }
         .animation(.calm, value: admin.isPromptPresented)
-        .overlay(alignment: .bottom) {
-            if push.isFirstOpenCardPresented, !ScreenshotCapture.isActive {
-                FirstOpenUpdatesCard()
-                    .padding(.bottom, FloatingTabBar.contentReserve - 4)
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
-            }
-        }
-        .animation(.calm, value: push.isFirstOpenCardPresented)
         .sheet(isPresented: $push.isExplainerPresented) {
             NotificationExplainerSheet()
                 .environment(push)
@@ -117,6 +113,7 @@ struct WeddingShell: View {
             NotificationsStore.shared.startListening()
             LiveActivityRegistrar.shared.start()
             WeddingPhotoStore.shared.resumeUploads()
+            Task { await push.offerIfNeeded(isSample: WeddingContext.shared.isSample) }
             await content.refreshIfNeeded()
         }
     }
@@ -191,6 +188,11 @@ struct ContentView: View {
         }
         .animation(.easeInOut(duration: 0.7), value: context.stage)
         .animation(.easeInOut(duration: 0.7), value: context.shellKey)
+        .fullScreenCover(item: Bindable(context).flowRequest) { request in
+            OnboardingFlow(entry: request.entry) {
+                context.closeFlow()
+            }
+        }
         .onOpenURL { url in
             _ = context.handleJoinLink(url)
         }

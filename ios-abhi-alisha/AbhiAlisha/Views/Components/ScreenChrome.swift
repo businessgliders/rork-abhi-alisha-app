@@ -11,11 +11,18 @@ struct ScreenChrome: View {
 
     let showsCrest: Bool
 
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
+    /// Wide screens have rounder corners and a camera cut-out near the top-left, so the
+    /// controls sit further in there. Both values are on top of the safe area.
+    private var isWide: Bool { horizontalSizeClass == .regular }
+
     var body: some View {
-        HStack(alignment: .top, spacing: 0) {
+        HStack(alignment: .top, spacing: 12) {
             if showsCrest {
                 WeddingSwitcherCapsule()
-                    .padding(.top, 6)
+                    .fixedSize()
+                    .padding(.top, isWide ? 10 : 6)
             }
 
             Spacer(minLength: 0)
@@ -24,8 +31,8 @@ struct ScreenChrome: View {
                 CoupleCrest(finish: .lit)
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.top, 2)
+        .padding(.horizontal, isWide ? 28 : 16)
+        .padding(.top, isWide ? 8 : 2)
         .frame(maxWidth: .infinity, alignment: .top)
     }
 }
@@ -97,7 +104,7 @@ struct CrestWatermark: View {
     @ViewBuilder
     private func crest(_ color: Color) -> some View {
         let wedding = ActiveWedding.snapshot
-        if wedding.isSampleWedding {
+        if wedding.isAbhiAlisha {
             Image("crest")
                 .renderingMode(.template)
                 .resizable()
