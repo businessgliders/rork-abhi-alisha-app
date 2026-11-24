@@ -154,10 +154,9 @@ final class WeddingContext {
 
     func open(_ summary: WeddingSummary) {
         show(summary.snapshot, sample: false, role: summary.role, status: summary.status)
-        Task {
-            await self.refreshMembership()
-            await self.refreshMyWeddings()
-        }
+        // The join and list RPCs leave out main_event_ref, rsvp_url and lat/lng: read the
+        // wedding row itself so the countdown and weather use them straight away.
+        Task { await self.refreshCurrent() }
     }
 
     /// The sample wedding, read-only and signed out. Not remembered across launches.
@@ -171,7 +170,11 @@ final class WeddingContext {
 
     /// Switches to another of my weddings with a cross-fade into its colours.
     func switchTo(_ summary: WeddingSummary) {
-        guard summary.id.lowercased() != weddingID.lowercased() || isSample else { return }
+        guard summary.id.lowercased() != weddingID.lowercased() || isSample else {
+            // Already the open wedding (re-entering its code): just go back to it.
+            returnToWedding()
+            return
+        }
         open(summary)
     }
 

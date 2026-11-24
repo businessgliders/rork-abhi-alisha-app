@@ -18,6 +18,10 @@ nonisolated struct WeddingSummary: Identifiable, Hashable, Sendable {
     var coverURLs: [String]
     var role: String?
     var status: String?
+    var mainEventRef: String?
+    var rsvpURL: String?
+    var latitude: Double?
+    var longitude: Double?
 
     var coupleNames: String {
         if partnerOne.isEmpty || partnerTwo.isEmpty { return title }
@@ -78,6 +82,10 @@ nonisolated struct WeddingSummary: Identifiable, Hashable, Sendable {
         coverURLs = (wedding["cover_urls"] as? [Any])?.compactMap { MilniJSON.string($0) } ?? []
         role = MilniJSON.string(row["role"]) ?? MilniJSON.string(wedding["role"])
         status = MilniJSON.string(row["status"]) ?? MilniJSON.string(wedding["status"])
+        mainEventRef = MilniJSON.string(wedding["main_event_ref"])
+        rsvpURL = MilniJSON.string(wedding["rsvp_url"])
+        latitude = MilniJSON.double(wedding["lat"])
+        longitude = MilniJSON.double(wedding["lng"])
         if title.isEmpty { title = coupleNames }
     }
 
@@ -94,7 +102,11 @@ nonisolated struct WeddingSummary: Identifiable, Hashable, Sendable {
             timezone: timezone ?? TimeZone.current.identifier,
             startDate: startDate,
             endDate: endDate,
-            preset: preset
+            preset: preset,
+            mainEventRef: mainEventRef,
+            rsvpURL: rsvpURL,
+            latitude: latitude,
+            longitude: longitude
         )
     }
 }
@@ -207,7 +219,7 @@ nonisolated struct MilniAPI: Sendable {
     /// The signed-in person's role and status in one wedding.
     func membership(weddingID: String, userID: String) async throws -> (role: String?, status: String?)? {
         let response = try await client.from("wedding_members")
-            .select()
+            .select("wedding_id,user_id,role,status,joined_at")
             .eq("wedding_id", value: weddingID)
             .eq("user_id", value: userID)
             .limit(1)
@@ -217,10 +229,13 @@ nonisolated struct MilniAPI: Sendable {
     }
 
     func code(weddingID: String) async throws -> String? {
-        let response = try await client.from("wedding_codes").select().eq("wedding_id", value: weddingID).execute()
-        let rows = MilniJSON.rows(response.data)
-        let active = rows.first { ($0["active"] as? Bool) != false && ($0["revoked_at"] == nil || $0["revoked_at"] is NSNull) }
-        return MilniJSON.string((active ?? rows.first)?["code"])?.uppercased()
+        let response = try await client.from("wedding_codes")
+            .select("wedding_id,join_code,updated_at")
+            .eq("wedding_id", value: weddingID)
+            .order("updated_at", ascending: false)
+            .limit(1)
+            .execute()
+        return MilniJSON.string(MilniJSON.rows(response.data).first?["join_code"])?.uppercased()
     }
 
     private struct CreateParams: Encodable, Sendable {

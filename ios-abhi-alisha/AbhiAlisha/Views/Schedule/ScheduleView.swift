@@ -400,11 +400,10 @@ struct ScheduleView: View {
 
     /// Warms every day's weather up front so stepping between cards never shows a gap.
     private func prefetchWeather() async {
-        // Forecasts use the Cancún venue coordinates, so only that wedding shows weather for now.
-        guard ActiveWedding.snapshot.isSampleWedding else { return }
         for event in events {
-            guard let date = event.startsAt, weatherByEvent[event.id] == nil else { continue }
-            let weather = await WeatherService.shared.weather(for: date)
+            guard let date = event.startsAt, weatherByEvent[event.id] == nil,
+                  let place = WeatherPlace.forEvent(event),
+                  let weather = await WeatherService.shared.weather(for: date, at: place) else { continue }
             withAnimation(.softFade) {
                 weatherByEvent[event.id] = weather
             }
@@ -412,10 +411,9 @@ struct ScheduleView: View {
     }
 
     private func loadWeatherForSelection() async {
-        guard ActiveWedding.snapshot.isSampleWedding else { return }
         guard let event = selectedEvent, let date = event.startsAt else { return }
-        guard weatherByEvent[event.id] == nil else { return }
-        let weather = await WeatherService.shared.weather(for: date)
+        guard weatherByEvent[event.id] == nil, let place = WeatherPlace.forEvent(event),
+              let weather = await WeatherService.shared.weather(for: date, at: place) else { return }
         withAnimation(.softFade) {
             weatherByEvent[event.id] = weather
         }

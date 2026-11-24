@@ -16,6 +16,11 @@ nonisolated struct WeddingSnapshot: Codable, Equatable, Sendable {
     var startDate: String?
     var endDate: String?
     var preset: String
+    /// `weddings.main_event_ref`: the event the countdown runs to.
+    var mainEventRef: String? = nil
+    var rsvpURL: String? = nil
+    var latitude: Double? = nil
+    var longitude: Double? = nil
 
     /// The wedding every earlier build of this app was made for. Its caches keep their
     /// original file names, so an existing guest never loses what is already on disk.
@@ -31,7 +36,11 @@ nonisolated struct WeddingSnapshot: Codable, Equatable, Sendable {
         timezone: "America/Cancun",
         startDate: "2027-01-30",
         endDate: "2027-02-03",
-        preset: "ivory"
+        preset: "ivory",
+        mainEventRef: "69effcf9de6c7e34fc4616a4",
+        rsvpURL: nil,
+        latitude: 21.0419,
+        longitude: -86.7841
     )
 
     var isSampleWedding: Bool { id.lowercased() == ActiveWedding.sampleID }
@@ -131,10 +140,14 @@ nonisolated enum ActiveWedding {
         lock.unlock()
     }
 
+    /// Posted after `save`, so views that derive from the snapshot (the countdown) redraw.
+    static let didSave = Notification.Name("ActiveWedding.didSave")
+
     static func save(_ snapshot: WeddingSnapshot) {
         lock.lock()
         cached = snapshot
         lock.unlock()
+        NotificationCenter.default.post(name: didSave, object: nil)
         guard let url = WeddingGroup.fileURL(fileName),
               let data = try? JSONEncoder().encode(snapshot) else { return }
         try? data.write(to: url, options: .atomic)

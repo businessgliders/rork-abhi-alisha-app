@@ -24,7 +24,10 @@ nonisolated struct WatchSchedule: Sendable {
     /// The ceremony the countdown runs to: the first religious ceremony of the
     /// weekend, falling back to whatever happens first.
     var ceremony: WatchEvent? {
-        timedEvents.first { $0.ceremonyKind != nil } ?? timedEvents.first
+        if let ref = WatchWedding.current.mainEventRef, let match = timedEvents.first(where: { $0.id == ref }) {
+            return match
+        }
+        return timedEvents.min { ($0.startsAt ?? .distantFuture) < ($1.startsAt ?? .distantFuture) }
     }
 
     /// Whole days until the ceremony, counted by calendar day rather than by elapsed

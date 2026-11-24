@@ -3,7 +3,7 @@ import Foundation
 nonisolated struct DayWeather: Sendable, Hashable {
     let highCelsius: Double
     let summary: String
-    /// True when the value is a seasonal Cancún average rather than a real forecast.
+    /// True when the value is last year's weather on that day rather than a real forecast.
     let isSeasonalAverage: Bool
 
     /// Short pill text. Always Celsius — the couple's guest list reads in Celsius.
@@ -41,47 +41,76 @@ nonisolated struct DayWeather: Sendable, Hashable {
     }
 }
 
-/// Open-Meteo day forecast with a graceful seasonal fallback.
-/// Weather must never block a card from rendering, so every failure resolves to the average.
+/// Where and when to look up the weather: an event's own spot, else the wedding's.
+nonisolated struct WeatherPlace: Sendable, Hashable {
+    let latitude: Double
+    let longitude: Double
+    let timeZone: TimeZone
+
+    /// The event's own coordinates when set, otherwise the wedding's; nil when neither is known.
+    @MainActor
+    static func forEvent(_ event: ScheduleEvent) -> WeatherPlace? {
+        let wedding = ActiveWedding.snapshot
+        if let lat = event.latitude, let lng = event.longitude, abs(lat) > 0.0001 || abs(lng) > 0.0001 {
+            return WeatherPlace(latitude: lat, longitude: lng, timeZone: wedding.timeZone)
+        }
+        if let lat = wedding.latitude, let lng = wedding.longitude {
+            return WeatherPlace(latitude: lat, longitude: lng, timeZone: wedding.timeZone)
+        }
+        return nil
+    }
+}
+
+/// Open-Meteo day weather for wherever the wedding is. Within the 16-day forecast window
+/// it's a real forecast; further out it's the same date last year at that spot, shown as
+/// "Usually". Weather never blocks a card: any failure simply means no weather.
 actor WeatherService {
     static let shared = WeatherService()
 
     private var cache: [String: DayWeather] = [:]
+    private var misses: Set<String> = []
 
-    private let latitude = 21.1619
-    private let longitude = -86.8515
-
-    /// Cancún's late-January / early-February norm.
-    private let seasonalAverage = DayWeather(highCelsius: 28, summary: "Sunny", isSeasonalAverage: true)
-
-    func weather(for date: Date) async -> DayWeather {
-        let key = Self.dayFormatter.string(from: date)
+    func weather(for date: Date, at place: WeatherPlace) async -> DayWeather? {
+        let dayKey = Self.dayKey(date, in: place.timeZone)
+        let key = String(format: "%.3f,%.3f,", place.latitude, place.longitude) + dayKey
         if let cached = cache[key] { return cached }
+        guard !misses.contains(key) else { return nil }
 
         let daysAway = Calendar.current.dateComponents([.day], from: Date(), to: date).day ?? 999
-        guard daysAway >= -1, daysAway <= 15 else {
-            cache[key] = seasonalAverage
-            return seasonalAverage
+        let weather: DayWeather?
+        if daysAway >= -1, daysAway <= 15 {
+            weather = try? await fetch(base: "https://api.open-meteo.com/v1/forecast", dayKey: dayKey, place: place, seasonal: false)
+        } else {
+            weather = try? await lastYear(date: date, place: place)
         }
-
-        do {
-            let weather = try await fetchForecast(dayKey: key)
-            cache[key] = weather
-            return weather
-        } catch {
-            print("[WeatherService] forecast unavailable, using seasonal average")
-            cache[key] = seasonalAverage
-            return seasonalAverage
-        }
+        if let weather { cache[key] = weather } else { misses.insert(key) }
+        return weather
     }
 
-    private func fetchForecast(dayKey: String) async throws -> DayWeather {
-        var components = URLComponents(string: "https://api.open-meteo.com/v1/forecast")!
+    /// The same calendar day a year earlier, from Open-Meteo's archive.
+    private func lastYear(date: Date, place: WeatherPlace) async throws -> DayWeather {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = place.timeZone
+        var reference = calendar.date(byAdding: .year, value: -1, to: date) ?? date
+        // The archive trails real time by a few days; step back another year if needed.
+        if reference > Date().addingTimeInterval(-7 * 86_400) {
+            reference = calendar.date(byAdding: .year, value: -1, to: reference) ?? reference
+        }
+        return try await fetch(
+            base: "https://archive-api.open-meteo.com/v1/archive",
+            dayKey: Self.dayKey(reference, in: place.timeZone),
+            place: place,
+            seasonal: true
+        )
+    }
+
+    private func fetch(base: String, dayKey: String, place: WeatherPlace, seasonal: Bool) async throws -> DayWeather {
+        var components = URLComponents(string: base)!
         components.queryItems = [
-            URLQueryItem(name: "latitude", value: String(latitude)),
-            URLQueryItem(name: "longitude", value: String(longitude)),
+            URLQueryItem(name: "latitude", value: String(place.latitude)),
+            URLQueryItem(name: "longitude", value: String(place.longitude)),
             URLQueryItem(name: "daily", value: "temperature_2m_max,weather_code"),
-            URLQueryItem(name: "timezone", value: Self.dayFormatter.timeZone.identifier),
+            URLQueryItem(name: "timezone", value: place.timeZone.identifier),
             URLQueryItem(name: "start_date", value: dayKey),
             URLQueryItem(name: "end_date", value: dayKey)
         ]
@@ -97,7 +126,16 @@ actor WeatherService {
         else {
             throw URLError(.cannotParseResponse)
         }
-        return DayWeather(highCelsius: high, summary: Self.summary(for: code), isSeasonalAverage: false)
+        return DayWeather(highCelsius: high, summary: Self.summary(for: code), isSeasonalAverage: seasonal)
+    }
+
+    private static func dayKey(_ date: Date, in zone: TimeZone) -> String {
+        let formatter = DateFormatter()
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "yyyy-MM-dd"
+        formatter.timeZone = zone
+        return formatter.string(from: date)
     }
 
     private static func summary(for code: Int) -> String {
@@ -114,12 +152,6 @@ actor WeatherService {
         }
     }
 
-    private static let dayFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        formatter.timeZone = TimeZone(identifier: "America/Cancun")
-        return formatter
-    }()
 
     private struct ForecastPayload: Decodable {
         struct Daily: Decodable {

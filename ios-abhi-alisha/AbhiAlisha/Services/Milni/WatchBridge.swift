@@ -23,6 +23,7 @@ final class WatchBridge: NSObject, WCSessionDelegate {
             "timezone": snapshot.timezone,
             "start_date": snapshot.startDate ?? "",
             "end_date": snapshot.endDate ?? "",
+            "main_event_ref": snapshot.mainEventRef ?? "",
         ]
         guard WCSession.isSupported() else { return }
         let session = WCSession.default

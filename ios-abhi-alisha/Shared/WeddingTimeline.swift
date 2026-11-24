@@ -21,10 +21,17 @@ nonisolated struct WeddingTimeline: Sendable {
         events.filter { $0.startsAt != nil }
     }
 
-    /// The ceremony the countdown runs to: the first religious ceremony of the weekend,
-    /// falling back to whatever happens first.
+    /// The event the countdown runs to: `weddings.main_event_ref`, else the first event.
     var ceremony: ScheduleEvent? {
-        timedEvents.first { $0.ceremonyType != nil } ?? timedEvents.first
+        Self.mainEvent(in: timedEvents)
+    }
+
+    static func mainEvent(in events: [ScheduleEvent]) -> ScheduleEvent? {
+        let timed = events.filter { $0.startsAt != nil }
+        if let ref = ActiveWedding.snapshot.mainEventRef, let match = timed.first(where: { $0.id == ref }) {
+            return match
+        }
+        return timed.min { ($0.startsAt ?? .distantFuture) < ($1.startsAt ?? .distantFuture) }
     }
 
     /// Whole days between today and the ceremony, counted by calendar day rather than by

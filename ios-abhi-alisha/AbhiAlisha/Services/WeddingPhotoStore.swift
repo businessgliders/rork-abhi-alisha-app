@@ -89,7 +89,7 @@ final class WeddingPhotoStore {
         do {
             let rows: [WeddingPhoto] = try await client
                 .from("event_photos")
-                .select()
+                .select(WeddingPhoto.columns)
                 .eq("wedding_id", value: weddingID)
                 .order("taken_at", ascending: true)
                 .execute()
@@ -311,7 +311,7 @@ final class WeddingPhotoStore {
             let row: WeddingPhoto = try await client
                 .from("event_photos")
                 .insert(insert, returning: .representation)
-                .select()
+                .select(WeddingPhoto.columns)
                 .single()
                 .execute()
                 .value

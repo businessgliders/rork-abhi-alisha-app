@@ -119,11 +119,12 @@ final class OutfitStore {
     /// One celebration's photos, read again from the server.
     func refresh(eventID: String) async {
         syncUser()
-        guard userID != nil else { return }
+        guard let userID else { return }
         do {
             let rows: [OutfitItem] = try await ChatBackend.client
                 .from("outfit_items")
-                .select()
+                .select(OutfitItem.columns)
+                .eq("user_id", value: userID.lower)
                 .eq("wedding_id", value: ActiveWedding.id.lowercased())
                 .eq("event_id", value: eventID)
                 .execute()
@@ -145,7 +146,7 @@ final class OutfitStore {
         do {
             let rows: [OutfitItem] = try await ChatBackend.client
                 .from("outfit_items")
-                .select()
+                .select(OutfitItem.columns)
                 .eq("user_id", value: userID.lower)
                 .eq("wedding_id", value: ActiveWedding.id.lowercased())
                 .execute()
@@ -182,7 +183,7 @@ final class OutfitStore {
                 row = try await ChatBackend.client
                     .from("outfit_items")
                     .insert(insert, returning: .representation)
-                    .select()
+                    .select(OutfitItem.columns)
                     .single()
                     .execute()
                     .value

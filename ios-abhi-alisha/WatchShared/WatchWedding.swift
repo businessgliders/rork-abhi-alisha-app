@@ -12,13 +12,15 @@ nonisolated struct WatchWedding: Sendable, Equatable {
     var partnerOne: String
     var partnerTwo: String
     var timezone: String
+    var mainEventRef: String? = nil
 
     static let sample = WatchWedding(
         id: sampleID,
         title: "Abhi & Alisha",
         partnerOne: "Abhi",
         partnerTwo: "Alisha",
-        timezone: "America/Cancun"
+        timezone: "America/Cancun",
+        mainEventRef: "69effcf9de6c7e34fc4616a4"
     )
 
     var isSample: Bool { id.lowercased() == Self.sampleID }
@@ -48,7 +50,8 @@ nonisolated struct WatchWedding: Sendable, Equatable {
             title: stored["title"] ?? "",
             partnerOne: stored["partner_one"] ?? "",
             partnerTwo: stored["partner_two"] ?? "",
-            timezone: stored["timezone"] ?? TimeZone.current.identifier
+            timezone: stored["timezone"] ?? TimeZone.current.identifier,
+            mainEventRef: stored["main_event_ref"].flatMap { $0.isEmpty ? nil : $0 }
         )
     }
 
@@ -62,7 +65,8 @@ nonisolated struct WatchWedding: Sendable, Equatable {
             title: context["title"] as? String ?? "",
             partnerOne: context["partner_one"] as? String ?? "",
             partnerTwo: context["partner_two"] as? String ?? "",
-            timezone: (context["timezone"] as? String).flatMap { $0.isEmpty ? nil : $0 } ?? TimeZone.current.identifier
+            timezone: (context["timezone"] as? String).flatMap { $0.isEmpty ? nil : $0 } ?? TimeZone.current.identifier,
+            mainEventRef: (context["main_event_ref"] as? String).flatMap { $0.isEmpty ? nil : $0 }
         )
         defaults.set([
             "id": next.id,
@@ -70,6 +74,7 @@ nonisolated struct WatchWedding: Sendable, Equatable {
             "partner_one": next.partnerOne,
             "partner_two": next.partnerTwo,
             "timezone": next.timezone,
+            "main_event_ref": next.mainEventRef ?? "",
         ], forKey: storageKey)
         return previous != next
     }

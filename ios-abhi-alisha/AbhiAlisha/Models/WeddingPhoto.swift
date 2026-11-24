@@ -25,6 +25,8 @@ nonisolated struct WeddingPhoto: Codable, Identifiable, Hashable, Sendable {
         case createdAt = "created_at"
     }
 
+    static let columns = "id,event_id,photo_path,thumb_path,caption,taken_at,is_cover,uploaded_by,created_at,wedding_id"
+
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         if let text = try? container.decode(String.self, forKey: .id) {

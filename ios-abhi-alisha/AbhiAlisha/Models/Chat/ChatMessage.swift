@@ -22,7 +22,7 @@ nonisolated struct ChatMessage: Codable, Identifiable, Hashable, Sendable {
         case editedAt = "edited_at"
     }
 
-    static let columns = "id,conversation_id,sender_id,body,client_id,created_at,deleted_at,edited_at"
+    static let columns = "id,conversation_id,sender_id,body,client_id,created_at,edited_at,deleted_at,push_sent_at"
 
     /// What a deleted message reads, and what its stored text is overwritten with.
     static let deletedText = "Message deleted"

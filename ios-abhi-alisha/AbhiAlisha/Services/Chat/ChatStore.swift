@@ -90,9 +90,10 @@ final class ChatStore {
             .from("wedding_members")
             .select("user_id,status")
             .eq("wedding_id", value: weddingID)
+            .eq("status", value: "approved")
             .execute() else { return nil }
         let ids = MilniJSON.rows(response.data)
-            .filter { (MilniJSON.string($0["status"]) ?? "approved").lowercased() == "approved" }
+            .filter { MilniJSON.string($0["status"]) == "approved" }
             .compactMap { MilniJSON.string($0["user_id"]).flatMap(UUID.init(uuidString:)) }
         return ids.isEmpty ? nil : Set(ids)
     }

@@ -17,6 +17,9 @@ final class ScheduleStore {
     private(set) var isShowingOfflineData = false
     /// Ticks roughly every minute so countdowns and the lit bulb advance on their own.
     private(set) var now: Date = Date()
+    /// `weddings.main_event_ref`, kept here so the countdown redraws when it arrives.
+    private(set) var mainEventRef: String? = ActiveWedding.snapshot.mainEventRef
+    private var weddingObserver: NSObjectProtocol?
 
     private let service: ScheduleService
     private let cache: ScheduleCache
@@ -27,6 +30,15 @@ final class ScheduleStore {
         self.cache = cache
         cache.adoptLegacyCacheIfNeeded()
         loadLocal()
+        weddingObserver = NotificationCenter.default.addObserver(
+            forName: ActiveWedding.didSave, object: nil, queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                guard let self else { return }
+                let ref = ActiveWedding.snapshot.mainEventRef
+                if self.mainEventRef != ref { self.mainEventRef = ref }
+            }
+        }
     }
 
     deinit {
@@ -112,6 +124,10 @@ final class ScheduleStore {
     /// The wedding ceremony the countdown runs to: the first religious ceremony,
     /// falling back to the first event of the weekend.
     var mainCeremony: ScheduleEvent? {
-        events.first { $0.ceremonyType != nil } ?? events.first
+        let timed = events.filter { $0.startsAt != nil }
+        if let mainEventRef, let match = timed.first(where: { $0.id == mainEventRef }) {
+            return match
+        }
+        return WeddingTimeline.mainEvent(in: events)
     }
 }

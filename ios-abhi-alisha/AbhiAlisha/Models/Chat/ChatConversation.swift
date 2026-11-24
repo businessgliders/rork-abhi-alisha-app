@@ -9,6 +9,7 @@ nonisolated struct ChatConversation: Codable, Identifiable, Hashable, Sendable {
     var createdBy: UUID?
     var createdAt: Date?
     var lastMessageAt: Date?
+    var weddingID: UUID?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -17,9 +18,10 @@ nonisolated struct ChatConversation: Codable, Identifiable, Hashable, Sendable {
         case createdBy = "created_by"
         case createdAt = "created_at"
         case lastMessageAt = "last_message_at"
+        case weddingID = "wedding_id"
     }
 
-    static let columns = "id,title,kind,created_by,created_at,last_message_at"
+    static let columns = "id,kind,title,created_by,created_at,last_message_at,wedding_id"
 
     private var normalizedKind: String { kind?.lowercased() ?? "" }
 
@@ -30,7 +32,7 @@ nonisolated struct ChatConversation: Codable, Identifiable, Hashable, Sendable {
 
     /// A private chat between two people.
     var isDirectKind: Bool {
-        ["direct", "dm", "one_to_one", "private"].contains(normalizedKind)
+        normalizedKind == "direct"
     }
 
     var isGroupKind: Bool { normalizedKind == "group" }

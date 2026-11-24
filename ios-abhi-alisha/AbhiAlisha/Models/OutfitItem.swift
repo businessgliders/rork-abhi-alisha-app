@@ -47,6 +47,8 @@ nonisolated struct OutfitItem: Codable, Identifiable, Hashable, Sendable {
         case createdAt = "created_at"
     }
 
+    static let columns = "id,user_id,event_id,category,photo_path,note,created_at,wedding_id"
+
     init(id: String, eventID: String, category: OutfitCategory, photoPath: String, note: String? = nil) {
         self.id = id
         self.eventID = eventID
