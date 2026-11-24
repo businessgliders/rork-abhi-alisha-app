@@ -122,7 +122,6 @@ struct AnnouncementsView: View {
                 compose()
             }
         }
-        .padding(.top, 8)
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
         .background(BrandPalette.background)
@@ -135,10 +134,15 @@ struct AnnouncementsView: View {
 
     /// Where the header actually landed, for the diagnostics panel.
     private var header: some View {
+        // Header top = max(safeAreaInsets.top, 0) + 8: the padding sits OUTSIDE the
+        // captured frame, so the readout must show y ≥ 8 even when the top inset is 0
+        // (the folding iPhone's outer screen). The root tab container is top-aligned
+        // (ContentView) and can no longer shift this screen upward.
         ViewThatFits(in: .horizontal) {
             headerRow { newAnnouncementButton }
             headerRow { compactNewAnnouncementButton }
         }
+        .padding(.top, 8)
         .background {
             GeometryReader { g in
                 Color.clear.preference(key: HeaderFrameKey.self, value: g.frame(in: .global))

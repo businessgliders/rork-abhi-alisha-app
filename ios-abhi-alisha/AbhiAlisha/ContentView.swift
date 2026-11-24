@@ -40,8 +40,10 @@ struct WeddingShell: View {
             .animation(.softFade, value: selection)
             // Pinned to the window, so a screen that runs taller on a short wide window
             // (the folding iPhone's inner screen) can never push the chrome or the tab
-            // bar outside the safe area.
-            .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity)
+            // bar outside the safe area. Top-aligned: an oversized screen may only
+            // overflow downward (under the tab bar); centring it would shift every
+            // header upward by half the overflow (the −30 pt header bug).
+            .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity, alignment: .top)
 
             if !isReadingThread {
                 FloatingTabBar(selection: $selection)
