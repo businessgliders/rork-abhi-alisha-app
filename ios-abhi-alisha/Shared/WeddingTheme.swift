@@ -144,15 +144,16 @@ nonisolated struct WeddingTheme: Codable, Hashable, Sendable {
 
     private static func tokens(_ value: Any?) -> Tokens? {
         guard let dict = value as? [String: Any],
-              let bg = hex(dict["bg"]), let ink = hex(dict["ink"]), let accent = hex(dict["accent"]) else { return nil }
+              let bg = hex(dict["background"]) ?? hex(dict["bg"]),
+              let ink = hex(dict["ink"]), let accent = hex(dict["accent"]) else { return nil }
         let card = hex(dict["card"]) ?? bg
         return Tokens(
             bg: bg,
             card: card,
             ink: ink,
-            muted: hex(dict["muted"]) ?? mix(ink, bg, 0.4),
+            muted: hex(dict["body"]) ?? hex(dict["muted"]) ?? mix(ink, bg, 0.4),
             accent: accent,
-            accentText: hex(dict["accent_text"]) ?? accent,
+            accentText: hex(dict["accentText"]) ?? hex(dict["accent_text"]) ?? accent,
             hairline: hex(dict["hairline"]) ?? mix(accent, bg, 0.62)
         )
     }
