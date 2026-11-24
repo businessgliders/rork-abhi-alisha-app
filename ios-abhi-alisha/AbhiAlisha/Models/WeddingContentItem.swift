@@ -11,6 +11,12 @@ nonisolated struct WeddingContentItem: Codable, Identifiable, Hashable, Sendable
     let imageURL: String?
     let sortOrder: Double?
     let isActive: Bool?
+    // Room rates (section "room_rate") only.
+    var currency: String? = nil
+    var maxAdults: Double? = nil
+    var sunWedRate: Double? = nil
+    var thuSatRate: Double? = nil
+    var extraAdultFee: Double? = nil
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -22,7 +28,14 @@ nonisolated struct WeddingContentItem: Codable, Identifiable, Hashable, Sendable
         case imageURL = "image_url"
         case sortOrder = "sort_order"
         case isActive = "is_active"
+        case currency
+        case maxAdults = "max_adults"
+        case sunWedRate = "sun_wed_rate"
+        case thuSatRate = "thu_sat_rate"
+        case extraAdultFee = "extra_adult_fee"
     }
+
+    var isRoomRate: Bool { section == "room_rate" }
 
     var url: URL? {
         guard let imageURL, !imageURL.isEmpty else { return nil }

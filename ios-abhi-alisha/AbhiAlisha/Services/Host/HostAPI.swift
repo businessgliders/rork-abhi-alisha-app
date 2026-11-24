@@ -9,6 +9,7 @@ nonisolated struct HostMember: Identifiable, Hashable, Sendable {
     var role: String
     var status: String
     var joinedAt: Date?
+    var avatarURL: String? = nil
 
     var id: String { userID }
 
@@ -94,6 +95,7 @@ final class HostAPI {
         let rows = MilniJSON.rows(response.data)
         let ids = rows.compactMap { MilniJSON.string($0["user_id"]) }
         var names: [String: String] = [:]
+        var avatars: [String: String] = [:]
         if !ids.isEmpty {
             if let profiles = try? await client.from("profiles")
                 .select()
@@ -104,6 +106,7 @@ final class HostAPI {
                     names[id.lowercased()] = MilniJSON.string(row["display_name"])
                         ?? MilniJSON.string(row["full_name"])
                         ?? MilniJSON.string(row["name"])
+                    avatars[id.lowercased()] = MilniJSON.string(row["avatar_url"]) ?? MilniJSON.string(row["photo_url"])
                 }
             }
         }
@@ -118,7 +121,8 @@ final class HostAPI {
                 role: MilniJSON.string(row["role"]) ?? "guest",
                 status: MilniJSON.string(row["status"]) ?? "pending",
                 joinedAt: MilniJSON.string(row["joined_at"]).flatMap(Self.parseDate)
-                    ?? MilniJSON.string(row["created_at"]).flatMap(Self.parseDate)
+                    ?? MilniJSON.string(row["created_at"]).flatMap(Self.parseDate),
+                avatarURL: avatars[userID.lowercased()]
             )
         }
         .sorted { ($0.joinedAt ?? .distantPast) > ($1.joinedAt ?? .distantPast) }
@@ -140,6 +144,60 @@ final class HostAPI {
         try await client.rpc("remove_member", params: [
             "p_wedding": weddingID, "p_user": userID
         ]).execute()
+    }
+
+    /// Leaves a wedding, or withdraws a request that is still waiting.
+    func leaveWedding(weddingID: String) async throws {
+        try await client.rpc("leave_wedding", params: ["p_wedding": weddingID]).execute()
+    }
+
+    /// Hands the wedding to a co-host; the current host becomes a co-host.
+    func transferHost(weddingID: String, userID: String) async throws {
+        try await client.rpc("transfer_host", params: [
+            "p_wedding": weddingID, "p_user": userID
+        ]).execute()
+    }
+
+    /// Deletes the wedding for good. The server checks `confirm` against the title
+    /// and refuses the showcase wedding.
+    func deleteWedding(weddingID: String, confirm: String) async throws {
+        try await client.rpc("delete_wedding", params: [
+            "p_wedding": weddingID, "p_confirm": confirm
+        ]).execute()
+    }
+
+    /// Removes every file under `<prefix>/` in a bucket, folders included. Best effort:
+    /// a file that can't be listed or removed is left for the server to clean up.
+    func deleteFolder(bucket: String, prefix: String) async {
+        let files = await listFiles(bucket: bucket, path: prefix, depth: 0)
+        guard !files.isEmpty else { return }
+        var start = 0
+        while start < files.count {
+            let chunk = Array(files[start..<min(start + 100, files.count)])
+            _ = try? await client.storage.from(bucket).remove(paths: chunk)
+            start += 100
+        }
+    }
+
+    private func listFiles(bucket: String, path: String, depth: Int) async -> [String] {
+        guard depth < 6 else { return [] }
+        var found: [String] = []
+        var offset = 0
+        while true {
+            guard let page = try? await client.storage.from(bucket)
+                .list(path: path, options: SearchOptions(limit: 1000, offset: offset)) else { break }
+            for object in page where object.name != ".emptyFolderPlaceholder" || object.id != nil {
+                let full = "\(path)/\(object.name)"
+                if object.id == nil {
+                    found += await listFiles(bucket: bucket, path: full, depth: depth + 1)
+                } else {
+                    found.append(full)
+                }
+            }
+            if page.count < 1000 { break }
+            offset += page.count
+        }
+        return found
     }
 
     func createCohostInvite(weddingID: String) async throws -> String {
@@ -293,6 +351,16 @@ final class HostAPI {
         }
         try await client.from("content_sections").update(row).eq("id", value: section.id).execute()
         return section.id
+    }
+
+    /// Saves each row's position (its `sort`), only where it changed.
+    func reorderSections(_ sections: [HostSection]) async throws {
+        for section in sections where !section.isNew {
+            try await client.from("content_sections")
+                .update(["sort": AnyJSON.integer(section.sort)])
+                .eq("id", value: section.id)
+                .execute()
+        }
     }
 
     func delete(sectionID: String) async throws {

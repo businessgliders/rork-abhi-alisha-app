@@ -159,6 +159,11 @@ final class ContentStore {
     /// Re-reads content on the next refresh (after a host saves something).
     func invalidate() { didRefresh = false }
 
+    /// The couple's room types and nightly rates, in their order.
+    var roomRates: [WeddingContentItem] {
+        contentItems.filter(\.isRoomRate)
+    }
+
     /// The resort map the couple published on their schedule page.
     var resortMap: WeddingContentItem? {
         contentItems.first { $0.key == "resort_map" && $0.url != nil }

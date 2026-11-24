@@ -13,6 +13,8 @@ nonisolated struct WeddingPhoto: Codable, Identifiable, Hashable, Sendable {
     let takenAt: Date?
     var isCover: Bool
     let createdAt: Date?
+    /// Who added it; guests may delete only their own.
+    let uploadedBy: String?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -23,6 +25,7 @@ nonisolated struct WeddingPhoto: Codable, Identifiable, Hashable, Sendable {
         case takenAt = "taken_at"
         case isCover = "is_cover"
         case createdAt = "created_at"
+        case uploadedBy = "uploaded_by"
     }
 
     static let columns = "id,event_id,photo_path,thumb_path,caption,taken_at,is_cover,uploaded_by,created_at,wedding_id"
@@ -43,6 +46,13 @@ nonisolated struct WeddingPhoto: Codable, Identifiable, Hashable, Sendable {
         takenAt = Self.date(in: container, forKey: .takenAt)
         isCover = (try? container.decodeIfPresent(Bool.self, forKey: .isCover)) ?? false
         createdAt = Self.date(in: container, forKey: .createdAt)
+        uploadedBy = (try? container.decodeIfPresent(String.self, forKey: .uploadedBy))?.lowercased().nonEmpty
+    }
+
+    /// Whether the signed-in person added this photo.
+    @MainActor var isMine: Bool {
+        guard let me = ChatSession.shared.userID?.lower, let uploadedBy else { return false }
+        return uploadedBy == me.lowercased()
     }
 
     /// Reads a timestamp whether it arrives as Postgres text or as the number this app
@@ -81,6 +91,7 @@ nonisolated struct WeddingPhotoInsert: Encodable, Sendable {
     let caption: String?
     let taken_at: String?
     let is_cover: Bool
+    let uploaded_by: String?
 }
 
 /// Sets or clears a caption; a cleared caption is sent as an explicit null.
@@ -131,21 +142,20 @@ nonisolated struct WeddingUploadJob: Codable, Identifiable, Equatable, Sendable 
     let fullName: String
     let thumbName: String
     var attempts: Int = 0
+    /// A guest's own user id: their photos go in their own folder. Nil for the couple.
+    var uploaderID: String? = nil
     /// The server's own reason for the last failure, kept for the logs.
     var lastError: String?
 
     var resolvedWeddingID: String { weddingID ?? ActiveWedding.sampleID }
 
-    var photoPath: String {
-        weddingID == nil
-            ? "\(eventID)/\(id.uuidString.lowercased()).jpg"
-            : "\(resolvedWeddingID)/\(id.uuidString.lowercased()).jpg"
+    private var folder: String {
+        if weddingID == nil { return eventID }
+        if let uploaderID { return "\(resolvedWeddingID)/guests/\(uploaderID)" }
+        return resolvedWeddingID
     }
-    var thumbPath: String {
-        weddingID == nil
-            ? "\(eventID)/\(id.uuidString.lowercased())_t.jpg"
-            : "\(resolvedWeddingID)/\(id.uuidString.lowercased())_t.jpg"
-    }
+    var photoPath: String { "\(folder)/\(id.uuidString.lowercased()).jpg" }
+    var thumbPath: String { "\(folder)/\(id.uuidString.lowercased())_t.jpg" }
 
     /// Every attempt spent; it now waits for Retry or Remove instead of blocking the queue.
     var isFailed: Bool { attempts >= Self.maxAttempts }

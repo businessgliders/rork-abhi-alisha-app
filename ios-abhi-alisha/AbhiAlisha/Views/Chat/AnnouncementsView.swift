@@ -83,12 +83,15 @@ struct AnnouncementsView: View {
                     .brandFont(.chatName)
                     .foregroundStyle(BrandPalette.ink)
                     .lineLimit(1)
-                    .minimumScaleFactor(0.8)
+                    .minimumScaleFactor(0.75)
+                    .truncationMode(.tail)
                 Text("From \(ActiveWedding.couple)")
                     .font(BrandLabel.font(size: 11, weight: .medium))
                     .foregroundStyle(BrandPalette.body)
-                    .lineLimit(1)
+                    .lineLimit(2)
+                    .truncationMode(.tail)
             }
+            .layoutPriority(1)
             .accessibilityElement(children: .combine)
 
             Spacer(minLength: 8)
@@ -112,15 +115,29 @@ struct AnnouncementsView: View {
             BrandHaptics.soft()
             isComposing = true
         } label: {
-            HStack(spacing: 6) {
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 6) {
+                    Image(systemName: "plus")
+                        .font(.system(size: 11, weight: .semibold))
+                    Text("New announcement")
+                        .font(BrandLabel.font(size: 11, weight: .semibold))
+                        .tracking(1.1)
+                        .textCase(.uppercase)
+                        .lineLimit(1)
+                        .fixedSize()
+                }
+                HStack(spacing: 6) {
+                    Image(systemName: "plus")
+                        .font(.system(size: 11, weight: .semibold))
+                    Text("New")
+                        .font(BrandLabel.font(size: 11, weight: .semibold))
+                        .tracking(1.1)
+                        .textCase(.uppercase)
+                        .lineLimit(1)
+                        .fixedSize()
+                }
                 Image(systemName: "plus")
-                    .font(.system(size: 11, weight: .semibold))
-                Text("New announcement")
-                    .font(BrandLabel.font(size: 11, weight: .semibold))
-                    .tracking(1.1)
-                    .textCase(.uppercase)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.75)
+                    .font(.system(size: 13, weight: .semibold))
             }
             .foregroundStyle(Color(hex: 0xFFFBF1))
             .padding(.horizontal, 14)
@@ -150,20 +167,25 @@ struct AnnouncementsView: View {
                     if updates.records.isEmpty {
                         emptyCard
                             .padding(.top, 34)
+                            .padding(.horizontal, 14)
+                            .readableWidth(560)
                     } else {
+                        // One composition sized to the room between the header and the tab bar.
                         AnnouncementEasel(
                             records: updates.records,
                             events: store.events,
-                            stageHeight: max(proxy.size.height * 0.45, 300),
+                            available: CGSize(
+                                width: max(proxy.size.width - 32, 200),
+                                height: max(proxy.size.height - FloatingTabBar.contentReserve - 16 - 14, 260)
+                            ),
                             isUnread: { updates.isUnread($0) },
                             onRoute: route
                         )
-                        .padding(.top, 18)
+                        .padding(.top, 14)
                     }
                 }
-                .padding(.horizontal, 14)
+                .frame(maxWidth: .infinity)
                 .padding(.bottom, FloatingTabBar.contentReserve + 16)
-                .readableWidth(560)
             }
             .scrollIndicators(.hidden)
             .refreshable { await updates.refresh() }

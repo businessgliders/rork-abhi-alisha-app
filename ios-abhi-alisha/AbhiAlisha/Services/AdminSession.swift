@@ -10,9 +10,16 @@ import Observation
 final class AdminSession {
     var isAdminPresented = false
     private(set) var isAuthenticating = false
+    /// A screen inside the couple's area to open straight away, e.g. People.
+    var initialRoute: CoupleRoute?
 
-    /// The host pill was tapped.
-    func requestEntry() {
+    /// The wedding switcher lives in its own sheet; it leaves a request here and the
+    /// shell opens the couple's area once the sheet has gone.
+    static let request = CoupleAreaRequest()
+
+    /// The host pill was tapped, or another screen asked for the couple's area.
+    func requestEntry(route: CoupleRoute? = nil) {
+        initialRoute = route
         let context = WeddingContext.shared
         guard context.isHost else { return }
         let weddingID = context.weddingID
@@ -28,6 +35,14 @@ final class AdminSession {
             isAuthenticating = false
             if passed { isAdminPresented = true }
         }
+    }
+
+    /// Picks up a request the switcher left behind.
+    func consumeRequest() {
+        guard let pending = Self.request.pending else { return }
+        Self.request.pending = nil
+        isAdminPresented = false
+        requestEntry(route: pending.route)
     }
 
     // MARK: - Face ID lock (per wedding, this phone only)
@@ -73,5 +88,20 @@ final class AdminSession {
         } catch {
             return false
         }
+    }
+}
+
+/// "Open the couple's area at this screen", left by a view that can't reach the shell.
+@Observable
+final class CoupleAreaRequest {
+    struct Pending: Equatable {
+        let id = UUID()
+        let route: CoupleRoute?
+    }
+
+    var pending: Pending?
+
+    func open(_ route: CoupleRoute?) {
+        pending = Pending(route: route)
     }
 }

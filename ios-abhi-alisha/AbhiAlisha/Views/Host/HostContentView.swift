@@ -9,17 +9,29 @@ struct HostContentView: View {
         case story = "Story"
         case family = "Family"
         case faq = "FAQ"
+        case stay = "Stay"
         var id: String { rawValue }
 
         var kind: String {
             switch self {
-            case .letter: return "custom"
+            case .letter, .stay: return "custom"
             case .story: return "story"
             case .family: return "family"
             case .faq: return "faq"
             }
         }
+
+        /// Which `data.key` a custom row needs to belong here.
+        var customKey: String? {
+            switch self {
+            case .letter: return "letter"
+            case .stay: return HostContentView.roomRateKey
+            default: return nil
+            }
+        }
     }
+
+    static let roomRateKey = "room_rate"
 
     @Environment(ContentStore.self) private var content
 
@@ -34,7 +46,7 @@ struct HostContentView: View {
     private var shown: [HostSection] {
         sections.filter { section in
             guard section.kind == tab.kind else { return false }
-            if tab == .letter { return section.string("key") == "letter" }
+            if let key = tab.customKey { return section.string("key") == key }
             return true
         }
         .sorted { $0.sort < $1.sort }
@@ -56,6 +68,11 @@ struct HostContentView: View {
 
                 HostErrorLine(message: error)
 
+                if tab == .stay {
+                    HostCaps("Room rates", color: HostStyle.muted)
+                        .padding(.top, 4)
+                }
+
                 if isLoading && sections.isEmpty {
                     ProgressView().frame(maxWidth: .infinity).padding(.top, 30)
                 } else if shown.isEmpty {
@@ -64,13 +81,28 @@ struct HostContentView: View {
                     HostCard {
                         ForEach(Array(shown.enumerated()), id: \.element.id) { index, section in
                             if index > 0 { HostHairline() }
-                            Button {
-                                BrandHaptics.tick()
-                                editing = section
-                            } label: {
-                                sectionRow(section)
+                            HStack(spacing: 0) {
+                                Button {
+                                    BrandHaptics.tick()
+                                    editing = section
+                                } label: {
+                                    sectionRow(section)
+                                }
+                                .buttonStyle(HostRowPressStyle())
+                                if tab == .stay, shown.count > 1 {
+                                    reorderControls(index: index, count: shown.count)
+                                }
                             }
-                            .buttonStyle(HostRowPressStyle())
+                            .contextMenu {
+                                if tab == .stay, shown.count > 1 {
+                                    if index > 0 {
+                                        Button("Move Up", systemImage: "arrow.up") { move(from: index, by: -1) }
+                                    }
+                                    if index < shown.count - 1 {
+                                        Button("Move Down", systemImage: "arrow.down") { move(from: index, by: 1) }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -92,7 +124,7 @@ struct HostContentView: View {
             .animation(.calm, value: tab)
         }
         .background(HostPaper())
-        .navigationTitle("Story, family & FAQ")
+        .navigationTitle("FAQ, travel & stay")
         .navigationBarTitleDisplayMode(.inline)
         .refreshable { await load() }
         .task { await load() }
@@ -115,7 +147,63 @@ struct HostContentView: View {
     }
 
     private func tabFor(_ section: HostSection) -> Tab {
-        Tab.allCases.first { $0.kind == section.kind } ?? .letter
+        if section.kind == "custom" {
+            return section.string("key") == Self.roomRateKey ? .stay : .letter
+        }
+        return Tab.allCases.first { $0.kind == section.kind } ?? .letter
+    }
+
+    private func reorderControls(index: Int, count: Int) -> some View {
+        VStack(spacing: 0) {
+            Button {
+                move(from: index, by: -1)
+            } label: {
+                Image(systemName: "chevron.up")
+                    .frame(width: 40, height: 28)
+                    .contentShape(Rectangle())
+            }
+            .disabled(index == 0)
+            .accessibilityLabel("Move up")
+            Button {
+                move(from: index, by: 1)
+            } label: {
+                Image(systemName: "chevron.down")
+                    .frame(width: 40, height: 28)
+                    .contentShape(Rectangle())
+            }
+            .disabled(index == count - 1)
+            .accessibilityLabel("Move down")
+        }
+        .font(.system(size: 12, weight: .semibold))
+        .foregroundStyle(HostStyle.goldText)
+        .buttonStyle(.plain)
+        .padding(.trailing, 6)
+    }
+
+    /// Swaps a row with its neighbour and saves the new order.
+    private func move(from index: Int, by offset: Int) {
+        var ordered = shown
+        let target = index + offset
+        guard ordered.indices.contains(index), ordered.indices.contains(target) else { return }
+        BrandHaptics.tick()
+        ordered.swapAt(index, target)
+        for position in ordered.indices { ordered[position].sort = position }
+        withAnimation(.calm) {
+            for row in ordered {
+                if let at = sections.firstIndex(where: { $0.id == row.id }) { sections[at].sort = row.sort }
+            }
+        }
+        Task {
+            do {
+                try await HostAPI.shared.reorderSections(ordered)
+                error = nil
+                content.invalidate()
+                await content.refreshIfNeeded()
+            } catch {
+                self.error = error.hostMessage
+                await load()
+            }
+        }
     }
 
     private var hint: String {
@@ -124,6 +212,7 @@ struct HostContentView: View {
         case .story: return "Moments from how you met, one card each."
         case .family: return "The people guests will meet, with a photo and how they're related."
         case .faq: return "Answers to the questions everyone asks."
+        case .stay: return "Each room type with its nightly rates. Guests see them under Where we're staying."
         }
     }
 
@@ -133,6 +222,7 @@ struct HostContentView: View {
         case .story: return "No story moments yet."
         case .family: return "No family added yet."
         case .faq: return "No questions yet."
+        case .stay: return "No room rates yet."
         }
     }
 
@@ -142,6 +232,7 @@ struct HostContentView: View {
         case .story: return "Add a moment"
         case .family: return "Add a family member"
         case .faq: return "Add a question"
+        case .stay: return "Add a room"
         }
     }
 
@@ -165,7 +256,12 @@ struct HostContentView: View {
                     .font(Milni.cormorant(20, weight: 500))
                     .foregroundStyle(HostStyle.ink)
                     .lineLimit(1)
-                if !section.body.isEmpty {
+                if tab == .stay {
+                    Text(RoomRateFormat.summary(section))
+                        .font(Milni.inter(13))
+                        .foregroundStyle(HostStyle.muted)
+                        .lineLimit(2)
+                } else if !section.body.isEmpty {
                     Text(section.body)
                         .font(Milni.inter(13))
                         .foregroundStyle(HostStyle.muted)
@@ -186,6 +282,10 @@ struct HostContentView: View {
     private func blank() -> HostSection {
         var data: [String: AnyJSON] = [:]
         if tab == .letter { data["key"] = .string("letter") }
+        if tab == .stay {
+            data["key"] = .string(Self.roomRateKey)
+            data["currency"] = .string("USD")
+        }
         if tab == .faq { data["section"] = .string("general") }
         let sort = (shown.map(\.sort).max() ?? -1) + 1
         return HostSection(id: "", kind: tab.kind, title: "", body: "", data: data, sort: sort)
@@ -195,7 +295,7 @@ struct HostContentView: View {
         isLoading = true
         defer { isLoading = false }
         do {
-            sections = try await HostAPI.shared.sections(weddingID: weddingID, kinds: Tab.allCases.map(\.kind))
+            sections = try await HostAPI.shared.sections(weddingID: weddingID, kinds: Array(Set(Tab.allCases.map(\.kind))))
             error = nil
         } catch {
             self.error = error.hostMessage
@@ -269,6 +369,7 @@ private struct HostSectionEditor: View {
         case .story: return "Story"
         case .family: return "Family"
         case .faq: return "Question"
+        case .stay: return "Room"
         }
     }
 
@@ -302,6 +403,31 @@ private struct HostSectionEditor: View {
                     }
                 }
             }
+        case .stay:
+            HostTitleField(placeholder: "Oceanfront King", text: $section.title, size: 30)
+            VStack(alignment: .leading, spacing: 10) {
+                HostCaps("Currency", color: HostStyle.muted)
+                ScrollView(.horizontal) {
+                    HStack(spacing: 8) {
+                        ForEach(RoomRateFormat.currencies, id: \.self) { code in
+                            HostChip(title: code, isOn: currency == code) {
+                                section.data["currency"] = .string(code)
+                            }
+                        }
+                    }
+                }
+                .scrollIndicators(.hidden)
+            }
+            HStack(alignment: .top, spacing: 16) {
+                HostField(label: "Sun – Wed / night", text: numberBinding("sun_wed_rate"), placeholder: "320", keyboard: .decimalPad)
+                HostField(label: "Thu – Sat / night", text: numberBinding("thu_sat_rate"), placeholder: "360", keyboard: .decimalPad)
+            }
+            HStack(alignment: .top, spacing: 16) {
+                HostField(label: "Max adults", text: numberBinding("max_adults", whole: true), placeholder: "2", keyboard: .numberPad)
+                HostField(label: "Extra adult / night", text: numberBinding("extra_adult_fee"), placeholder: "80", keyboard: .decimalPad)
+            }
+            HostField(label: "Room code (optional)", text: dataBinding("room_key"), placeholder: RoomRateFormat.slug(section.title))
+            HostField(label: "Note for guests (optional)", text: $section.body, placeholder: "Includes breakfast for two", multiline: true)
         }
     }
 
@@ -345,6 +471,29 @@ private struct HostSectionEditor: View {
         )
     }
 
+    private var currency: String {
+        let code = section.string("currency").uppercased()
+        return code.isEmpty ? "USD" : code
+    }
+
+    /// A number in `data`, edited as text and saved back as a number.
+    private func numberBinding(_ key: String, whole: Bool = false) -> Binding<String> {
+        Binding(
+            get: { RoomRateFormat.text(section.data[key]) },
+            set: { raw in
+                let clean = raw.replacingOccurrences(of: ",", with: ".").filter { "0123456789.".contains($0) }
+                if clean.isEmpty {
+                    section.data[key] = nil
+                } else if whole {
+                    section.data[key] = Int(clean.split(separator: ".").first ?? "").map(AnyJSON.integer) ?? nil
+                } else if let value = Double(clean) {
+                    section.data[key] = value.rounded() == value && !clean.contains(".")
+                        ? .integer(Int(value)) : .double(value)
+                }
+            }
+        )
+    }
+
     private var photoTarget: HostPhotoTarget {
         tab == .family ? HostPhotoTarget(key: "photo", folder: "family") : HostPhotoTarget(key: "image_url", folder: "story")
     }
@@ -373,6 +522,13 @@ private struct HostSectionEditor: View {
         var draft = section
         draft.title = draft.title.hostTrimmed
         draft.body = draft.body.hostTrimmed
+        if tab == .stay {
+            draft.data["key"] = .string(HostContentView.roomRateKey)
+            if draft.string("room_key").hostTrimmed.isEmpty {
+                draft.data["room_key"] = .string(RoomRateFormat.slug(draft.title))
+            }
+            if draft.string("currency").isEmpty { draft.data["currency"] = .string("USD") }
+        }
         do {
             let id = try await HostAPI.shared.save(draft, weddingID: weddingID)
             if !id.isEmpty { draft.id = id }
@@ -398,4 +554,49 @@ private struct HostSectionEditor: View {
 struct HostPhotoTarget: Equatable {
     let key: String
     let folder: String
+}
+
+/// Shared formatting for the couple's room rates.
+enum RoomRateFormat {
+    static let currencies = ["USD", "CAD", "MXN", "EUR", "GBP", "INR"]
+
+    static func number(_ value: AnyJSON?) -> Double? {
+        switch value {
+        case .integer(let number)?: return Double(number)
+        case .double(let number)?: return number
+        case .string(let text)?: return Double(text)
+        default: return nil
+        }
+    }
+
+    static func text(_ value: AnyJSON?) -> String {
+        switch value {
+        case .integer(let number)?: return String(number)
+        case .double(let number)?:
+            return number.rounded() == number ? String(Int(number)) : String(number)
+        case .string(let text)?: return text
+        default: return ""
+        }
+    }
+
+    static func slug(_ title: String) -> String {
+        let words = title.lowercased().split { !$0.isLetter && !$0.isNumber }
+        return words.isEmpty ? "room" : words.joined(separator: "_")
+    }
+
+    static func money(_ value: Double, code: String) -> String {
+        let whole = value.rounded() == value
+        return value.formatted(.currency(code: code).precision(.fractionLength(whole ? 0 : 2)))
+    }
+
+    /// "USD 320 Sun–Wed · 360 Thu–Sat · up to 2 adults"
+    static func summary(_ section: HostSection) -> String {
+        let raw = section.string("currency").uppercased()
+        let code = raw.count == 3 ? raw : "USD"
+        var parts: [String] = []
+        if let low = number(section.data["sun_wed_rate"]) { parts.append("\(money(low, code: code)) Sun–Wed") }
+        if let high = number(section.data["thu_sat_rate"]) { parts.append("\(money(high, code: code)) Thu–Sat") }
+        if let adults = number(section.data["max_adults"]), adults > 0 { parts.append("up to \(Int(adults)) adults") }
+        return parts.isEmpty ? "No rates yet" : parts.joined(separator: " · ")
+    }
 }

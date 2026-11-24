@@ -1,142 +1,338 @@
 import SwiftUI
 
-/// Announcements as a notice board: the pinned note stands on a thin gold easel, with
-/// two older notices peeking out behind it, and everything earlier is listed below,
-/// fading a little more with each step back in time. Tapping an earlier notice lifts it
-/// onto the easel; the one it replaces drops back into the list in its own place.
+/// Announcements as a notice board: the shown notice stands on a thin gold easel, and up
+/// to three earlier sheets lean behind it on the left, their dates written up the edge.
+/// Tapping a sheet lifts it onto the easel and the one it replaces goes back into the
+/// stack; swiping right steps to older notices, left to newer. The whole board is one
+/// composition scaled to the space between the header and the tab bar.
 /// With Reduce Motion, every change is a plain crossfade.
 struct AnnouncementEasel: View {
     /// Newest first, as stored.
     let records: [NotificationRecord]
     let events: [ScheduleEvent]
-    /// The height of the easel stage, about 45% of the screen.
-    let stageHeight: CGFloat
+    /// The room the board may use: width already inset from the screen edges, height
+    /// from under the header to above the tab bar.
+    let available: CGSize
     let isUnread: (NotificationRecord) -> Bool
     let onRoute: (AnnouncementDestination) -> Void
 
-    /// An earlier notice pinned by hand; nil means the latest stands on the easel.
+    /// An earlier notice put on the easel by hand; nil means the latest stands there.
     @State private var pinnedID: String?
+    /// +1 when stepping to an older notice, -1 to a newer one; decides the slide direction.
+    @State private var direction: CGFloat = 1
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    private var pinned: NotificationRecord? {
-        records.first { $0.id == pinnedID } ?? records.first
+    static let design = CGSize(width: 320, height: 420)
+    private static let navigatorHeight: CGFloat = 76
+
+    private var index: Int {
+        guard let pinnedID, let found = records.firstIndex(where: { $0.id == pinnedID }) else { return 0 }
+        return found
     }
 
-    private var earlier: [NotificationRecord] {
-        guard let pinned else { return [] }
-        return records.filter { $0.id != pinned.id }
+    private var current: NotificationRecord? {
+        records.indices.contains(index) ? records[index] : nil
     }
+
+    /// Older notices nearest first, then newer ones, so the sign that was just replaced
+    /// always has a place in the stack.
+    private var leaning: [NotificationRecord] {
+        let older = records.indices.filter { $0 > index }.map { records[$0] }
+        let newer = records.indices.filter { $0 < index }.reversed().map { records[$0] }
+        return Array((older + newer).prefix(3))
+    }
+
+    private var olderCount: Int { max(0, records.count - 1 - index) }
+
+    private var scale: CGFloat {
+        let width = available.width / Self.design.width
+        let height = (available.height - Self.navigatorHeight) / Self.design.height
+        return min(max(min(width, height), 0.5), 1.35)
+    }
+
+    private var motion: Animation { reduceMotion ? .softFade : .calm }
 
     var body: some View {
         VStack(spacing: 0) {
-            if let pinned {
-                EaselStage(
-                    record: pinned,
-                    isLatest: pinned.id == records.first?.id,
-                    isNew: isUnread(pinned),
-                    peekCount: min(2, records.count - 1),
-                    destination: pinned.destination(events: events),
-                    minHeight: stageHeight,
-                    reduceMotion: reduceMotion,
-                    onRoute: onRoute
-                )
-            }
-
-            if !earlier.isEmpty {
-                BoardHeading(text: "Earlier on the board")
-                    .padding(.top, 30)
-                    .padding(.bottom, 14)
-
-                VStack(spacing: 10) {
-                    ForEach(Array(earlier.enumerated()), id: \.element.id) { index, record in
-                        EarlierNoticeRow(
-                            record: record,
-                            depth: index,
-                            isNew: isUnread(record)
-                        ) {
-                            pin(record)
+            if let current {
+                stage(current)
+                    .frame(width: Self.design.width, height: Self.design.height)
+                    .scaleEffect(scale)
+                    .frame(width: Self.design.width * scale, height: Self.design.height * scale)
+                    .contentShape(Rectangle())
+                    .simultaneousGesture(swipe)
+                    .accessibilityElement(children: .contain)
+                    .accessibilityAdjustableAction { action in
+                        switch action {
+                        case .increment: step(by: -1)
+                        case .decrement: step(by: 1)
+                        @unknown default: break
                         }
-                        .transition(.opacity)
                     }
-                }
+
+                EaselNavigator(
+                    count: records.count,
+                    index: index,
+                    olderCount: olderCount,
+                    onOlder: { step(by: 1) },
+                    onNewer: { step(by: -1) }
+                )
+                .frame(maxWidth: min(available.width, 420))
+                .frame(height: Self.navigatorHeight)
             }
         }
-        .animation(reduceMotion ? .softFade : .calm, value: pinned?.id)
+        .frame(maxWidth: .infinity)
+        .animation(motion, value: index)
         .onChange(of: records.first?.id) { _, _ in
             // A brand-new announcement always takes the easel.
             pinnedID = nil
         }
     }
 
+    // MARK: Stage
+
+    /// Positions in the 320 × 420 design space.
+    private static let sign = CGRect(x: 80, y: 40, width: 224, height: 326)
+    /// Where every leaning sheet's bottom-right corner rests, hidden behind the sign.
+    private static let lean = CGPoint(x: 222, y: 340)
+
+    private func stage(_ record: NotificationRecord) -> some View {
+        let sign = Self.sign
+        return ZStack(alignment: .topLeading) {
+            EaselFrame()
+                .frame(width: sign.width + 56, height: Self.design.height - 14)
+                .position(x: sign.midX, y: 14 + (Self.design.height - 14) / 2)
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
+
+            ForEach(Array(leaning.enumerated()).reversed(), id: \.element.id) { depth, sheet in
+                LeaningSheet(record: sheet, depth: depth, isNewer: sheet.sentAt.flatMap { date in
+                    record.sentAt.map { date > $0 }
+                } ?? false) {
+                    pin(sheet)
+                }
+                .frame(width: LeaningSheet.size(depth).width, height: LeaningSheet.size(depth).height)
+                .rotationEffect(.degrees(LeaningSheet.angles[depth]), anchor: .bottomTrailing)
+                .position(
+                    x: Self.lean.x - LeaningSheet.size(depth).width / 2,
+                    y: Self.lean.y - LeaningSheet.size(depth).height / 2
+                )
+                .transition(.opacity)
+            }
+
+            EaselSign(
+                record: record,
+                isLatest: index == 0,
+                isNew: isUnread(record),
+                destination: record.destination(events: events),
+                onRoute: onRoute
+            )
+            .frame(width: sign.width, height: sign.height)
+            .id(record.id)
+            .transition(
+                reduceMotion
+                    ? .opacity
+                    : .asymmetric(
+                        insertion: .opacity.combined(with: .offset(x: -26 * direction, y: 8)),
+                        removal: .opacity.combined(with: .offset(x: 30 * direction))
+                    )
+            )
+            .position(x: sign.midX, y: sign.midY)
+
+            EaselLedge()
+                .frame(width: sign.width + 30, height: 6)
+                .position(x: sign.midX, y: sign.maxY + 6)
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
+        }
+    }
+
+    private var swipe: some Gesture {
+        DragGesture(minimumDistance: 24)
+            .onEnded { value in
+                let dx = value.translation.width
+                guard abs(dx) > 50, abs(dx) > abs(value.translation.height) * 1.4 else { return }
+                // Right reaches back in time; left comes forward.
+                step(by: dx > 0 ? 1 : -1)
+            }
+    }
+
+    private func step(by offset: Int) {
+        let target = index + offset
+        guard records.indices.contains(target) else {
+            BrandHaptics.tick()
+            return
+        }
+        show(records[target], direction: CGFloat(offset))
+    }
+
     private func pin(_ record: NotificationRecord) {
+        guard let target = records.firstIndex(where: { $0.id == record.id }) else { return }
+        show(record, direction: target > index ? 1 : -1)
+    }
+
+    private func show(_ record: NotificationRecord, direction: CGFloat) {
         BrandHaptics.soft()
-        withAnimation(reduceMotion ? .softFade : .calm) {
+        self.direction = direction
+        withAnimation(motion) {
             pinnedID = record.id == records.first?.id ? nil : record.id
         }
     }
 }
 
-// MARK: - Stage
+// MARK: - Leaning sheets
 
-private struct EaselStage: View {
+/// A blank earlier notice leaning behind the easel; only its left edge shows, with the
+/// date written up it in small caps. Each one further back is darker and fainter.
+private struct LeaningSheet: View {
     let record: NotificationRecord
-    let isLatest: Bool
-    let isNew: Bool
-    let peekCount: Int
-    let destination: AnnouncementDestination?
-    let minHeight: CGFloat
-    let reduceMotion: Bool
-    let onRoute: (AnnouncementDestination) -> Void
+    let depth: Int
+    let isNewer: Bool
+    let action: () -> Void
+
+    static let angles: [Double] = [-9, -13, -17]
+
+    static func size(_ depth: Int) -> CGSize {
+        CGSize(width: 168, height: 262 - CGFloat(depth) * 14)
+    }
+
+    private var dateText: String {
+        record.sentAt?.formatted(.dateTime.month(.abbreviated).day()).uppercased() ?? "EARLIER"
+    }
 
     var body: some View {
-        VStack(spacing: 0) {
-            ZStack {
-                // Two older notices tucked behind, slightly darker.
-                if peekCount >= 2 {
-                    PeekingNotice(rotation: 3.5, offset: CGSize(width: 10, height: 8))
-                }
-                if peekCount >= 1 {
-                    PeekingNotice(rotation: -5, offset: CGSize(width: -8, height: 4))
-                }
-
-                EaselSign(
-                    record: record,
-                    isLatest: isLatest,
-                    isNew: isNew,
-                    destination: destination,
-                    onRoute: onRoute
+        Button(action: action) {
+            RoundedRectangle(cornerRadius: 4, style: .continuous)
+                .fill(EaselPaper.color)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 4, style: .continuous)
+                        .fill(Color.black.opacity(0.05 + 0.05 * Double(depth)))
                 )
-                .id(record.id)
-                .transition(
-                    reduceMotion
-                        ? .opacity
-                        : .asymmetric(
-                            insertion: .opacity.combined(with: .offset(y: 16)).combined(with: .scale(scale: 0.98, anchor: .bottom)),
-                            removal: .opacity.combined(with: .offset(y: 10))
-                        )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 4, style: .continuous)
+                        .stroke(BrandPalette.gold.opacity(0.35 - 0.07 * Double(depth)), lineWidth: 0.75)
                 )
-            }
-            // The ledge the sign rests on.
-            .overlay(alignment: .bottom) {
-                EaselLedge()
-                    .padding(.horizontal, -18)
-                    .offset(y: 7)
-                    .allowsHitTesting(false)
-            }
-            .padding(.horizontal, 30)
-            .padding(.top, 22)
-
-            Spacer(minLength: 64)
+                .overlay(alignment: .topLeading) {
+                    Text(dateText)
+                        .font(BrandLabel.font(size: 9, weight: .semibold))
+                        .tracking(2)
+                        .foregroundStyle(BrandPalette.goldDeep.opacity(0.9))
+                        .monospacedDigit()
+                        .lineLimit(1)
+                        .fixedSize()
+                        .rotationEffect(.degrees(-90))
+                        .frame(width: 14, height: 84)
+                        .padding(.leading, 5)
+                        .padding(.top, 18)
+                }
+                .shadow(color: Color.black.opacity(0.1), radius: 5, x: -2, y: 3)
+                .contentShape(Rectangle())
         }
-        .frame(maxWidth: .infinity)
-        .frame(minHeight: minHeight)
-        .background {
-            EaselFrame()
-                .allowsHitTesting(false)
-                .accessibilityHidden(true)
+        .buttonStyle(PressableStyle())
+        .opacity(1 - 0.16 * Double(depth))
+        .accessibilityLabel(accessibilityTitle)
+        .accessibilityHint("Puts it on the easel")
+    }
+
+    private var accessibilityTitle: String {
+        var parts = [isNewer ? "Newer notice" : "Earlier notice"]
+        if let sentAt = record.sentAt { parts.append(sentAt.formatted(.dateTime.month(.wide).day())) }
+        if let title = record.title { parts.append(title) }
+        return parts.joined(separator: ", ")
+    }
+}
+
+// MARK: - Navigator
+
+/// "‹ EARLIER · ● ● ━ · LATEST ›" with a quiet hint underneath.
+private struct EaselNavigator: View {
+    let count: Int
+    /// 0 is the latest.
+    let index: Int
+    let olderCount: Int
+    let onOlder: () -> Void
+    let onNewer: () -> Void
+
+    private static let maxDots = 7
+
+    /// Dots run oldest → newest; a window keeps a long history on one line.
+    private var dots: [Int] {
+        let positions = Array((0..<count).reversed())
+        guard positions.count > Self.maxDots,
+              let at = positions.firstIndex(of: index) else { return positions }
+        let half = Self.maxDots / 2
+        let lower = min(max(0, at - half), positions.count - Self.maxDots)
+        return Array(positions[lower..<(lower + Self.maxDots)])
+    }
+
+    private var hint: String {
+        if olderCount == 0 { return "This is the first notice" }
+        let leaning = min(olderCount, 3)
+        let noun = leaning == 1 ? "1 earlier notice" : "\(leaning) earlier notices"
+        return "\(noun) leaning behind · tap one or swipe right"
+    }
+
+    var body: some View {
+        VStack(spacing: 8) {
+            HStack(spacing: 10) {
+                Button(action: onOlder) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 9, weight: .semibold))
+                        Text("EARLIER")
+                    }
+                    .frame(minHeight: 36)
+                    .contentShape(Rectangle())
+                }
+                .disabled(olderCount == 0)
+                .accessibilityLabel("Earlier notice")
+
+                Text("·").accessibilityHidden(true)
+
+                HStack(spacing: 5) {
+                    ForEach(dots, id: \.self) { position in
+                        Capsule(style: .continuous)
+                            .fill(position == index ? BrandPalette.gold : BrandPalette.gold.opacity(0.3))
+                            .frame(width: position == index ? 18 : 5, height: 5)
+                    }
+                }
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel("Notice \(count - index) of \(count)")
+
+                Text("·").accessibilityHidden(true)
+
+                Button(action: onNewer) {
+                    HStack(spacing: 4) {
+                        Text("LATEST")
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 9, weight: .semibold))
+                    }
+                    .frame(minHeight: 36)
+                    .contentShape(Rectangle())
+                }
+                .disabled(index == 0)
+                .accessibilityLabel("Newer notice")
+            }
+            .font(BrandLabel.font(size: 10, weight: .semibold))
+            .tracking(1.8)
+            .foregroundStyle(BrandPalette.goldDeep)
+            .buttonStyle(PressableStyle())
+            .lineLimit(1)
+            .minimumScaleFactor(0.8)
+
+            Text(hint)
+                .brandFont(.bodyItalic)
+                .foregroundStyle(BrandPalette.body)
+                .multilineTextAlignment(.center)
+                .lineLimit(2)
+                .minimumScaleFactor(0.8)
+                .contentTransition(.opacity)
+                .padding(.horizontal, 12)
         }
     }
 }
+
+// MARK: - Easel
 
 /// The easel itself: an apex knob, two splayed front legs, a back leg and a soft shadow
 /// on the floor.
@@ -209,29 +405,6 @@ private struct EaselLedge: View {
     }
 }
 
-/// An older notice peeking from behind the sign.
-private struct PeekingNotice: View {
-    let rotation: Double
-    let offset: CGSize
-
-    var body: some View {
-        RoundedRectangle(cornerRadius: 6, style: .continuous)
-            .fill(EaselPaper.color)
-            .overlay(
-                RoundedRectangle(cornerRadius: 6, style: .continuous)
-                    .fill(Color.black.opacity(0.06))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 6, style: .continuous)
-                    .stroke(BrandPalette.gold.opacity(0.28), lineWidth: 0.75)
-            )
-            .shadow(color: Color.black.opacity(0.08), radius: 6, y: 3)
-            .rotationEffect(.degrees(rotation))
-            .offset(offset)
-            .accessibilityHidden(true)
-    }
-}
-
 /// The paper the notices are printed on: cream in the light, the theme's card in the dark.
 private enum EaselPaper {
     static let color = Color(
@@ -263,7 +436,7 @@ private struct EaselSign: View {
     }
 
     private var label: String {
-        let lead = isLatest ? "LATEST" : "PINNED"
+        let lead = isLatest ? "LATEST" : "EARLIER"
         guard let dateText else { return lead }
         return "\(lead) · \(dateText)"
     }
@@ -288,19 +461,28 @@ private struct EaselSign: View {
                         .brandFont(.announcementHeadline)
                         .foregroundStyle(BrandPalette.ink)
                         .multilineTextAlignment(.center)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .padding(.top, 14)
+                        .lineLimit(3)
+                        .minimumScaleFactor(0.7)
+                        .padding(.top, 12)
+                        .layoutPriority(1)
                 }
 
                 if let body = record.body {
-                    Text(body)
-                        .brandFont(.bodyText)
-                        .foregroundStyle(BrandPalette.ink.opacity(0.86))
-                        .multilineTextAlignment(.center)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .padding(.top, 10)
+                    // A long notice scrolls inside the sign instead of stretching the board.
+                    ScrollView {
+                        Text(body)
+                            .brandFont(.bodyText)
+                            .foregroundStyle(BrandPalette.ink.opacity(0.86))
+                            .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .frame(maxWidth: .infinity)
+                    }
+                    .scrollBounceBehavior(.basedOnSize)
+                    .scrollIndicators(.hidden)
+                    .padding(.top, 8)
                 }
             }
+            .frame(maxHeight: .infinity, alignment: .top)
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(accessibilityTitle)
             .accessibilityValue(record.body ?? "")
@@ -326,19 +508,21 @@ private struct EaselSign: View {
                     .contentShape(Capsule(style: .continuous))
                 }
                 .buttonStyle(PressableStyle())
-                .padding(.top, 18)
+                .padding(.top, 10)
                 .accessibilityHint("Opens \(destination.label), the same place the notification goes")
             }
 
             Text("— \(ActiveWedding.couple)")
                 .brandFont(.bodyItalic)
                 .foregroundStyle(BrandPalette.body)
-                .padding(.top, 16)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+                .padding(.top, 10)
         }
-        .padding(.horizontal, 26)
-        .padding(.top, 34)
-        .padding(.bottom, 26)
-        .frame(maxWidth: .infinity)
+        .padding(.horizontal, 22)
+        .padding(.top, 30)
+        .padding(.bottom, 22)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(EaselPaper.color)
         .overlay {
             // Double gold hairline frame.
@@ -417,96 +601,3 @@ private struct WaxSeal: View {
     }
 }
 
-// MARK: - Earlier
-
-private struct BoardHeading: View {
-    let text: String
-
-    var body: some View {
-        HStack(spacing: 12) {
-            Rectangle().fill(BrandPalette.gold.opacity(0.5)).frame(height: 0.75)
-            Text(text.uppercased())
-                .font(BrandLabel.font(size: 10, weight: .semibold))
-                .tracking(2.2)
-                .foregroundStyle(BrandPalette.goldDeep)
-                .fixedSize()
-            Rectangle().fill(BrandPalette.gold.opacity(0.5)).frame(height: 0.75)
-        }
-        .padding(.horizontal, 8)
-        .accessibilityAddTraits(.isHeader)
-    }
-}
-
-/// A compact earlier notice: date in small caps, title, a one-line preview. Each step
-/// further down the board is a little fainter, smaller and flatter.
-private struct EarlierNoticeRow: View {
-    let record: NotificationRecord
-    let depth: Int
-    let isNew: Bool
-    let action: () -> Void
-
-    private var fade: Double { max(0.45, 1 - 0.22 * Double(depth)) }
-    private var scale: CGFloat { max(0.88, 1 - 0.03 * CGFloat(depth)) }
-    private var shadowStrength: Double { max(0.02, 0.09 - 0.02 * Double(depth)) }
-
-    var body: some View {
-        Button(action: action) {
-            HStack(alignment: .top, spacing: 12) {
-                VStack(alignment: .leading, spacing: 4) {
-                    if let sentAt = record.sentAt {
-                        Text(sentAt.formatted(.dateTime.month(.abbreviated).day()).uppercased())
-                            .font(BrandLabel.font(size: 9.5, weight: .semibold))
-                            .tracking(1.8)
-                            .foregroundStyle(BrandPalette.goldDeep)
-                            .monospacedDigit()
-                    }
-                    Text(record.title ?? "Announcement")
-                        .brandFont(.chatName)
-                        .foregroundStyle(BrandPalette.ink)
-                        .lineLimit(2)
-                        .multilineTextAlignment(.leading)
-                    if let body = record.body {
-                        Text(body)
-                            .brandFont(.bodySmall)
-                            .foregroundStyle(BrandPalette.body)
-                            .lineLimit(1)
-                    }
-                }
-                Spacer(minLength: 6)
-                if isNew {
-                    UnreadDot()
-                        .padding(.top, 4)
-                }
-            }
-            .padding(.horizontal, 18)
-            .padding(.vertical, 14)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(EaselPaper.color)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .stroke(BrandPalette.gold.opacity(0.3), lineWidth: 0.75)
-            )
-            .shadow(color: Color.black.opacity(shadowStrength), radius: 10 - min(8, CGFloat(depth) * 2), y: 4)
-            .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-        }
-        .buttonStyle(PressableStyle())
-        .scaleEffect(scale, anchor: .top)
-        .opacity(fade)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(accessibilityTitle)
-        .accessibilityHint("Pins it to the easel")
-        .accessibilityAddTraits(.isButton)
-    }
-
-    private var accessibilityTitle: String {
-        var parts = ["Announcement"]
-        if let sentAt = record.sentAt {
-            parts.append(sentAt.formatted(.dateTime.month(.wide).day()))
-        }
-        parts.append(record.title ?? "Untitled")
-        return parts.joined(separator: ", ")
-    }
-}

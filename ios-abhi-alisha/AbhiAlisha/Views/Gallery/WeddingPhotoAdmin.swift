@@ -239,8 +239,8 @@ extension View {
     }
 
     /// The couple's press-and-hold actions on a photo.
-    func weddingPhotoActions(photo: WeddingPhoto, events: [ScheduleEvent], isEnabled: Bool) -> some View {
-        modifier(WeddingPhotoActions(photo: photo, events: events, isEnabled: isEnabled))
+    func weddingPhotoActions(photo: WeddingPhoto, events: [ScheduleEvent], isEnabled: Bool, canDeleteOwn: Bool = false) -> some View {
+        modifier(WeddingPhotoActions(photo: photo, events: events, isEnabled: isEnabled, canDeleteOwn: canDeleteOwn))
     }
 }
 
@@ -530,7 +530,7 @@ private struct WeddingReviewSheet: View {
                     if let index = items.firstIndex(where: { $0.id == id }) {
                         ReviewRow(
                             item: $items[index],
-                            canBeCover: group.eventID != nil,
+                            canBeCover: group.eventID != nil && ChatSession.shared.isAdmin,
                             onStar: { toggleCover(id) },
                             onRemove: { remove(id) }
                         )
@@ -661,6 +661,7 @@ private struct WeddingPhotoActions: ViewModifier {
     let photo: WeddingPhoto
     let events: [ScheduleEvent]
     let isEnabled: Bool
+    var canDeleteOwn: Bool = false
 
     @State private var store = WeddingPhotoStore.shared
     @State private var isEditingCaption = false
@@ -707,6 +708,21 @@ private struct WeddingPhotoActions: ViewModifier {
                     Button("Cancel", role: .cancel) {}
                 } message: {
                     Text("It will be removed from Wedding Week for every guest.")
+                }
+        } else if canDeleteOwn {
+            content
+                .contextMenu {
+                    Button("Delete", systemImage: "trash", role: .destructive) {
+                        isConfirmingDelete = true
+                    }
+                }
+                .confirmationDialog("Delete your photo?", isPresented: $isConfirmingDelete, titleVisibility: .visible) {
+                    Button("Delete", role: .destructive) {
+                        Task { await store.delete(photo) }
+                    }
+                    Button("Cancel", role: .cancel) {}
+                } message: {
+                    Text("It will be removed from Wedding Week for everyone.")
                 }
         } else {
             content

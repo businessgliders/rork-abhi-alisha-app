@@ -16,6 +16,7 @@ struct WeddingShell: View {
     @State private var chat = ChatStore.shared
     @State private var announcementDraft = AnnouncementDraft.shared
     @State private var admin = AdminSession()
+    @State private var areaRequest = AdminSession.request
     @State private var selection: AppTab = .home
 
     @Environment(\.scenePhase) private var scenePhase
@@ -95,6 +96,11 @@ struct WeddingShell: View {
             }
         }
         .onAppear(perform: openPendingLanding)
+        .onAppear { admin.consumeRequest() }
+        .onChange(of: areaRequest.pending) { _, pending in
+            guard pending != nil else { return }
+            admin.consumeRequest()
+        }
         .task {
             store.startClock()
             NotificationsStore.shared.startListening()

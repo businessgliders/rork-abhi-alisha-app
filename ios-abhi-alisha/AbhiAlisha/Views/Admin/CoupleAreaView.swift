@@ -34,8 +34,6 @@ struct CoupleAreaView: View {
     @State private var isShareKitPresented = false
     @State private var faceIDOn: Bool
     @State private var isConfirmingLeave = false
-    @State private var isConfirmingDelete = false
-    @State private var deleteTyped = ""
     @State private var isLeaving = false
 
     init() {
@@ -108,15 +106,12 @@ struct CoupleAreaView: View {
         } message: {
             Text("You'll stop being a co-host of \(snapshot.coupleNames). The couple can invite you again.")
         }
-        .alert("Delete this wedding?", isPresented: $isConfirmingDelete) {
-            TextField(snapshot.coupleNames, text: $deleteTyped)
-                .textInputAutocapitalization(.words)
-                .autocorrectionDisabled()
-            Button("Delete forever", role: .destructive) { Task { await deleteWedding() } }
-                .disabled(!deleteMatches)
-            Button("Cancel", role: .cancel) { deleteTyped = "" }
-        } message: {
-            Text("Every event, photo, message and guest goes with it. This can't be undone. Type \(snapshot.coupleNames) to confirm.")
+        .onAppear {
+            // Opened from the wedding switcher's "Manage": go straight to that screen.
+            if let route = admin.initialRoute {
+                admin.initialRoute = nil
+                path = [route]
+            }
         }
     }
 
@@ -412,7 +407,7 @@ struct CoupleAreaView: View {
             divider
             row("Look, crest & cover photos", symbol: "paintpalette", route: .look)
             divider
-            row("Guests & co-hosts", symbol: "person.2", detail: approvedCountText, route: .guests)
+            row("People", symbol: "person.2", detail: approvedCountText, route: .guests)
             divider
             codeRow
             divider
@@ -492,23 +487,7 @@ struct CoupleAreaView: View {
 
     private var exitSection: some View {
         VStack(spacing: 10) {
-            if isOwner {
-                Button {
-                    BrandHaptics.tick()
-                    deleteTyped = ""
-                    isConfirmingDelete = true
-                } label: {
-                    exitLabel("Delete this wedding", symbol: "trash")
-                }
-                .buttonStyle(PressableStyle())
-                .disabled(isAbhiAlisha || isLeaving)
-                if isAbhiAlisha {
-                    Text("This wedding is the app's showcase, so it can't be deleted from here.")
-                        .brandFont(.bodySmall)
-                        .foregroundStyle(BrandPalette.body.opacity(0.75))
-                        .multilineTextAlignment(.center)
-                }
-            } else {
+            if !isOwner {
                 Button {
                     BrandHaptics.tick()
                     isConfirmingLeave = true
@@ -611,7 +590,11 @@ struct CoupleAreaView: View {
         case .photos: hostScreen(HostPhotosView())
         case .content: hostScreen(HostContentView())
         case .look: hostScreen(HostLookView())
-        case .guests: hostScreen(HostGuestsView(onChange: { Task { await load() } }))
+        case .guests:
+            CouplePeopleView(
+                onWeddingGone: { await finishLeaving() },
+                onChange: { Task { await load() } }
+            )
         }
     }
 
@@ -729,37 +712,11 @@ struct CoupleAreaView: View {
         }
     }
 
-    private var deleteMatches: Bool {
-        func letters(_ text: String) -> String {
-            text.lowercased()
-                .replacingOccurrences(of: " and ", with: "&")
-                .filter { $0.isLetter }
-        }
-        let typed = letters(deleteTyped)
-        return !typed.isEmpty && typed == letters(snapshot.coupleNames)
-    }
-
     private func leave() async {
-        guard let me = ChatSession.shared.userID?.lower else {
-            error = "You need to be signed in to leave this wedding."
-            return
-        }
         isLeaving = true
         defer { isLeaving = false }
         do {
-            try await HostAPI.shared.remove(weddingID: weddingID, userID: me)
-            await finishLeaving()
-        } catch {
-            withAnimation(fade) { self.error = error.hostMessage }
-        }
-    }
-
-    private func deleteWedding() async {
-        guard deleteMatches, !isAbhiAlisha, isOwner else { return }
-        isLeaving = true
-        defer { isLeaving = false }
-        do {
-            try await ChatBackend.client.from("weddings").delete().eq("id", value: weddingID).execute()
+            try await HostAPI.shared.leaveWedding(weddingID: weddingID)
             await finishLeaving()
         } catch {
             withAnimation(fade) { self.error = error.hostMessage }

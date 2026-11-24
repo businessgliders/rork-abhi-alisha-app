@@ -90,6 +90,16 @@ struct ExperienceView: View {
                             .padding(.top, 18)
                     }
                 }
+
+                if !content.roomRates.isEmpty {
+                    SectionHeading(text: "Room rates")
+                        .padding(.horizontal, 22)
+                        .padding(.top, 42)
+
+                    RoomRatesList(rooms: content.roomRates)
+                        .padding(.horizontal, 22)
+                        .padding(.top, 18)
+                }
             }
             .padding(.top, ScreenChrome.contentReserve)
             .padding(.bottom, FloatingTabBar.contentReserve + 24)
@@ -311,3 +321,96 @@ struct ExperienceUpdatesCard: View {
     }
 }
 
+
+// MARK: - Room rates
+
+/// The couple's room types with their nightly rates, as guests see them.
+struct RoomRatesList: View {
+    let rooms: [WeddingContentItem]
+
+    var body: some View {
+        VStack(spacing: 12) {
+            ForEach(rooms) { room in
+                RoomRateCard(room: room)
+            }
+        }
+        .animation(.calm, value: rooms)
+    }
+}
+
+private struct RoomRateCard: View {
+    let room: WeddingContentItem
+
+    var body: some View {
+        MatteCard(cornerRadius: 22) {
+            VStack(alignment: .leading, spacing: 12) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(room.title ?? "Room")
+                        .brandFont(.eventTitleSmall)
+                        .foregroundStyle(BrandPalette.ink)
+                        .fixedSize(horizontal: false, vertical: true)
+                    if let adults = room.maxAdults, adults > 0 {
+                        Text(Int(adults) == 1 ? "Up to 1 adult" : "Up to \(Int(adults)) adults")
+                            .brandFont(.bodySmall)
+                            .foregroundStyle(BrandPalette.body)
+                    }
+                }
+
+                HStack(alignment: .top, spacing: 0) {
+                    rate("Sun – Wed", room.sunWedRate)
+                    Rectangle()
+                        .fill(BrandPalette.hairline)
+                        .frame(width: 1)
+                        .padding(.horizontal, 14)
+                    rate("Thu – Sat", room.thuSatRate)
+                }
+                .fixedSize(horizontal: false, vertical: true)
+
+                if let fee = room.extraAdultFee, fee > 0 {
+                    Text("Extra adult \(money(fee)) a night")
+                        .brandFont(.bodySmall)
+                        .foregroundStyle(BrandPalette.body)
+                }
+                if let body = room.body, !body.isEmpty {
+                    Text(body)
+                        .brandFont(.bodyItalic)
+                        .foregroundStyle(BrandPalette.body)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .padding(18)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .accessibilityElement(children: .combine)
+    }
+
+    private func rate(_ label: String, _ value: Double?) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Eyebrow(text: label, size: 9.5)
+            if let value {
+                HStack(alignment: .firstTextBaseline, spacing: 4) {
+                    Text(money(value))
+                        .font(Milni.cormorant(26, weight: 600))
+                        .foregroundStyle(BrandPalette.ink)
+                        .contentTransition(.numericText())
+                        .minimumScaleFactor(0.7)
+                        .lineLimit(1)
+                    Text("/ night")
+                        .brandFont(.bodySmall)
+                        .foregroundStyle(BrandPalette.body)
+                }
+            } else {
+                Text("Ask the couple")
+                    .brandFont(.bodyItalic)
+                    .foregroundStyle(BrandPalette.body)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func money(_ value: Double) -> String {
+        let code = (room.currency?.uppercased()).flatMap { $0.count == 3 ? $0 : nil } ?? "USD"
+        let whole = value.rounded() == value
+        return value.formatted(.currency(code: code).precision(.fractionLength(whole ? 0 : 2)))
+    }
+}

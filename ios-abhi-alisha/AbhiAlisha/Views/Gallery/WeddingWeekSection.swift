@@ -295,9 +295,17 @@ struct WeddingPhotoTile: View {
                 .contentShape(shape)
         }
         .buttonStyle(PressableStyle())
-        .weddingPhotoActions(photo: photo, events: events, isEnabled: session.isAdmin)
+        .weddingPhotoActions(
+            photo: photo,
+            events: events,
+            isEnabled: session.isAdmin,
+            canDeleteOwn: !session.isAdmin && photo.isMine
+        )
         .accessibilityLabel(photo.caption ?? "Wedding week photograph")
-        .accessibilityHint(session.isAdmin ? "Hold for Edit caption, Move, Make cover or Delete" : "Opens the photograph")
+        .accessibilityHint(
+            session.isAdmin ? "Hold for Edit caption, Move, Make cover or Delete"
+                : (photo.isMine ? "Hold to delete your photo" : "Opens the photograph")
+        )
     }
 }
 

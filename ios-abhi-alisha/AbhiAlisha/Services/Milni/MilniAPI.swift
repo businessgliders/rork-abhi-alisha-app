@@ -464,9 +464,15 @@ nonisolated struct MilniAPI: Sendable {
                     // `data.room_key`; "room_rate" is only the fallback.
                     var item: [String: Any] = ["id": id, "sort_order": sort, "is_active": true]
                     item["key"] = MilniJSON.string(data["room_key"]) ?? "room_rate"
+                    item["section"] = "room_rate"
                     item["title"] = title
                     item["body"] = body
                     item["image_url"] = MilniJSON.string(data["image_url"])
+                    item["currency"] = MilniJSON.string(data["currency"])
+                    item["max_adults"] = MilniJSON.double(data["max_adults"])
+                    item["sun_wed_rate"] = MilniJSON.double(data["sun_wed_rate"])
+                    item["thu_sat_rate"] = MilniJSON.double(data["thu_sat_rate"])
+                    item["extra_adult_fee"] = MilniJSON.double(data["extra_adult_fee"])
                     items.append(item.compactMapValues { $0 })
                 } else {
                     var item: [String: Any] = ["id": id, "sort_order": sort, "is_active": true]

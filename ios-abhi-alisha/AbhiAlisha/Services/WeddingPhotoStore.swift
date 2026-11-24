@@ -183,6 +183,9 @@ final class WeddingPhotoStore {
 
     /// Stages the reviewed photos as jobs and starts sending them.
     func enqueue(_ prepared: [PreparedWeddingPhoto]) {
+        let isCouple = ChatSession.shared.isAdmin
+        let guestID = isCouple ? nil : ChatSession.shared.userID?.lower.lowercased()
+        if !isCouple, guestID == nil { return }
         let jobs: [WeddingUploadJob] = prepared.compactMap { item in
             guard let eventID = item.eventID else { return nil }
             return WeddingUploadJob(
@@ -190,10 +193,11 @@ final class WeddingPhotoStore {
                 weddingID: ActiveWedding.id.lowercased(),
                 eventID: eventID,
                 caption: item.caption.trimmed.nonEmpty,
-                isCover: item.isCover,
+                isCover: isCouple && item.isCover,
                 takenAt: item.takenAt,
                 fullName: item.fullName,
-                thumbName: item.thumbName
+                thumbName: item.thumbName,
+                uploaderID: guestID
             )
         }
         guard !jobs.isEmpty else { return }
@@ -227,7 +231,7 @@ final class WeddingPhotoStore {
     func resumeUploads() {
         startMonitoring()
         guard hasActiveJobs, !isUploading, isOnline else { return }
-        guard ChatSession.shared.isAdmin else { return }
+        guard WeddingContext.shared.canUploadWeddingPhotos else { return }
         isUploading = true
         beginBackgroundTime()
         Task {
@@ -251,6 +255,11 @@ final class WeddingPhotoStore {
                 var spent = queue[current]
                 spent.attempts += 1
                 spent.lastError = outcome.message
+                if Self.isRefusal(outcome.message) {
+                    // The couple has switched guest photos off: no point trying again.
+                    spent.attempts = WeddingUploadJob.maxAttempts
+                    notice = "The couple has turned off photo uploads"
+                }
                 let gaveUp = spent.attempts >= WeddingUploadJob.maxAttempts
                 queue[current] = spent
                 WeddingPhotoDisk.saveQueue(queue)
@@ -306,7 +315,8 @@ final class WeddingPhotoStore {
                 thumb_path: job.thumbPath,
                 caption: job.caption,
                 taken_at: job.takenAt.map(ChatJSON.isoString),
-                is_cover: job.isCover
+                is_cover: job.isCover,
+                uploaded_by: ChatSession.shared.userID?.lower.lowercased()
             )
             let row: WeddingPhoto = try await client
                 .from("event_photos")
@@ -324,6 +334,13 @@ final class WeddingPhotoStore {
             print("[WeddingWeek] upload attempt failed (job \(job.id.uuidString.prefix(8))): \(message)")
             return (false, message)
         }
+    }
+
+    /// The server said no (row-level security / permission), rather than a network hiccup.
+    private nonisolated static func isRefusal(_ message: String?) -> Bool {
+        guard let text = message?.lowercased() else { return false }
+        return text.contains("row-level security") || text.contains("42501")
+            || text.contains("403") || text.contains("unauthorized") || text.contains("permission denied")
     }
 
     /// A short reason for the logs: the timeout that fired, or the error's own words.
