@@ -47,20 +47,36 @@ nonisolated enum WeddingGroup: Sendable {
             url.scheme == scheme && url.host == "schedule"
         }
 
-        static func event(_ id: String) -> URL? {
+        /// One celebration; `wedding` names the wedding the celebration belongs to, so
+        /// the app can switch weddings before opening it. Older links without a wedding
+        /// keep working — the app then opens the event on whatever wedding is active.
+        static func event(_ id: String, wedding: String? = nil) -> URL? {
             var components = URLComponents()
             components.scheme = scheme
             components.host = "event"
             components.queryItems = [URLQueryItem(name: "id", value: id)]
+            if let wedding, !wedding.isEmpty {
+                components.queryItems?.append(URLQueryItem(name: "wedding", value: wedding))
+            }
             return components.url
         }
 
         /// The event id carried by a link, if it is one of ours and names an event.
         static func eventID(from url: URL) -> String? {
             guard url.scheme == scheme, url.host == "event" else { return nil }
-            return URLComponents(url: url, resolvingAgainstBaseURL: false)?
+            return queryValue("id", from: url)
+        }
+
+        /// The wedding id carried by an event link, if it names one.
+        static func weddingID(from url: URL) -> String? {
+            guard url.scheme == scheme, url.host == "event" else { return nil }
+            return queryValue("wedding", from: url)
+        }
+
+        private static func queryValue(_ name: String, from url: URL) -> String? {
+            URLComponents(url: url, resolvingAgainstBaseURL: false)?
                 .queryItems?
-                .first { $0.name == "id" }?
+                .first { $0.name == name }?
                 .value?
                 .nonEmpty
         }

@@ -14,10 +14,6 @@ struct AnnouncementsView: View {
     @State private var isComposing = false
     @State private var toast: String?
     @State private var toastTask: Task<Void, Never>?
-    // TEMPORARY — header diagnostics, TestFlight only. Remove with the panel below
-    // before the App Store submission.
-    @State private var headerFrame: CGRect = .zero
-    @State private var showsDiagnostics = false
 
     /// A snapshot of the note at the moment Send was tapped.
     private struct PendingSend: Identifiable {
@@ -46,8 +42,6 @@ struct AnnouncementsView: View {
             }
         }
         .animation(.calm, value: toast)
-        .onPreferenceChange(HeaderFrameKey.self) { headerFrame = $0 }
-        .overlay { diagnosticsPanel }
         .sheet(isPresented: $isComposing) {
             NewAnnouncementSheet(events: store.events) { title, message, destination in
                 isComposing = false
@@ -82,8 +76,7 @@ struct AnnouncementsView: View {
     // MARK: - Header
 
     /// Narrow windows (the closed folding iPhone, a Split View pane) collapse the
-    /// gold button to an icon-only circle instead of squeezing the words. The frame
-    /// capture feeds the diagnostics panel.
+    /// gold button to an icon-only circle instead of squeezing the words.
     private func headerRow<Compose: View>(@ViewBuilder compose: () -> Compose) -> some View {
         HStack(spacing: 10) {
             ChatBackButton()
@@ -97,16 +90,6 @@ struct AnnouncementsView: View {
                     .lineLimit(1)
                     .minimumScaleFactor(0.75)
                     .truncationMode(.tail)
-                    // TEMPORARY diagnostics trigger — remove with the panel.
-                    .onLongPressGesture(minimumDuration: 2) {
-                        guard HeaderDiagnostics.isEnabled else { return }
-                        BrandHaptics.soft()
-                        showsDiagnostics = true
-                    }
-                    .accessibilityAction(named: "Show layout numbers") {
-                        guard HeaderDiagnostics.isEnabled else { return }
-                        showsDiagnostics = true
-                    }
                 Text("From \(ActiveWedding.couple)")
                     .font(BrandLabel.font(size: 11, weight: .medium))
                     .foregroundStyle(BrandPalette.body)
@@ -132,22 +115,14 @@ struct AnnouncementsView: View {
         }
     }
 
-    /// Where the header actually landed, for the diagnostics panel.
+    /// The header: top padding of 8 inside the safe area, so the top row always sits
+    /// at least 8 pt from the top on every device and pose.
     private var header: some View {
-        // Header top = max(safeAreaInsets.top, 0) + 8: the padding sits OUTSIDE the
-        // captured frame, so the readout must show y ≥ 8 even when the top inset is 0
-        // (the folding iPhone's outer screen). The root tab container is top-aligned
-        // (ContentView) and can no longer shift this screen upward.
         ViewThatFits(in: .horizontal) {
             headerRow { newAnnouncementButton }
             headerRow { compactNewAnnouncementButton }
         }
         .padding(.top, 8)
-        .background {
-            GeometryReader { g in
-                Color.clear.preference(key: HeaderFrameKey.self, value: g.frame(in: .global))
-            }
-        }
     }
 
     private var newAnnouncementButton: some View {
@@ -303,68 +278,5 @@ struct AnnouncementsView: View {
         .padding(.vertical, 56)
         .padding(.horizontal, 20)
         .announcementPaper(cornerRadius: 22, isLatest: false)
-    }
-
-    // MARK: - TEMPORARY header diagnostics (TestFlight only — remove before App Store)
-
-    private var diagnosticsPanel: some View {
-        Group {
-            if showsDiagnostics {
-                ZStack {
-                    Color.black.opacity(0.55)
-                        .ignoresSafeArea()
-                        .onTapGesture { showsDiagnostics = false }
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("Header diagnostics")
-                            .font(.system(size: 13, weight: .semibold, design: .monospaced))
-                        Text(HeaderDiagnostics.readout)
-                            .font(.system(size: 12, design: .monospaced))
-                        Text("header x \(Int(headerFrame.minX)) y \(Int(headerFrame.minY)) w \(Int(headerFrame.width)) h \(Int(headerFrame.height))")
-                            .font(.system(size: 12, design: .monospaced))
-                        Text("scroll: none — page does not scroll")
-                            .font(.system(size: 12, design: .monospaced))
-                        Text("Tap anywhere to close")
-                            .font(.system(size: 11, design: .monospaced))
-                            .opacity(0.7)
-                    }
-                    .foregroundStyle(.white)
-                    .padding(18)
-                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-                    .padding(30)
-                }
-                .transition(.opacity)
-            }
-        }
-        .animation(.easeInOut(duration: 0.2), value: showsDiagnostics)
-    }
-}
-
-/// TEMPORARY — what the folding phone's window really reports. Reads the key window's
-/// own safe-area insets, which is what SwiftUI's layout was given. Shows only in
-/// TestFlight and sandbox builds, never an App Store build; remove entirely before
-/// the App Store submission.
-enum HeaderDiagnostics {
-    static let isEnabled = Bundle.main.appStoreReceiptURL?.lastPathComponent == "sandboxReceipt"
-
-    static var readout: String {
-        let window = UIApplication.shared.connectedScenes
-            .compactMap { $0 as? UIWindowScene }
-            .flatMap(\.windows)
-            .first { $0.isKeyWindow }
-        guard let window else { return "No key window" }
-        let inset = window.safeAreaInsets
-        return """
-        window \(Int(window.bounds.size.width)) \u{d7} \(Int(window.bounds.size.height))
-        insets  top \(inset.top)  left \(inset.left)
-                bottom \(inset.bottom)  right \(inset.right)
-        """
-    }
-}
-
-/// The header row's frame in global coordinates, captured where it really landed.
-private struct HeaderFrameKey: PreferenceKey {
-    static var defaultValue: CGRect = .zero
-    static func reduce(value: inout CGRect, nextValue: () -> CGRect) {
-        if value == .zero { value = nextValue() }
     }
 }

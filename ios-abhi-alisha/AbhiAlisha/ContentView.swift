@@ -95,8 +95,20 @@ struct WeddingShell: View {
             // Join links are handled by the root gate.
             guard WeddingContext.joinCode(from: url) == nil,
                   WeddingContext.cohostCode(from: url) == nil else { return }
-            // Where a tap on a widget, or on the Live Activity, lands.
+            // Where a tap on a widget, the Live Activity, or the Control Centre control
+            // lands.
             guard let tab = router.handle(url) else { return }
+            // The link can name a wedding other than the one on screen. Switch to it
+            // first, then land: the route is held while the switch runs, and the
+            // destination screen keeps its pending target until its events have loaded.
+            if let weddingID = WeddingGroup.Link.weddingID(from: url),
+               weddingID.lowercased() != WeddingContext.shared.weddingID.lowercased() {
+                Task {
+                    await WeddingContext.shared.prepareForPush(weddingID: weddingID)
+                    withAnimation(.calm) { selection = tab }
+                }
+                return
+            }
             withAnimation(.calm) { selection = tab }
         }
         .safeAreaInset(edge: .top, spacing: 0) {
