@@ -808,7 +808,7 @@
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -851,7 +851,7 @@
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
@@ -944,7 +944,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = MilniWeddingClip/MilniWeddingClip.entitlements;
+				CODE_SIGN_ENTITLEMENTS = AbhiAlishaClip/AbhiAlishaClip.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
@@ -972,7 +972,7 @@
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -981,7 +981,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = MilniWeddingClip/MilniWeddingClip.entitlements;
+				CODE_SIGN_ENTITLEMENTS = AbhiAlishaClip/AbhiAlishaClip.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
@@ -1009,14 +1009,14 @@
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
 		XX063E4F6097F29D18815BXX /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = MilniWeddingWidget/MilniWeddingWidget.entitlements;
+				CODE_SIGN_ENTITLEMENTS = AbhiAlishaWidget/AbhiAlishaWidget.entitlements;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -1041,7 +1041,7 @@
 		XX4CC71F635D02DC74527AXX /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = MilniWeddingWidget/MilniWeddingWidget.entitlements;
+				CODE_SIGN_ENTITLEMENTS = AbhiAlishaWidget/AbhiAlishaWidget.entitlements;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -1066,7 +1066,7 @@
 		XX6DA9996569D17D463A14XX /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = MilniWeddingWatchWidget/MilniWeddingWatchWidget.entitlements;
+				CODE_SIGN_ENTITLEMENTS = AbhiAlishaWatchWidget/AbhiAlishaWatchWidget.entitlements;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PRODUCT_BUNDLE_IDENTIFIER = com.businessgliders.abhialisha.abhialishawatch.widgetextension;
@@ -1091,7 +1091,7 @@
 		XX988B757A878EF48084D8XX /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = MilniWeddingWatch/MilniWeddingWatch.entitlements;
+				CODE_SIGN_ENTITLEMENTS = AbhiAlishaWatch/AbhiAlishaWatch.entitlements;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PRODUCT_BUNDLE_IDENTIFIER = com.businessgliders.abhialisha.abhialishawatch;
 				SDKROOT = watchos;
@@ -1121,7 +1121,7 @@
 		XXA1960709A55A4C228466XX /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = MilniWeddingWatch/MilniWeddingWatch.entitlements;
+				CODE_SIGN_ENTITLEMENTS = AbhiAlishaWatch/AbhiAlishaWatch.entitlements;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PRODUCT_BUNDLE_IDENTIFIER = com.businessgliders.abhialisha.abhialishawatch;
 				SDKROOT = watchos;
@@ -1151,7 +1151,7 @@
 		XXA77AD6A2CED9779AB73DXX /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = MilniWeddingWatchWidget/MilniWeddingWatchWidget.entitlements;
+				CODE_SIGN_ENTITLEMENTS = AbhiAlishaWatchWidget/AbhiAlishaWatchWidget.entitlements;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PRODUCT_BUNDLE_IDENTIFIER = com.businessgliders.abhialisha.abhialishawatch.widgetextension;
