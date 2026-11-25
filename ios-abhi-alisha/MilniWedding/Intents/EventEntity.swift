@@ -62,7 +62,7 @@ enum IntentSchedule {
             return cached.filter { $0.isActive != false }
         }
         // Abhi & Alisha ship a bundled copy; other weddings simply have nothing yet.
-        return ActiveWedding.snapshot.isAbhiAlisha ? WeddingTimeline.load().events : []
+        return ActiveWedding.snapshot.isMilniWedding ? WeddingTimeline.load().events : []
     }
 
     /// What's underway, else what's next.

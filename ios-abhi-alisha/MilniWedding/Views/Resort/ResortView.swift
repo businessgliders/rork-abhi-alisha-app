@@ -23,7 +23,7 @@ struct PhotosAndMaps: View {
     private static let mapsWidth: CGFloat = 132
 
     /// A&A's pinned resort map is drawn on the bundled artwork, so it keeps using it.
-    private var usesBundledMaps: Bool { ActiveWedding.snapshot.isAbhiAlisha }
+    private var usesBundledMaps: Bool { ActiveWedding.snapshot.isMilniWedding }
 
     private var hasResortMap: Bool { usesBundledMaps || stay.resortMap != nil }
     private var hasWingMap: Bool { usesBundledMaps || stay.wingMap != nil }

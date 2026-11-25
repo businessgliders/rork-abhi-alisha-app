@@ -156,7 +156,7 @@ final class ContentStore {
     /// content, else nothing (the section is hidden).
     var stay: StayInfo? {
         if let stayRow { return stayRow }
-        return ActiveWedding.snapshot.isAbhiAlisha ? StayInfo.abhiAlishaBundled : nil
+        return ActiveWedding.snapshot.isMilniWedding ? StayInfo.abhiAlishaBundled : nil
     }
 
     /// Re-reads content on the next refresh (after a host saves something).

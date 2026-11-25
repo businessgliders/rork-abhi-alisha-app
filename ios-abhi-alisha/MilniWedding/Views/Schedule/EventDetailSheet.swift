@@ -492,7 +492,7 @@ struct EventDetailSheet: View {
     }
 
     private var resortLabel: String? {
-        ActiveWedding.snapshot.isAbhiAlisha ? event.resortMapLabel : nil
+        ActiveWedding.snapshot.isMilniWedding ? event.resortMapLabel : nil
     }
 
     /// Every plotted celebration, so the number on this pin matches the legend's.
@@ -502,7 +502,7 @@ struct EventDetailSheet: View {
 
     private var mapPin: ResortMapPin? {
         // The resort map is AVA's: only Abhi & Alisha's events are placed on it.
-        guard ActiveWedding.snapshot.isAbhiAlisha else { return nil }
+        guard ActiveWedding.snapshot.isMilniWedding else { return nil }
         return mapPins.first { $0.id == event.id }
     }
 

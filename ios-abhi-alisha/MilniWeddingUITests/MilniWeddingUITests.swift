@@ -1,13 +1,13 @@
 //
-//  AbhiAlishaUITests.swift
-//  AbhiAlishaUITests
+//  MilniWeddingUITests.swift
+//  MilniWeddingUITests
 //
 //  Created by Rork on August 13, 2026.
 //
 
 import XCTest
 
-final class AbhiAlishaUITests: XCTestCase {
+final class MilniWeddingUITests: XCTestCase {
 
     override func setUpWithError() throws {
         // Put setup code here. This method is called before the invocation of each test method in the class.

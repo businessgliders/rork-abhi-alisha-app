@@ -7,11 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		XX2F2D719C0EF179FE782EXX /* AbhiAlishaWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = XXFECD93F8CE8391DDF12EXX /* AbhiAlishaWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		XX2F454EBB60C27EB3313AXX /* AbhiAlishaWatchWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = XX9A918967852AE91A553EXX /* AbhiAlishaWatchWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		XX9F62D95E8263ACF0CA07XX /* AbhiAlishaWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = XX877ED8969F1802A998B6XX /* AbhiAlishaWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		C11BF0000000000000000001 /* MilniWeddingClip.app in Embed App Clips */ = {isa = PBXBuildFile; fileRef = C11BF0000000000000000004 /* MilniWeddingClip.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		XX2F2D719C0EF179FE782EXX /* MilniWeddingWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = XXFECD93F8CE8391DDF12EXX /* MilniWeddingWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		XX2F454EBB60C27EB3313AXX /* MilniWeddingWatchWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = XX9A918967852AE91A553EXX /* MilniWeddingWatchWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		XX9F62D95E8263ACF0CA07XX /* MilniWeddingWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = XX877ED8969F1802A998B6XX /* MilniWeddingWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		XXCB0C833A4E7DDE353CE0XX /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = XX17F496E7391AF4178246XX /* Supabase */; };
-		C11BF0000000000000000001 /* AbhiAlishaClip.app in Embed App Clips */ = {isa = PBXBuildFile; fileRef = C11BF0000000000000000004 /* AbhiAlishaClip.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -20,51 +20,62 @@
 			containerPortal = 105FC5722E9EAD3100EA8BCF /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 105FC5792E9EAD3100EA8BCF;
-			remoteInfo = AbhiAlisha;
+			remoteInfo = MilniWedding;
 		};
 		105FC5942E9EAD3200EA8BCF /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 105FC5722E9EAD3100EA8BCF /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 105FC5792E9EAD3100EA8BCF;
-			remoteInfo = AbhiAlisha;
-		};
-		XX4CDA6802173918904B73XX /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 105FC5722E9EAD3100EA8BCF /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = XX2A266D0DE95353D76097XX;
-			remoteInfo = AbhiAlishaWatch;
-		};
-		XX5747B1DA2DED004B3D52XX /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 105FC5722E9EAD3100EA8BCF /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = XX5D98368F33E386823FB9XX;
-			remoteInfo = AbhiAlishaWatchWidget;
-		};
-		XXE35D517854BF800EC59CXX /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 105FC5722E9EAD3100EA8BCF /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = XX170BB40174A02606543BXX;
-			remoteInfo = AbhiAlishaWidget;
+			remoteInfo = MilniWedding;
 		};
 		C11BF0000000000000000002 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 105FC5722E9EAD3100EA8BCF /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = C11BF000000000000000000A;
-			remoteInfo = AbhiAlishaClip;
+			remoteInfo = MilniWeddingClip;
+		};
+		XX4CDA6802173918904B73XX /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 105FC5722E9EAD3100EA8BCF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = XX2A266D0DE95353D76097XX;
+			remoteInfo = MilniWeddingWatch;
+		};
+		XX5747B1DA2DED004B3D52XX /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 105FC5722E9EAD3100EA8BCF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = XX5D98368F33E386823FB9XX;
+			remoteInfo = MilniWeddingWatchWidget;
+		};
+		XXE35D517854BF800EC59CXX /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 105FC5722E9EAD3100EA8BCF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = XX170BB40174A02606543BXX;
+			remoteInfo = MilniWeddingWidget;
 		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		C11BF0000000000000000003 /* Embed App Clips */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/AppClips";
+			dstSubfolderSpec = 16;
+			files = (
+				C11BF0000000000000000001 /* MilniWeddingClip.app in Embed App Clips */,
+			);
+			name = "Embed App Clips";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		FF7E4C2A91D4480FBA30C61B /* Embed Foundation Extensions */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				XX2F454EBB60C27EB3313AXX /* AbhiAlishaWatchWidget.appex in Embed Foundation Extensions */,
+				XX2F454EBB60C27EB3313AXX /* MilniWeddingWatchWidget.appex in Embed Foundation Extensions */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			name = "Embed Foundation Extensions";
@@ -75,7 +86,7 @@
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				XX9F62D95E8263ACF0CA07XX /* AbhiAlishaWatch.app in Embed Watch Content */,
+				XX9F62D95E8263ACF0CA07XX /* MilniWeddingWatch.app in Embed Watch Content */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			name = "Embed Watch Content";
@@ -86,84 +97,81 @@
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				XX2F2D719C0EF179FE782EXX /* AbhiAlishaWidget.appex in Embed Foundation Extensions */,
+				XX2F2D719C0EF179FE782EXX /* MilniWeddingWidget.appex in Embed Foundation Extensions */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			name = "Embed Foundation Extensions";
 			dstPath = "";
 			dstSubfolderSpec = 13;
 		};
-		C11BF0000000000000000003 /* Embed App Clips */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "$(CONTENTS_FOLDER_PATH)/AppClips";
-			dstSubfolderSpec = 16;
-			files = (
-				C11BF0000000000000000001 /* AbhiAlishaClip.app in Embed App Clips */,
-			);
-			name = "Embed App Clips";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		105FC57A2E9EAD3100EA8BCF /* AbhiAlisha.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AbhiAlisha.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		105FC5892E9EAD3200EA8BCF /* AbhiAlishaTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AbhiAlishaTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		105FC5932E9EAD3200EA8BCF /* AbhiAlishaUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AbhiAlishaUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		XX877ED8969F1802A998B6XX /* AbhiAlishaWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AbhiAlishaWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		XX9A918967852AE91A553EXX /* AbhiAlishaWatchWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = AbhiAlishaWatchWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
-		XXFECD93F8CE8391DDF12EXX /* AbhiAlishaWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = AbhiAlishaWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
-		C11BF0000000000000000004 /* AbhiAlishaClip.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AbhiAlishaClip.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		105FC57A2E9EAD3100EA8BCF /* MilniWedding.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MilniWedding.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		105FC5892E9EAD3200EA8BCF /* MilniWeddingTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MilniWeddingTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		105FC5932E9EAD3200EA8BCF /* MilniWeddingUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MilniWeddingUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		C11BF0000000000000000004 /* MilniWeddingClip.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MilniWeddingClip.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		XX877ED8969F1802A998B6XX /* MilniWeddingWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MilniWeddingWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		XX9A918967852AE91A553EXX /* MilniWeddingWatchWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MilniWeddingWatchWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		XXFECD93F8CE8391DDF12EXX /* MilniWeddingWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MilniWeddingWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		FF9E4C2A91D4480FBA30C63D /* Exceptions for "AbhiAlishaWatch" folder in "AbhiAlishaWatch" target */ = {
+		C11BF0000000000000000005 /* Exceptions for "AbhiAlishaClip" folder in "MilniWeddingClip" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				AbhiAlishaClip.entitlements,
+			);
+			target = C11BF000000000000000000A /* MilniWeddingClip */;
+		};
+		FF9E4C2A91D4480FBA30C63D /* Exceptions for "AbhiAlishaWatch" folder in "MilniWeddingWatch" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				AbhiAlishaWatch.entitlements,
 			);
-			target = XX2A266D0DE95353D76097XX /* AbhiAlishaWatch */;
+			target = XX2A266D0DE95353D76097XX /* MilniWeddingWatch */;
 		};
-		XX769B2448490ABDC44B32XX /* Exceptions for "AbhiAlishaWatchWidget" folder in "AbhiAlishaWatchWidget" target */ = {
+		XX769B2448490ABDC44B32XX /* Exceptions for "AbhiAlishaWatchWidget" folder in "MilniWeddingWatchWidget" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
 				AbhiAlishaWatchWidget.entitlements,
 			);
-			target = XX5D98368F33E386823FB9XX /* AbhiAlishaWatchWidget */;
+			target = XX5D98368F33E386823FB9XX /* MilniWeddingWatchWidget */;
 		};
-		XX9E3459D161D25BA806C0XX /* Exceptions for "AbhiAlishaWidget" folder in "AbhiAlishaWidget" target */ = {
+		XX9E3459D161D25BA806C0XX /* Exceptions for "AbhiAlishaWidget" folder in "MilniWeddingWidget" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
 				AbhiAlishaWidget.entitlements,
 			);
-			target = XX170BB40174A02606543BXX /* AbhiAlishaWidget */;
-		};
-		C11BF0000000000000000005 /* Exceptions for "AbhiAlishaClip" folder in "AbhiAlishaClip" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				AbhiAlishaClip.entitlements,
-			);
-			target = C11BF000000000000000000A /* AbhiAlishaClip */;
+			target = XX170BB40174A02606543BXX /* MilniWeddingWidget */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		105FC57C2E9EAD3100EA8BCF /* AbhiAlisha */ = {
+		105FC57C2E9EAD3100EA8BCF /* MilniWedding */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = AbhiAlisha;
+			path = MilniWedding;
 			sourceTree = "<group>";
 		};
-		105FC58C2E9EAD3200EA8BCF /* AbhiAlishaTests */ = {
+		105FC58C2E9EAD3200EA8BCF /* MilniWeddingTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = AbhiAlishaTests;
+			path = MilniWeddingTests;
 			sourceTree = "<group>";
 		};
-		105FC5962E9EAD3200EA8BCF /* AbhiAlishaUITests */ = {
+		105FC5962E9EAD3200EA8BCF /* MilniWeddingUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = AbhiAlishaUITests;
+			path = MilniWeddingUITests;
 			sourceTree = "<group>";
+		};
+		C11BF0000000000000000006 /* AbhiAlishaClip */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = AbhiAlishaClip;
+			sourceTree = "<group>";
+			exceptions = (
+				C11BF0000000000000000005 /* Exceptions for "AbhiAlishaClip" folder in "MilniWeddingClip" target */,
+			);
 		};
 		FF8E4C2A91D4480FBA30C62C /* WatchShared */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
@@ -180,7 +188,7 @@
 			path = AbhiAlishaWatch;
 			sourceTree = "<group>";
 			exceptions = (
-				FF9E4C2A91D4480FBA30C63D /* Exceptions for "AbhiAlishaWatch" folder in "AbhiAlishaWatch" target */,
+				FF9E4C2A91D4480FBA30C63D /* Exceptions for "AbhiAlishaWatch" folder in "MilniWeddingWatch" target */,
 			);
 		};
 		XX57B8A0AC90CE3D9AB644XX /* AbhiAlishaWatchWidget */ = {
@@ -188,7 +196,7 @@
 			path = AbhiAlishaWatchWidget;
 			sourceTree = "<group>";
 			exceptions = (
-				XX769B2448490ABDC44B32XX /* Exceptions for "AbhiAlishaWatchWidget" folder in "AbhiAlishaWatchWidget" target */,
+				XX769B2448490ABDC44B32XX /* Exceptions for "AbhiAlishaWatchWidget" folder in "MilniWeddingWatchWidget" target */,
 			);
 		};
 		XXB04757A74359A174D6BEXX /* AbhiAlishaWidget */ = {
@@ -196,15 +204,7 @@
 			path = AbhiAlishaWidget;
 			sourceTree = "<group>";
 			exceptions = (
-				XX9E3459D161D25BA806C0XX /* Exceptions for "AbhiAlishaWidget" folder in "AbhiAlishaWidget" target */,
-			);
-		};
-		C11BF0000000000000000006 /* AbhiAlishaClip */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = AbhiAlishaClip;
-			sourceTree = "<group>";
-			exceptions = (
-				C11BF0000000000000000005 /* Exceptions for "AbhiAlishaClip" folder in "AbhiAlishaClip" target */,
+				XX9E3459D161D25BA806C0XX /* Exceptions for "AbhiAlishaWidget" folder in "MilniWeddingWidget" target */,
 			);
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -232,6 +232,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		C11BF0000000000000000007 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		XX7387B1691134468DE4D3XX /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -253,23 +260,16 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		C11BF0000000000000000007 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		105FC5712E9EAD3100EA8BCF = {
 			isa = PBXGroup;
 			children = (
-				105FC57C2E9EAD3100EA8BCF /* AbhiAlisha */,
+				105FC57C2E9EAD3100EA8BCF /* MilniWedding */,
 				SHARED00CODE00GROUP00001 /* Shared */,
-				105FC58C2E9EAD3200EA8BCF /* AbhiAlishaTests */,
-				105FC5962E9EAD3200EA8BCF /* AbhiAlishaUITests */,
+				105FC58C2E9EAD3200EA8BCF /* MilniWeddingTests */,
+				105FC5962E9EAD3200EA8BCF /* MilniWeddingUITests */,
 				105FC57B2E9EAD3100EA8BCF /* Products */,
 				XXB04757A74359A174D6BEXX /* AbhiAlishaWidget */,
 				XX0E643F35DD50EB1BB2C2XX /* AbhiAlishaWatch */,
@@ -282,13 +282,13 @@
 		105FC57B2E9EAD3100EA8BCF /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				105FC57A2E9EAD3100EA8BCF /* AbhiAlisha.app */,
-				105FC5892E9EAD3200EA8BCF /* AbhiAlishaTests.xctest */,
-				105FC5932E9EAD3200EA8BCF /* AbhiAlishaUITests.xctest */,
-				XXFECD93F8CE8391DDF12EXX /* AbhiAlishaWidget.appex */,
-				XX877ED8969F1802A998B6XX /* AbhiAlishaWatch.app */,
-				XX9A918967852AE91A553EXX /* AbhiAlishaWatchWidget.appex */,
-				C11BF0000000000000000004 /* AbhiAlishaClip.app */,
+				105FC57A2E9EAD3100EA8BCF /* MilniWedding.app */,
+				105FC5892E9EAD3200EA8BCF /* MilniWeddingTests.xctest */,
+				105FC5932E9EAD3200EA8BCF /* MilniWeddingUITests.xctest */,
+				XXFECD93F8CE8391DDF12EXX /* MilniWeddingWidget.appex */,
+				XX877ED8969F1802A998B6XX /* MilniWeddingWatch.app */,
+				XX9A918967852AE91A553EXX /* MilniWeddingWatchWidget.appex */,
+				C11BF0000000000000000004 /* MilniWeddingClip.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -296,9 +296,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		105FC5792E9EAD3100EA8BCF /* AbhiAlisha */ = {
+		105FC5792E9EAD3100EA8BCF /* MilniWedding */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 105FC59D2E9EAD3200EA8BCF /* Build configuration list for PBXNativeTarget "AbhiAlisha" */;
+			buildConfigurationList = 105FC59D2E9EAD3200EA8BCF /* Build configuration list for PBXNativeTarget "MilniWedding" */;
 			buildPhases = (
 				105FC5762E9EAD3100EA8BCF /* Sources */,
 				105FC5772E9EAD3100EA8BCF /* Frameworks */,
@@ -313,20 +313,20 @@
 				XX5733D1251AF51D5B0930XX /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				105FC57C2E9EAD3100EA8BCF /* AbhiAlisha */,
+				105FC57C2E9EAD3100EA8BCF /* MilniWedding */,
 				SHARED00CODE00GROUP00001 /* Shared */,
 			);
-			name = AbhiAlisha;
+			name = MilniWedding;
 			packageProductDependencies = (
 				XX17F496E7391AF4178246XX /* Supabase */,
 			);
-			productName = AbhiAlisha;
-			productReference = 105FC57A2E9EAD3100EA8BCF /* AbhiAlisha.app */;
+			productName = MilniWedding;
+			productReference = 105FC57A2E9EAD3100EA8BCF /* MilniWedding.app */;
 			productType = "com.apple.product-type.application";
 		};
-		105FC5882E9EAD3200EA8BCF /* AbhiAlishaTests */ = {
+		105FC5882E9EAD3200EA8BCF /* MilniWeddingTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 105FC5A02E9EAD3200EA8BCF /* Build configuration list for PBXNativeTarget "AbhiAlishaTests" */;
+			buildConfigurationList = 105FC5A02E9EAD3200EA8BCF /* Build configuration list for PBXNativeTarget "MilniWeddingTests" */;
 			buildPhases = (
 				105FC5852E9EAD3200EA8BCF /* Sources */,
 				105FC5862E9EAD3200EA8BCF /* Frameworks */,
@@ -338,18 +338,18 @@
 				105FC58B2E9EAD3200EA8BCF /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				105FC58C2E9EAD3200EA8BCF /* AbhiAlishaTests */,
+				105FC58C2E9EAD3200EA8BCF /* MilniWeddingTests */,
 			);
-			name = AbhiAlishaTests;
+			name = MilniWeddingTests;
 			packageProductDependencies = (
 			);
-			productName = AbhiAlishaTests;
-			productReference = 105FC5892E9EAD3200EA8BCF /* AbhiAlishaTests.xctest */;
+			productName = MilniWeddingTests;
+			productReference = 105FC5892E9EAD3200EA8BCF /* MilniWeddingTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		105FC5922E9EAD3200EA8BCF /* AbhiAlishaUITests */ = {
+		105FC5922E9EAD3200EA8BCF /* MilniWeddingUITests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 105FC5A32E9EAD3200EA8BCF /* Build configuration list for PBXNativeTarget "AbhiAlishaUITests" */;
+			buildConfigurationList = 105FC5A32E9EAD3200EA8BCF /* Build configuration list for PBXNativeTarget "MilniWeddingUITests" */;
 			buildPhases = (
 				105FC58F2E9EAD3200EA8BCF /* Sources */,
 				105FC5902E9EAD3200EA8BCF /* Frameworks */,
@@ -361,83 +361,18 @@
 				105FC5952E9EAD3200EA8BCF /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				105FC5962E9EAD3200EA8BCF /* AbhiAlishaUITests */,
+				105FC5962E9EAD3200EA8BCF /* MilniWeddingUITests */,
 			);
-			name = AbhiAlishaUITests;
+			name = MilniWeddingUITests;
 			packageProductDependencies = (
 			);
-			productName = AbhiAlishaUITests;
-			productReference = 105FC5932E9EAD3200EA8BCF /* AbhiAlishaUITests.xctest */;
+			productName = MilniWeddingUITests;
+			productReference = 105FC5932E9EAD3200EA8BCF /* MilniWeddingUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
-		XX170BB40174A02606543BXX /* AbhiAlishaWidget */ = {
+		C11BF000000000000000000A /* MilniWeddingClip */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = XXB8C89A447FB81CA09F6EXX /* Build configuration list for PBXNativeTarget "AbhiAlishaWidget" */;
-			buildPhases = (
-				XX9846A71882101663F647XX /* Sources */,
-				XXC42E8B73A8E96FAFE7CCXX /* Frameworks */,
-				XXFF0F059C1E5927B468C1XX /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = AbhiAlishaWidget;
-			productName = AbhiAlishaWidget;
-			productReference = XXFECD93F8CE8391DDF12EXX /* AbhiAlishaWidget.appex */;
-			productType = "com.apple.product-type.app-extension";
-			fileSystemSynchronizedGroups = (
-				XXB04757A74359A174D6BEXX /* AbhiAlishaWidget */,
-				SHARED00CODE00GROUP00001 /* Shared */,
-			);
-		};
-		XX2A266D0DE95353D76097XX /* AbhiAlishaWatch */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = XXC58AAB310494ECFAA1E5XX /* Build configuration list for PBXNativeTarget "AbhiAlishaWatch" */;
-			buildPhases = (
-				XX395EFA1E9FE92318041CXX /* Sources */,
-				XX7387B1691134468DE4D3XX /* Frameworks */,
-				XXA38758DE108935308AA6XX /* Resources */,
-				FF7E4C2A91D4480FBA30C61B /* Embed Foundation Extensions */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				XXEE6C5F1FD54F8336D547XX /* PBXTargetDependency */,
-			);
-			name = AbhiAlishaWatch;
-			productName = AbhiAlishaWatch;
-			productReference = XX877ED8969F1802A998B6XX /* AbhiAlishaWatch.app */;
-			productType = "com.apple.product-type.application";
-			fileSystemSynchronizedGroups = (
-				XX0E643F35DD50EB1BB2C2XX /* AbhiAlishaWatch */,
-				FF8E4C2A91D4480FBA30C62C /* WatchShared */,
-			);
-		};
-		XX5D98368F33E386823FB9XX /* AbhiAlishaWatchWidget */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = XXDC97FCEEF922CADC0B65XX /* Build configuration list for PBXNativeTarget "AbhiAlishaWatchWidget" */;
-			buildPhases = (
-				XXE3CAB98CB31052CE0051XX /* Sources */,
-				XXE1E171CED766A7EC6FFCXX /* Frameworks */,
-				XX44EFCBE7FD2BD02E6DF5XX /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = AbhiAlishaWatchWidget;
-			productName = AbhiAlishaWatchWidget;
-			productReference = XX9A918967852AE91A553EXX /* AbhiAlishaWatchWidget.appex */;
-			productType = "com.apple.product-type.app-extension";
-			fileSystemSynchronizedGroups = (
-				XX57B8A0AC90CE3D9AB644XX /* AbhiAlishaWatchWidget */,
-				FF8E4C2A91D4480FBA30C62C /* WatchShared */,
-			);
-		};
-		C11BF000000000000000000A /* AbhiAlishaClip */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = C11BF000000000000000000E /* Build configuration list for PBXNativeTarget "AbhiAlishaClip" */;
+			buildConfigurationList = C11BF000000000000000000E /* Build configuration list for PBXNativeTarget "MilniWeddingClip" */;
 			buildPhases = (
 				C11BF0000000000000000009 /* Sources */,
 				C11BF0000000000000000007 /* Frameworks */,
@@ -450,10 +385,75 @@
 			fileSystemSynchronizedGroups = (
 				C11BF0000000000000000006 /* AbhiAlishaClip */,
 			);
-			name = AbhiAlishaClip;
-			productName = AbhiAlishaClip;
-			productReference = C11BF0000000000000000004 /* AbhiAlishaClip.app */;
+			name = MilniWeddingClip;
+			productName = MilniWeddingClip;
+			productReference = C11BF0000000000000000004 /* MilniWeddingClip.app */;
 			productType = "com.apple.product-type.application.on-demand-install-capable";
+		};
+		XX170BB40174A02606543BXX /* MilniWeddingWidget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = XXB8C89A447FB81CA09F6EXX /* Build configuration list for PBXNativeTarget "MilniWeddingWidget" */;
+			buildPhases = (
+				XX9846A71882101663F647XX /* Sources */,
+				XXC42E8B73A8E96FAFE7CCXX /* Frameworks */,
+				XXFF0F059C1E5927B468C1XX /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = MilniWeddingWidget;
+			productName = MilniWeddingWidget;
+			productReference = XXFECD93F8CE8391DDF12EXX /* MilniWeddingWidget.appex */;
+			productType = "com.apple.product-type.app-extension";
+			fileSystemSynchronizedGroups = (
+				XXB04757A74359A174D6BEXX /* AbhiAlishaWidget */,
+				SHARED00CODE00GROUP00001 /* Shared */,
+			);
+		};
+		XX2A266D0DE95353D76097XX /* MilniWeddingWatch */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = XXC58AAB310494ECFAA1E5XX /* Build configuration list for PBXNativeTarget "MilniWeddingWatch" */;
+			buildPhases = (
+				XX395EFA1E9FE92318041CXX /* Sources */,
+				XX7387B1691134468DE4D3XX /* Frameworks */,
+				XXA38758DE108935308AA6XX /* Resources */,
+				FF7E4C2A91D4480FBA30C61B /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				XXEE6C5F1FD54F8336D547XX /* PBXTargetDependency */,
+			);
+			name = MilniWeddingWatch;
+			productName = MilniWeddingWatch;
+			productReference = XX877ED8969F1802A998B6XX /* MilniWeddingWatch.app */;
+			productType = "com.apple.product-type.application";
+			fileSystemSynchronizedGroups = (
+				XX0E643F35DD50EB1BB2C2XX /* AbhiAlishaWatch */,
+				FF8E4C2A91D4480FBA30C62C /* WatchShared */,
+			);
+		};
+		XX5D98368F33E386823FB9XX /* MilniWeddingWatchWidget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = XXDC97FCEEF922CADC0B65XX /* Build configuration list for PBXNativeTarget "MilniWeddingWatchWidget" */;
+			buildPhases = (
+				XXE3CAB98CB31052CE0051XX /* Sources */,
+				XXE1E171CED766A7EC6FFCXX /* Frameworks */,
+				XX44EFCBE7FD2BD02E6DF5XX /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = MilniWeddingWatchWidget;
+			productName = MilniWeddingWatchWidget;
+			productReference = XX9A918967852AE91A553EXX /* MilniWeddingWatchWidget.appex */;
+			productType = "com.apple.product-type.app-extension";
+			fileSystemSynchronizedGroups = (
+				XX57B8A0AC90CE3D9AB644XX /* AbhiAlishaWatchWidget */,
+				FF8E4C2A91D4480FBA30C62C /* WatchShared */,
+			);
 		};
 /* End PBXNativeTarget section */
 
@@ -478,7 +478,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 105FC5752E9EAD3100EA8BCF /* Build configuration list for PBXProject "AbhiAlisha" */;
+			buildConfigurationList = 105FC5752E9EAD3100EA8BCF /* Build configuration list for PBXProject "MilniWedding" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -492,13 +492,13 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				105FC5792E9EAD3100EA8BCF /* AbhiAlisha */,
-				105FC5882E9EAD3200EA8BCF /* AbhiAlishaTests */,
-				105FC5922E9EAD3200EA8BCF /* AbhiAlishaUITests */,
-				XX170BB40174A02606543BXX /* AbhiAlishaWidget */,
-				XX2A266D0DE95353D76097XX /* AbhiAlishaWatch */,
-				XX5D98368F33E386823FB9XX /* AbhiAlishaWatchWidget */,
-				C11BF000000000000000000A /* AbhiAlishaClip */,
+				105FC5792E9EAD3100EA8BCF /* MilniWedding */,
+				105FC5882E9EAD3200EA8BCF /* MilniWeddingTests */,
+				105FC5922E9EAD3200EA8BCF /* MilniWeddingUITests */,
+				XX170BB40174A02606543BXX /* MilniWeddingWidget */,
+				XX2A266D0DE95353D76097XX /* MilniWeddingWatch */,
+				XX5D98368F33E386823FB9XX /* MilniWeddingWatchWidget */,
+				C11BF000000000000000000A /* MilniWeddingClip */,
 			);
 			packageReferences = (
 				XXA26CCC1C14E04A80BED3XX /* XCRemoteSwiftPackageReference "supabase-swift" */,
@@ -528,6 +528,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		C11BF0000000000000000008 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		XX44EFCBE7FD2BD02E6DF5XX /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -543,13 +550,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		XXFF0F059C1E5927B468C1XX /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		C11BF0000000000000000008 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -580,6 +580,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		C11BF0000000000000000009 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		XX395EFA1E9FE92318041CXX /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -601,45 +608,38 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		C11BF0000000000000000009 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
 		105FC58B2E9EAD3200EA8BCF /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 105FC5792E9EAD3100EA8BCF /* AbhiAlisha */;
+			target = 105FC5792E9EAD3100EA8BCF /* MilniWedding */;
 			targetProxy = 105FC58A2E9EAD3200EA8BCF /* PBXContainerItemProxy */;
 		};
 		105FC5952E9EAD3200EA8BCF /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 105FC5792E9EAD3100EA8BCF /* AbhiAlisha */;
+			target = 105FC5792E9EAD3100EA8BCF /* MilniWedding */;
 			targetProxy = 105FC5942E9EAD3200EA8BCF /* PBXContainerItemProxy */;
+		};
+		C11BF000000000000000000B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = C11BF000000000000000000A /* MilniWeddingClip */;
+			targetProxy = C11BF0000000000000000002 /* PBXContainerItemProxy */;
 		};
 		XX5733D1251AF51D5B0930XX /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = XX2A266D0DE95353D76097XX /* AbhiAlishaWatch */;
+			target = XX2A266D0DE95353D76097XX /* MilniWeddingWatch */;
 			targetProxy = XX4CDA6802173918904B73XX /* PBXContainerItemProxy */;
 		};
 		XX6EB980879C0260862FABXX /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = XX170BB40174A02606543BXX /* AbhiAlishaWidget */;
+			target = XX170BB40174A02606543BXX /* MilniWeddingWidget */;
 			targetProxy = XXE35D517854BF800EC59CXX /* PBXContainerItemProxy */;
 		};
 		XXEE6C5F1FD54F8336D547XX /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = XX5D98368F33E386823FB9XX /* AbhiAlishaWatchWidget */;
+			target = XX5D98368F33E386823FB9XX /* MilniWeddingWatchWidget */;
 			targetProxy = XX5747B1DA2DED004B3D52XX /* PBXContainerItemProxy */;
-		};
-		C11BF000000000000000000B /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = C11BF000000000000000000A /* AbhiAlishaClip */;
-			targetProxy = C11BF0000000000000000002 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -774,7 +774,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = AbhiAlisha/AbhiAlisha.entitlements;
+				CODE_SIGN_ENTITLEMENTS = MilniWedding/MilniWedding.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
@@ -786,7 +786,7 @@
 				INFOPLIST_KEY_NSCalendarsWriteOnlyAccessUsageDescription = "Add wedding celebrations to your own calendar so you never miss one.";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Photograph your outfits for each celebration, or, for the couple, take Wedding Week photos that are shared with every guest.";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Face ID keeps the couple’s area private on this phone.";
-				INFOPLIST_KEY_CFBundleDisplayName = Milni;
+				INFOPLIST_KEY_CFBundleDisplayName = "Milni Wedding";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Save wedding week photos to your photo library.";
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_NSSupportsLiveActivitiesFrequentUpdates = YES;
@@ -817,7 +817,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = AbhiAlisha/AbhiAlisha.entitlements;
+				CODE_SIGN_ENTITLEMENTS = MilniWedding/MilniWedding.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
@@ -829,7 +829,7 @@
 				INFOPLIST_KEY_NSCalendarsWriteOnlyAccessUsageDescription = "Add wedding celebrations to your own calendar so you never miss one.";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Photograph your outfits for each celebration, or, for the couple, take Wedding Week photos that are shared with every guest.";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Face ID keeps the couple’s area private on this phone.";
-				INFOPLIST_KEY_CFBundleDisplayName = Milni;
+				INFOPLIST_KEY_CFBundleDisplayName = "Milni Wedding";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Save wedding week photos to your photo library.";
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_NSSupportsLiveActivitiesFrequentUpdates = YES;
@@ -873,7 +873,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/AbhiAlisha.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/AbhiAlisha";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MilniWedding.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/MilniWedding";
 			};
 			name = Debug;
 		};
@@ -895,7 +895,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/AbhiAlisha.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/AbhiAlisha";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MilniWedding.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/MilniWedding";
 			};
 			name = Release;
 		};
@@ -915,7 +915,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = AbhiAlisha;
+				TEST_TARGET_NAME = MilniWedding;
 			};
 			name = Debug;
 		};
@@ -935,167 +935,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = AbhiAlisha;
-			};
-			name = Release;
-		};
-		XX063E4F6097F29D18815BXX /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = AbhiAlishaWidget/AbhiAlishaWidget.entitlements;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				PRODUCT_BUNDLE_IDENTIFIER = com.businessgliders.abhialisha.abhialishawidget;
-				SDKROOT = iphoneos;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = AbhiAlishaWidget/Info.plist;
-				SWIFT_VERSION = 5.0;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
-				SKIP_INSTALL = YES;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				MARKETING_VERSION = 1.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
-				INFOPLIST_KEY_CFBundleDisplayName = Milni;
-			};
-			name = Debug;
-		};
-		XX4CC71F635D02DC74527AXX /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = AbhiAlishaWidget/AbhiAlishaWidget.entitlements;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				PRODUCT_BUNDLE_IDENTIFIER = com.businessgliders.abhialisha.abhialishawidget;
-				SDKROOT = iphoneos;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = AbhiAlishaWidget/Info.plist;
-				SWIFT_VERSION = 5.0;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
-				SKIP_INSTALL = YES;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				MARKETING_VERSION = 1.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
-				INFOPLIST_KEY_CFBundleDisplayName = Milni;
-			};
-			name = Release;
-		};
-		XX6DA9996569D17D463A14XX /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = AbhiAlishaWatchWidget/AbhiAlishaWatchWidget.entitlements;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				PRODUCT_BUNDLE_IDENTIFIER = com.businessgliders.abhialisha.abhialishawatch.widgetextension;
-				SDKROOT = watchos;
-				WATCHOS_DEPLOYMENT_TARGET = 26.0;
-				SUPPORTED_PLATFORMS = "watchos watchsimulator";
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = AbhiAlishaWatchWidget/Info.plist;
-				SWIFT_VERSION = 5.0;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
-				SKIP_INSTALL = YES;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				MARKETING_VERSION = 1.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
-				TARGETED_DEVICE_FAMILY = 4;
-				INFOPLIST_KEY_CFBundleDisplayName = Milni;
-			};
-			name = Debug;
-		};
-		XX988B757A878EF48084D8XX /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = AbhiAlishaWatch/AbhiAlishaWatch.entitlements;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				PRODUCT_BUNDLE_IDENTIFIER = com.businessgliders.abhialisha.abhialishawatch;
-				SDKROOT = watchos;
-				WATCHOS_DEPLOYMENT_TARGET = 26.0;
-				SUPPORTED_PLATFORMS = "watchos watchsimulator";
-				GENERATE_INFOPLIST_FILE = YES;
-				SWIFT_VERSION = 5.0;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
-				SKIP_INSTALL = YES;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				MARKETING_VERSION = 1.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
-				TARGETED_DEVICE_FAMILY = 4;
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				INFOPLIST_KEY_CFBundleDisplayName = Milni;
-				INFOPLIST_KEY_WKRunsIndependentlyOfCompanionApp = YES;
-				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
-				ENABLE_PREVIEWS = YES;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
-				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.businessgliders.abhialisha;
-			};
-			name = Debug;
-		};
-		XXA1960709A55A4C228466XX /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = AbhiAlishaWatch/AbhiAlishaWatch.entitlements;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				PRODUCT_BUNDLE_IDENTIFIER = com.businessgliders.abhialisha.abhialishawatch;
-				SDKROOT = watchos;
-				WATCHOS_DEPLOYMENT_TARGET = 26.0;
-				SUPPORTED_PLATFORMS = "watchos watchsimulator";
-				GENERATE_INFOPLIST_FILE = YES;
-				SWIFT_VERSION = 5.0;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
-				SKIP_INSTALL = YES;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				MARKETING_VERSION = 1.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
-				TARGETED_DEVICE_FAMILY = 4;
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				INFOPLIST_KEY_CFBundleDisplayName = Milni;
-				INFOPLIST_KEY_WKRunsIndependentlyOfCompanionApp = YES;
-				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
-				ENABLE_PREVIEWS = YES;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
-				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.businessgliders.abhialisha;
-			};
-			name = Release;
-		};
-		XXA77AD6A2CED9779AB73DXX /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = AbhiAlishaWatchWidget/AbhiAlishaWatchWidget.entitlements;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				PRODUCT_BUNDLE_IDENTIFIER = com.businessgliders.abhialisha.abhialishawatch.widgetextension;
-				SDKROOT = watchos;
-				WATCHOS_DEPLOYMENT_TARGET = 26.0;
-				SUPPORTED_PLATFORMS = "watchos watchsimulator";
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = AbhiAlishaWatchWidget/Info.plist;
-				SWIFT_VERSION = 5.0;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
-				SKIP_INSTALL = YES;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				MARKETING_VERSION = 1.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
-				TARGETED_DEVICE_FAMILY = 4;
-				INFOPLIST_KEY_CFBundleDisplayName = Milni;
+				TEST_TARGET_NAME = MilniWedding;
 			};
 			name = Release;
 		};
@@ -1104,7 +944,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = AbhiAlishaClip/AbhiAlishaClip.entitlements;
+				CODE_SIGN_ENTITLEMENTS = MilniWeddingClip/MilniWeddingClip.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
@@ -1141,7 +981,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = AbhiAlishaClip/AbhiAlishaClip.entitlements;
+				CODE_SIGN_ENTITLEMENTS = MilniWeddingClip/MilniWeddingClip.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
@@ -1173,10 +1013,170 @@
 			};
 			name = Release;
 		};
+		XX063E4F6097F29D18815BXX /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = MilniWeddingWidget/MilniWeddingWidget.entitlements;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				PRODUCT_BUNDLE_IDENTIFIER = com.businessgliders.abhialisha.abhialishawidget;
+				SDKROOT = iphoneos;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = AbhiAlishaWidget/Info.plist;
+				SWIFT_VERSION = 5.0;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				MARKETING_VERSION = 1.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
+				INFOPLIST_KEY_CFBundleDisplayName = Milni;
+			};
+			name = Debug;
+		};
+		XX4CC71F635D02DC74527AXX /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = MilniWeddingWidget/MilniWeddingWidget.entitlements;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				PRODUCT_BUNDLE_IDENTIFIER = com.businessgliders.abhialisha.abhialishawidget;
+				SDKROOT = iphoneos;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = AbhiAlishaWidget/Info.plist;
+				SWIFT_VERSION = 5.0;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				MARKETING_VERSION = 1.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
+				INFOPLIST_KEY_CFBundleDisplayName = Milni;
+			};
+			name = Release;
+		};
+		XX6DA9996569D17D463A14XX /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = MilniWeddingWatchWidget/MilniWeddingWatchWidget.entitlements;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.businessgliders.abhialisha.abhialishawatch.widgetextension;
+				SDKROOT = watchos;
+				WATCHOS_DEPLOYMENT_TARGET = 26.0;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = AbhiAlishaWatchWidget/Info.plist;
+				SWIFT_VERSION = 5.0;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				MARKETING_VERSION = 1.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
+				TARGETED_DEVICE_FAMILY = 4;
+				INFOPLIST_KEY_CFBundleDisplayName = Milni;
+			};
+			name = Debug;
+		};
+		XX988B757A878EF48084D8XX /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = MilniWeddingWatch/MilniWeddingWatch.entitlements;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.businessgliders.abhialisha.abhialishawatch;
+				SDKROOT = watchos;
+				WATCHOS_DEPLOYMENT_TARGET = 26.0;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
+				GENERATE_INFOPLIST_FILE = YES;
+				SWIFT_VERSION = 5.0;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				MARKETING_VERSION = 1.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
+				TARGETED_DEVICE_FAMILY = 4;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				INFOPLIST_KEY_CFBundleDisplayName = Milni;
+				INFOPLIST_KEY_WKRunsIndependentlyOfCompanionApp = YES;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				ENABLE_PREVIEWS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.businessgliders.abhialisha;
+			};
+			name = Debug;
+		};
+		XXA1960709A55A4C228466XX /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = MilniWeddingWatch/MilniWeddingWatch.entitlements;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.businessgliders.abhialisha.abhialishawatch;
+				SDKROOT = watchos;
+				WATCHOS_DEPLOYMENT_TARGET = 26.0;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
+				GENERATE_INFOPLIST_FILE = YES;
+				SWIFT_VERSION = 5.0;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				MARKETING_VERSION = 1.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
+				TARGETED_DEVICE_FAMILY = 4;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				INFOPLIST_KEY_CFBundleDisplayName = Milni;
+				INFOPLIST_KEY_WKRunsIndependentlyOfCompanionApp = YES;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				ENABLE_PREVIEWS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.businessgliders.abhialisha;
+			};
+			name = Release;
+		};
+		XXA77AD6A2CED9779AB73DXX /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = MilniWeddingWatchWidget/MilniWeddingWatchWidget.entitlements;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.businessgliders.abhialisha.abhialishawatch.widgetextension;
+				SDKROOT = watchos;
+				WATCHOS_DEPLOYMENT_TARGET = 26.0;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = AbhiAlishaWatchWidget/Info.plist;
+				SWIFT_VERSION = 5.0;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				MARKETING_VERSION = 1.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
+				TARGETED_DEVICE_FAMILY = 4;
+				INFOPLIST_KEY_CFBundleDisplayName = Milni;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		105FC5752E9EAD3100EA8BCF /* Build configuration list for PBXProject "AbhiAlisha" */ = {
+		105FC5752E9EAD3100EA8BCF /* Build configuration list for PBXProject "MilniWedding" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				105FC59B2E9EAD3200EA8BCF /* Debug */,
@@ -1185,7 +1185,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		105FC59D2E9EAD3200EA8BCF /* Build configuration list for PBXNativeTarget "AbhiAlisha" */ = {
+		105FC59D2E9EAD3200EA8BCF /* Build configuration list for PBXNativeTarget "MilniWedding" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				105FC59E2E9EAD3200EA8BCF /* Debug */,
@@ -1194,7 +1194,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		105FC5A02E9EAD3200EA8BCF /* Build configuration list for PBXNativeTarget "AbhiAlishaTests" */ = {
+		105FC5A02E9EAD3200EA8BCF /* Build configuration list for PBXNativeTarget "MilniWeddingTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				105FC5A12E9EAD3200EA8BCF /* Debug */,
@@ -1203,7 +1203,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		105FC5A32E9EAD3200EA8BCF /* Build configuration list for PBXNativeTarget "AbhiAlishaUITests" */ = {
+		105FC5A32E9EAD3200EA8BCF /* Build configuration list for PBXNativeTarget "MilniWeddingUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				105FC5A42E9EAD3200EA8BCF /* Debug */,
@@ -1212,7 +1212,16 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		XXB8C89A447FB81CA09F6EXX /* Build configuration list for PBXNativeTarget "AbhiAlishaWidget" */ = {
+		C11BF000000000000000000E /* Build configuration list for PBXNativeTarget "MilniWeddingClip" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C11BF000000000000000000C /* Debug */,
+				C11BF000000000000000000D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		XXB8C89A447FB81CA09F6EXX /* Build configuration list for PBXNativeTarget "MilniWeddingWidget" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				XX063E4F6097F29D18815BXX /* Debug */,
@@ -1221,7 +1230,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		XXC58AAB310494ECFAA1E5XX /* Build configuration list for PBXNativeTarget "AbhiAlishaWatch" */ = {
+		XXC58AAB310494ECFAA1E5XX /* Build configuration list for PBXNativeTarget "MilniWeddingWatch" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				XX988B757A878EF48084D8XX /* Debug */,
@@ -1230,20 +1239,11 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		XXDC97FCEEF922CADC0B65XX /* Build configuration list for PBXNativeTarget "AbhiAlishaWatchWidget" */ = {
+		XXDC97FCEEF922CADC0B65XX /* Build configuration list for PBXNativeTarget "MilniWeddingWatchWidget" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				XX6DA9996569D17D463A14XX /* Debug */,
 				XXA77AD6A2CED9779AB73DXX /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		C11BF000000000000000000E /* Build configuration list for PBXNativeTarget "AbhiAlishaClip" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				C11BF000000000000000000C /* Debug */,
-				C11BF000000000000000000D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

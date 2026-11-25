@@ -1,6 +1,6 @@
 //
-//  AbhiAlishaApp.swift
-//  AbhiAlisha
+//  MilniWeddingApp.swift
+//  MilniWedding
 //
 //  Created by Rork on August 13, 2026.
 //
@@ -8,7 +8,7 @@
 import SwiftUI
 
 @main
-struct AbhiAlishaApp: App {
+struct MilniWeddingApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
     init() {

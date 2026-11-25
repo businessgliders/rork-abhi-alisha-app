@@ -1,13 +1,13 @@
 //
-//  AbhiAlishaUITestsLaunchTests.swift
-//  AbhiAlishaUITests
+//  MilniWeddingUITestsLaunchTests.swift
+//  MilniWeddingUITests
 //
 //  Created by Rork on August 13, 2026.
 //
 
 import XCTest
 
-final class AbhiAlishaUITestsLaunchTests: XCTestCase {
+final class MilniWeddingUITestsLaunchTests: XCTestCase {
 
     override class var runsForEachTargetApplicationUIConfiguration: Bool {
         true

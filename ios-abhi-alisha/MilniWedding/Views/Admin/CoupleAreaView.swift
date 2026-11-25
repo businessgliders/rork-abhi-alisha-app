@@ -47,7 +47,7 @@ struct CoupleAreaView: View {
     private var weddingID: String { context.weddingID }
     private var snapshot: WeddingSnapshot { context.snapshot }
     private var isOwner: Bool { context.role?.lowercased() == "host" }
-    private var isAbhiAlisha: Bool { weddingID.lowercased() == ActiveWedding.sampleID.lowercased() }
+    private var isMilniWedding: Bool { weddingID.lowercased() == ActiveWedding.sampleID.lowercased() }
 
     private var pending: [HostMember] {
         members.filter { $0.status.lowercased() == "pending" }
@@ -413,7 +413,7 @@ struct CoupleAreaView: View {
             codeRow
             divider
             faceIDRow
-            if isAbhiAlisha {
+            if isMilniWedding {
                 divider
                 ThankYouPreviewToggle()
                     .padding(12)

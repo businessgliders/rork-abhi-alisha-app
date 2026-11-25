@@ -13,7 +13,7 @@ enum StayMigration {
     static func runIfNeeded(content: ContentStore) async {
         let context = WeddingContext.shared
         let snapshot = context.snapshot
-        guard context.isHost, snapshot.isAbhiAlisha, !snapshot.isSampleWedding else { return }
+        guard context.isHost, snapshot.isMilniWedding, !snapshot.isSampleWedding else { return }
         let weddingID = snapshot.id
         let key = doneKey + weddingID.lowercased()
         guard !UserDefaults.standard.bool(forKey: key) else { return }

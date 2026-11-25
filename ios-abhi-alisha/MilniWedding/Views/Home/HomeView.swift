@@ -161,7 +161,7 @@ struct HomeView: View {
 
                 HappeningNowBanner(events: store.events)
 
-                if ActiveWedding.snapshot.isAbhiAlisha {
+                if ActiveWedding.snapshot.isMilniWedding {
                     rsvpBlock
                 } else if let link = rsvpLink {
                     rsvpBar(hint: "Opens the couple's RSVP page in Safari") {

@@ -2,11 +2,12 @@
   "$schema": "https://rork.com/schema/rork.json",
   "apps": [
     {
-      "name": "Abhi & Alisha",
+      "name": "Milni",
       "path": "ios-abhi-alisha",
       "framework": "swift",
       "settings": {
-        "iosBundleId": "com.businessgliders.abhialisha"
+        "iosBundleId": "com.businessgliders.abhialisha",
+        "displayName": "Milni Wedding"
       }
     }
   ]

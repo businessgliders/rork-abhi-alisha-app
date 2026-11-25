@@ -67,7 +67,7 @@ struct HostHomeView: View {
             .sorted { ($0.joinedAt ?? .distantPast) > ($1.joinedAt ?? .distantPast) }
     }
 
-    private var isAbhiAlisha: Bool { weddingID.lowercased() == ActiveWedding.sampleID.lowercased() }
+    private var isMilniWedding: Bool { weddingID.lowercased() == ActiveWedding.sampleID.lowercased() }
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -83,7 +83,7 @@ struct HostHomeView: View {
                         rows
                             .padding(.top, 34)
 
-                        if isAbhiAlisha, openChecklist != nil {
+                        if isMilniWedding, openChecklist != nil {
                             checklistRow
                                 .padding(.top, 14)
                         }

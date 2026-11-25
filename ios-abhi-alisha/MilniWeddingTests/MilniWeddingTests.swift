@@ -1,14 +1,14 @@
 //
-//  AbhiAlishaTests.swift
-//  AbhiAlishaTests
+//  MilniWeddingTests.swift
+//  MilniWeddingTests
 //
 //  Created by Rork on August 13, 2026.
 //
 
 import Testing
-@testable import AbhiAlisha
+@testable import MilniWedding
 
-struct AbhiAlishaTests {
+struct MilniWeddingTests {
 
     @Test func example() async throws {
         // Write your test here and use APIs like `#expect(...)` to check expected conditions.
