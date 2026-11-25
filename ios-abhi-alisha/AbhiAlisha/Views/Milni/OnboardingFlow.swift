@@ -76,6 +76,7 @@ struct OnboardingFlow: View {
         .animation(reduceMotion ? .easeInOut(duration: 0.4) : .spring(response: 0.7, dampingFraction: 0.92), value: step)
         .preferredColorScheme(step.prefersDark && !(step == .splash && dawnLit) ? .dark : .light)
         .onAppear(perform: startStep)
+        .screenshotFixtureMarkers()
         .onChange(of: context.pendingJoinCode) { _, code in
             guard let code else { return }
             context.pendingJoinCode = nil
@@ -99,6 +100,13 @@ struct OnboardingFlow: View {
     }
 
     private func startStep() {
+#if DEBUG && targetEnvironment(simulator)
+        if ScreenshotFixture.target == "create-mood" {
+            draft = ScreenshotFixture.moodDraft
+            step = .coupleMood
+            return
+        }
+#endif
         if let code = context.pendingJoinCode {
             context.pendingJoinCode = nil
             step = .code(prefill: code)

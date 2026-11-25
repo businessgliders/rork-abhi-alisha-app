@@ -118,6 +118,9 @@ final class OutfitStore {
 
     /// One celebration's photos, read again from the server.
     func refresh(eventID: String) async {
+#if DEBUG && targetEnvironment(simulator)
+        if ScreenshotFixture.suspendNetwork { return }
+#endif
         syncUser()
         guard let userID else { return }
         do {
@@ -141,6 +144,9 @@ final class OutfitStore {
 
     /// Every look at once, for the My Outfits list.
     func refreshAll() async {
+#if DEBUG && targetEnvironment(simulator)
+        if ScreenshotFixture.suspendNetwork { return }
+#endif
         syncUser()
         guard let userID else { return }
         do {

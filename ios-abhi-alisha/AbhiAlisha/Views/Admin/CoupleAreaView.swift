@@ -608,6 +608,13 @@ struct CoupleAreaView: View {
     // MARK: - Data
 
     private func load() async {
+#if DEBUG && targetEnvironment(simulator)
+        if ScreenshotFixture.suspendNetwork {
+            eventCount = ScheduleCache.shared.load()?.count
+            settings = context.guestSettings
+            return
+        }
+#endif
         async let membersTask = HostAPI.shared.members(weddingID: weddingID)
         async let codeTask = HostAPI.shared.joinCode(weddingID: weddingID)
         async let events = HostAPI.shared.count(table: "events", weddingID: weddingID)

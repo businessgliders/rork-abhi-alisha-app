@@ -66,6 +66,9 @@ final class ContentStore {
 
     /// Refreshes once per launch, quietly, from the open wedding's content sections.
     func refreshIfNeeded() async {
+#if DEBUG && targetEnvironment(simulator)
+        if ScreenshotFixture.suspendNetwork { return }
+#endif
         guard !didRefresh, !isRefreshing else { return }
         isRefreshing = true
         defer { isRefreshing = false }

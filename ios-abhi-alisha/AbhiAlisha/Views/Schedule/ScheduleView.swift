@@ -63,6 +63,7 @@ struct ScheduleView: View {
         .background(BrandPalette.background.ignoresSafeArea())
         .sheet(item: $detailEvent) { event in
             EventDetailSheet(event: event, weather: weatherByEvent[event.id])
+                .screenshotFixtureMarkers()
         }
         .task {
             syncToCurrentIfNeeded()

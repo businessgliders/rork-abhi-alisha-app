@@ -49,6 +49,14 @@ struct WeddingShell: View {
                 FloatingTabBar(selection: $selection)
                     .transition(.opacity.combined(with: .move(edge: .bottom)))
             }
+
+#if DEBUG && targetEnvironment(simulator)
+            // Screenshot mode: the Siri / Spotlight composite for the captures.
+            if ScreenshotFixture.target == "siri" {
+                ScreenshotFixtureSiriScreen()
+                    .transition(.opacity)
+            }
+#endif
         }
         .animation(.calm, value: isReadingThread)
         .overlay(alignment: .top) {
@@ -63,6 +71,7 @@ struct WeddingShell: View {
                 .environment(store)
                 .environment(content)
                 .environment(admin)
+                .screenshotFixtureMarkers()
         }
         .fullScreenCover(isPresented: $router.isNotificationsPresented) {
             NotificationsView()
@@ -218,6 +227,11 @@ struct ContentView: View {
                     .preferredColorScheme(context.colorScheme)
                     .transition(.opacity)
             }
+
+#if DEBUG && targetEnvironment(simulator)
+            // Screenshot mode's ready/target markers ride above everything.
+            ScreenshotFixtureMarkers()
+#endif
         }
         .animation(.easeInOut(duration: 0.7), value: context.stage)
         .animation(.easeInOut(duration: 0.7), value: context.shellKey)

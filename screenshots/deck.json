@@ -1,88 +1,112 @@
 {
   "appContext": {
-    "appName": "Abhi & Alisha",
-    "category": "wedding guest guide",
-    "summary": "The official guest guide to Abhi & Alisha's wedding week at a resort in Cancún: every celebration's schedule with dress codes, RSVP lookup by name, an outfit builder for each event, announcements from the couple, family chat, and a Wedding Week photo album as it happens. Works offline. Warm editorial aesthetic: aged cream paper, antique gold, Playfair italic serif and Cormorant text, string lights, paper-texture cards. On iPad the layouts are roomier: the schedule shows tall invitation cards with attire photo previews.",
-    "domainKeywords": [
-      "wedding",
-      "wedding week",
-      "schedule",
-      "RSVP",
-      "outfits",
-      "Sangeet",
-      "Haldi",
-      "Anand Karaj",
-      "Reception",
-      "Cancún",
-      "resort",
-      "wing map",
-      "announcements",
-      "family chat",
-      "photos"
-    ],
-    "forbiddenInterpretations": [
-      "dating app",
-      "wedding planning marketplace or vendor directory",
-      "photo editing app",
-      "travel booking app",
-      "religious study app"
-    ]
+    "appName": "Milni",
+    "category": "Lifestyle",
+    "summary": "Milni is a wedding companion app: guests get the schedule, directions, announcements, chat and a shared photo gallery for one wedding; hosts plan the whole weekend and welcome guests. A second wedding can be switched to from the same app."
   },
-  "theme": {
-    "style": "Warm editorial wedding stationery world: aged cream paper, antique gold leaf, and soft blush, warmed by dusk light over a Caribbean sea. Lighting is gentle golden hour with faint bokeh like distant string lights. Surfaces carry fine paper grain, deckled softness, and delicate gold foil shimmer. Backgrounds stay calm, airy and luxurious, never loud, with generous open space at the top for the serif headline.",
-    "headlineFont": "font-family: 'Playfair Display', serif; font-style: italic; font-weight: 500; @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,500&display=swap');",
-    "headlineFontSize": 120,
-    "mockupIds": {
-      "iphone": "silver",
-      "ipad": "silver"
-    },
-    "palette": {
-      "primary": "#F4ECDD",
-      "secondary": "#B08A4A",
-      "accent": "#2F5D6B"
-    },
-    "layoutId": "floating-centered"
-  },
-  "slides": [
-    {
-      "label": "Home",
-      "backgroundPrompt": "Soft photorealistic dusk atmosphere with a warm cream sky melting into pale peach and a faint band of muted teal sea at the lower edge, scattered out-of-focus warm gold bokeh orbs floating along the bottom third. Gentle golden-hour light glows from the lower right, with fine paper grain over the frame and the upper 30% an open, calm ivory wash. 8K quality, ultra smooth gradients, premium feel, no text, no letters, no UI elements, no device mockups",
-      "backgroundUrl": "https://r2-pub.rork.com/app-store-screenshots/344bb918-53ea-4a4c-b93a-b9664a6cb917.png"
-    },
-    {
-      "label": "Schedule",
-      "backgroundPrompt": "Abstract layered composition of overlapping sheets of aged cream and ivory handmade paper with softly torn deckled edges, fanned diagonally across the lower half. Thin antique gold foil edges catch warm side light from the left. Soft shadows between the layers add depth, and the upper 30% fades to smooth creamy parchment. 8K quality, ultra smooth gradients, premium feel, no text, no letters, no UI elements, no device mockups",
-      "backgroundUrl": "https://r2-pub.rork.com/app-store-screenshots/62b8c3ec-103a-475a-9417-be45dc89eafc.png"
-    },
-    {
-      "label": "Chat",
-      "backgroundPrompt": "Abstract art of flowing silk ribbons in champagne gold and soft blush drifting in gentle curves across a warm cream backdrop, gathering toward the lower center. Diffused overhead light gives the silk a subtle sheen, with faint teal-tinted shadows in the folds. The top region stays airy and pale ivory with a fine grain texture. 8K quality, ultra smooth gradients, premium feel, no text, no letters, no UI elements, no device mockups",
-      "backgroundUrl": "https://r2-pub.rork.com/app-store-screenshots/264426c4-0c3e-496c-8782-5f7d01800060.png"
-    },
-    {
-      "label": "Wedding Week",
-      "backgroundPrompt": "Photorealistic soft-focus twilight scene of a warm apricot and cream sky over a calm muted teal sea horizon. Delicate strands of warm gold light points stretch in a gentle arc across the lower third, heavily blurred. Glow rises from the horizon, and the upper 30% stays a serene, clean cream-to-peach gradient with subtle film grain. 8K quality, ultra smooth gradients, premium feel, no text, no letters, no UI elements, no device mockups",
-      "backgroundUrl": "https://r2-pub.rork.com/app-store-screenshots/be41dea8-4f9a-47ed-9274-747cd663705a.png"
-    },
-    {
-      "label": "My Experience",
-      "backgroundPrompt": "Abstract minimalist art of sweeping fine antique gold linework curves and soft concentric contour arcs on textured aged cream paper, radiating from the lower left corner. Pale teal watercolor washes bleed softly at the edges. Warm raking light from the right reveals the paper fibers, and the upper 30% stays open and quiet. 8K quality, ultra smooth gradients, premium feel, no text, no letters, no UI elements, no device mockups",
-      "backgroundUrl": "https://r2-pub.rork.com/app-store-screenshots/9c32abef-19a7-4e0b-940e-06a9304b6035.png"
-    },
-    {
-      "label": "My Outfits",
-      "backgroundPrompt": "Luxurious close-up abstract of draped sheer chiffon in blush rose and champagne gold, with scattered fine gold shimmer particles, cascading from the bottom right. A deep teal silk fold adds accent contrast. Soft warm backlight makes the fabric glow translucent, with a shallow depth of field, and the upper 30% fades into smooth creamy ivory. 8K quality, ultra smooth gradients, premium feel, no text, no letters, no UI elements, no device mockups",
-      "backgroundUrl": "https://r2-pub.rork.com/app-store-screenshots/821afc5a-fd3e-4486-8544-fe190a65250a.png"
-    }
-  ],
-  "headlines": {
-    "en": {
-      "Home": "The Celebration<br>Has Begun",
-      "Schedule": "Every Moment<br>In Order",
-      "Chat": "Stay Close",
-      "Wedding Week": "Live From<br>Cancún",
-      "My Experience": "Find Your Way",
-      "My Outfits": "Dress<br>The Part"
+  "devices": {
+    "iphone": {
+      "theme": {
+        "style": "Luxe editorial wedding magazine world of ivory silk, gold-veined white marble, soft champagne drapery and hazy golden-hour sunset beaches. Backgrounds are light, airy and calm, with warm diffused daylight, gentle film grain and delicate gold-leaf glints. The upper third stays pale ivory so dark-ink italic headlines read clearly. The mood is romantic, refined and quietly opulent, never loud.",
+        "headlineFont": "font-family: 'Playfair Display', serif; font-style: italic; font-weight: 600; color: #2A2420; text-align: center; @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,500;1,600&display=swap');",
+        "headlineFontSize": 120,
+        "mockupIds": {
+          "iphone": "silver",
+          "ipad": "silver"
+        },
+        "palette": {
+          "primary": "#F7F1E6",
+          "secondary": "#D9C3A0",
+          "accent": "#B8893B"
+        },
+        "layoutId": "sandwich"
+      },
+      "slides": [
+        {
+          "label": "Abhi and alisha",
+          "capture": "screenshots/captures/iphone/01-abhi-and-alisha.png",
+          "prompt": "Abhi and alisha",
+          "backgroundPrompt": "Photorealistic editorial still life of flowing ivory silk cascading across gold-veined white marble, with soft champagne folds pooling at the bottom and fine gold-leaf flecks glinting. Warm diffused golden-hour light comes from the upper left, with shallow depth of field and subtle film grain, and the upper 30% fades to a calm pale ivory wash. 8K quality, ultra smooth gradients, premium feel, no text, no letters, no UI elements, no device mockups",
+          "background": "screenshots/backgrounds/iphone-abhi-and-alisha.png"
+        },
+        {
+          "label": "Set the mood",
+          "capture": "screenshots/captures/iphone/02-set-the-mood.png",
+          "prompt": "Set the mood",
+          "backgroundPrompt": "Dreamy photorealistic hazy sunset beach with soft blush-peach and champagne sky melting into a pearly ivory sea, and gentle sheer voile drapes billowing in from the right edge. Backlit warm amber sun glow rises from the lower center, with atmospheric haze and soft bokeh, and the top region stays a calm creamy ivory. 8K quality, ultra smooth gradients, premium feel, no text, no letters, no UI elements, no device mockups",
+          "background": "screenshots/backgrounds/iphone-set-the-mood.png"
+        },
+        {
+          "label": "The celebrations",
+          "capture": "screenshots/captures/iphone/03-the-celebrations.png",
+          "prompt": "The celebrations",
+          "backgroundPrompt": "Abstract luxe composition of gently swirling champagne-gold silk ribbons sweeping diagonally across an ivory field, with tiny floating gold-leaf petals scattered through the lower half. Soft top-right window light creates sheen highlights on the satin, with delicate depth-of-field blur on the edges and a serene pale ivory upper third. 8K quality, ultra smooth gradients, premium feel, no text, no letters, no UI elements, no device mockups",
+          "background": "screenshots/backgrounds/iphone-the-celebrations.png"
+        },
+        {
+          "label": "Where",
+          "capture": "screenshots/captures/iphone/04-where.png",
+          "prompt": "Where",
+          "backgroundPrompt": "Close-up of polished white marble with meandering fine gold veins flowing in long elegant curves from bottom left to top right, and a faint champagne gradient pooling at the base. Cool-to-warm side lighting from the left adds a subtle glossy reflection and fine stone texture, while the upper 30% stays a soft unmarked ivory. 8K quality, ultra smooth gradients, premium feel, no text, no letters, no UI elements, no device mockups",
+          "background": "screenshots/backgrounds/iphone-where.png"
+        },
+        {
+          "label": "Announcements",
+          "capture": "screenshots/captures/iphone/05-announcements.png",
+          "prompt": "Announcements",
+          "backgroundPrompt": "Soft-focus photorealistic scene of layered sheer champagne tulle panels hanging in vertical folds, with warm golden light streaming through from behind to create glowing translucent bands. Gentle volumetric light rays and drifting dust motes catch the light, with a creamy ivory haze across the top portion. 8K quality, ultra smooth gradients, premium feel, no text, no letters, no UI elements, no device mockups",
+          "background": "screenshots/backgrounds/iphone-announcements.png"
+        },
+        {
+          "label": "Questions and chat",
+          "capture": "screenshots/captures/iphone/06-questions-and-chat.png",
+          "prompt": "Questions and chat",
+          "backgroundPrompt": "Abstract digital art of two soft intertwining ribbons of ivory satin and burnished gold curling around each other in the lower center, set against a warm blush-champagne gradient. Diffused overhead light gives silky highlights and soft shadows, with subtle grain texture and the upper area open and pale ivory. 8K quality, ultra smooth gradients, premium feel, no text, no letters, no UI elements, no device mockups",
+          "background": "screenshots/backgrounds/iphone-questions-and-chat.png"
+        },
+        {
+          "label": "The gallery",
+          "capture": "screenshots/captures/iphone/07-the-gallery.png",
+          "prompt": "The gallery",
+          "backgroundPrompt": "Photorealistic hazy golden-hour shoreline with soft sand ripples in warm champagne tones and gentle foam lines of pearly ivory, and scattered sparkling sun glints across the water. Low warm sunlight comes from the right with soft lens bloom and dreamy atmospheric depth, and the top third dissolves into calm luminous ivory sky. 8K quality, ultra smooth gradients, premium feel, no text, no letters, no UI elements, no device mockups",
+          "background": "screenshots/backgrounds/iphone-the-gallery.png"
+        },
+        {
+          "label": "You re the host",
+          "capture": "screenshots/captures/iphone/08-you-re-the-host.png",
+          "prompt": "You re the host",
+          "backgroundPrompt": "Elegant still life of a sweeping champagne silk drape arranged over a gold-veined marble plinth, with rich deeper antique-gold tones in the lower folds and fine gold dust suspended in the air. Dramatic yet soft rim lighting from the lower right gives a refined, authoritative feel, with a calm creamy ivory upper region. 8K quality, ultra smooth gradients, premium feel, no text, no letters, no UI elements, no device mockups",
+          "background": "screenshots/backgrounds/iphone-you-re-the-host.png"
+        },
+        {
+          "label": "Where is the ceremony",
+          "capture": "screenshots/captures/iphone/09-where-is-the-ceremony.png",
+          "prompt": "Where is the ceremony",
+          "backgroundPrompt": "Abstract layered composition of translucent ivory and champagne glass-like planes arranged in gentle stepped arcs rising from the bottom, with each edge catching a thin line of warm gold light. Soft diffused light from above, delicate reflections and shallow depth of field lend an airy calm, and the top fades into smooth pale ivory. 8K quality, ultra smooth gradients, premium feel, no text, no letters, no UI elements, no device mockups",
+          "background": "screenshots/backgrounds/iphone-where-is-the-ceremony.png"
+        },
+        {
+          "label": "Write a toast",
+          "capture": "screenshots/captures/iphone/10-write-a-toast.png",
+          "prompt": "Write a toast",
+          "backgroundPrompt": "Luminous abstract scene of effervescent golden champagne bubbles rising through a warm honey-to-ivory gradient, with a soft glowing burst of sparkling gold light in the lower center. Backlit radiant glow, creamy bokeh orbs and subtle grain create a celebratory finale, while the upper 30% stays calm, soft and pale ivory. 8K quality, ultra smooth gradients, premium feel, no text, no letters, no UI elements, no device mockups",
+          "background": "screenshots/backgrounds/iphone-write-a-toast.png"
+        }
+      ],
+      "headlines": {
+        "en": {
+          "Abhi and alisha": "Abhi and<br>Alisha",
+          "Set the mood": "Set the<br>Mood",
+          "The celebrations": "The<br>Celebrations",
+          "Where": "Find Your<br>Way",
+          "Announcements": "Never Miss<br>a Moment",
+          "Questions and chat": "Ask and<br>Chat",
+          "The gallery": "Share the<br>Gallery",
+          "You re the host": "Host the<br>Weekend",
+          "Where is the ceremony": "Where to<br>Next",
+          "Write a toast": "Raise a<br>Toast"
+        }
+      }
     }
   }
 }

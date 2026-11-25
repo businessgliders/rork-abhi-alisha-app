@@ -1,9 +1,12 @@
 import Foundation
 
-/// TEMPORARY — switched on only while capturing the App Store screenshots.
+/// switched on while the App Store screenshots are captured (`--scenario app-store`).
 /// It forces the happening-now ribbon on Home to read "Happening now" and keeps the
-/// first-open notification card out of the captures. Revert to `false` when the
-/// captures are done.
+/// first-open notification card out of the captures. Release builds always read false.
 enum ScreenshotCapture {
+#if DEBUG && targetEnvironment(simulator)
+    static var isActive: Bool { ScreenshotFixture.isActive }
+#else
     static let isActive = false
+#endif
 }

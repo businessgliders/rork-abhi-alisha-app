@@ -1,0 +1,50 @@
+{
+  "version": 2,
+  "platform": "ios",
+  "scrollDirection": "page",
+  "screenshotScenario": "app-store",
+  "screenshotPrompts": [
+    {
+      "label": "You're the host",
+      "screenDescription": "You're the host: Close the couple's area, COUPLE'S AREA, Maya & Arjun, You're the host, Blush theme, Paint Palette",
+      "requiredLabels": [
+        "Close the couple's area",
+        "COUPLE'S AREA",
+        "Maya & Arjun",
+        "You're the host",
+        "Blush theme",
+        "Paint Palette"
+      ],
+      "prompt": "Plan the whole weekend from one desk — guests, events, approvals",
+      "screenshotTarget": "couples-area"
+    },
+    {
+      "label": "Where is the ceremony",
+      "screenDescription": "Where is the ceremony: Abhi & Alisha. Switch wedding, Where is the ceremony?, Search, Siri, ABHI & ALISHA, Wedding Ceremony",
+      "requiredLabels": [
+        "Abhi & Alisha. Switch wedding",
+        "Where is the ceremony?",
+        "Search",
+        "Siri",
+        "ABHI & ALISHA",
+        "Wedding Ceremony"
+      ],
+      "prompt": "Ask Siri, get the celebration — your wedding week answers instantly",
+      "screenshotTarget": "siri"
+    },
+    {
+      "label": "Write a toast",
+      "screenDescription": "Write a toast: Done, FOR MAYA & ARJUN, Write a toast, Written by Apple Intelligence on your iPhone. Nothing you type leaves your phone., YOUR NAME, YOU ARE THEIR…",
+      "requiredLabels": [
+        "Done",
+        "FOR MAYA & ARJUN",
+        "Write a toast",
+        "Written by Apple Intelligence on your iPhone. Nothing you type leaves your phone.",
+        "YOUR NAME",
+        "YOU ARE THEIR…"
+      ],
+      "prompt": "The perfect toast, written with you — never sent anywhere",
+      "screenshotTarget": "toast"
+    }
+  ]
+}

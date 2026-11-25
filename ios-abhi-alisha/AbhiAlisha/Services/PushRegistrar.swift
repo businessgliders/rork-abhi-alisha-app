@@ -47,6 +47,9 @@ final class PushRegistrar {
         let launches = defaults.integer(forKey: Key.launchCount) + 1
         defaults.set(launches, forKey: Key.launchCount)
 
+#if DEBUG && targetEnvironment(simulator)
+        if ScreenshotFixture.suspendNetwork { return }
+#endif
         Task {
             await refreshStatus()
             if isEnabled {

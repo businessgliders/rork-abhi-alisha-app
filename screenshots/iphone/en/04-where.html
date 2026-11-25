@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,500;1,600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,700&display=swap');
+html, body { margin:0; padding:0; }
+body { background:#F7F1E6; }
+.canvas {
+  position:relative;
+  width:1284px;
+  height:2778px;
+  overflow:hidden;
+  background:#F7F1E6;
+}
+.bg {
+  position:absolute;
+  inset:0;
+  background-image:
+    linear-gradient(180deg, rgba(247,241,230,0.85) 0%, rgba(247,241,230,0.55) 18%, rgba(247,241,230,0) 32%),
+    url('../../backgrounds/iphone-where.png');
+  background-size:cover;
+  background-position:center;
+}
+.headline {
+  font-family:'Playfair Display', serif;
+  font-style:italic;
+  font-weight:700;
+  font-size:120px;
+  line-height:1.08;
+  color:#2A2420;
+  text-align:center;
+  margin:0;
+  letter-spacing:-0.5px;
+  text-shadow:0 2px 18px rgba(247,241,230,0.9), 0 1px 2px rgba(247,241,230,0.8);
+}
+</style>
+</head>
+<body>
+<div class="canvas">
+  <div class="bg"></div>
+
+  <div style="position:absolute; top:0%; left:50%; width:84%; height:24%; transform:translateX(-50%); display:flex; align-items:center; justify-content:center; text-align:center;">
+    <h1 class="headline">Find Your<br>Way</h1>
+  </div>
+
+  <div style="position:absolute; left:50%; top:25%; width:71%; transform:translateX(-50%); filter:drop-shadow(0 40px 60px rgba(90,70,40,0.22));">
+    <div style="position:relative; aspect-ratio:879/1832;">
+      <div style="position:absolute; overflow:hidden; left:4.32%; top:2.29%; width:91.47%; height:95.41%; border-radius:7.5% / 3.5%;">
+        <img src="../../captures/iphone/04-where.png" style="display:block; width:100%; height:100%; object-fit:cover; object-position:top;" draggable="false" />
+      </div>
+      <img src="https://r2-pub.rork.com/static/iphone-mockups/iphone-17-pro-silver.png" style="position:relative; z-index:10; display:block; width:100%; height:100%; pointer-events:none;" draggable="false" />
+    </div>
+  </div>
+</div>
+</body>
+</html>

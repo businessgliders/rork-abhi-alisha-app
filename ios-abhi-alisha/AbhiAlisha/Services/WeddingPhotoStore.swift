@@ -85,6 +85,9 @@ final class WeddingPhotoStore {
     }
 
     func refresh() async {
+#if DEBUG && targetEnvironment(simulator)
+        if ScreenshotFixture.suspendNetwork { return }
+#endif
         let weddingID = ActiveWedding.id.lowercased()
         do {
             let rows: [WeddingPhoto] = try await client

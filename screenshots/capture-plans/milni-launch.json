@@ -1,0 +1,116 @@
+{
+  "version": 2,
+  "platform": "ios",
+  "scrollDirection": "page",
+  "screenshotScenario": "app-store",
+  "screenshotPrompts": [
+    {
+      "label": "Abhi and Alisha",
+      "screenDescription": "Abhi and Alisha: Abhi & Alisha. Switch wedding, Abhi and Alisha, Happening now · Welcome Fiesta · Pool Deck, Find your RSVP details, NEXT, Welcome Fiesta",
+      "requiredLabels": [
+        "Abhi & Alisha. Switch wedding",
+        "Abhi and Alisha",
+        "Happening now · Welcome Fiesta · Pool Deck",
+        "Find your RSVP details",
+        "NEXT",
+        "Welcome Fiesta"
+      ],
+      "prompt": "Warm welcome home: the whole weekend ahead at a glance"
+    },
+    {
+      "label": "Set the mood",
+      "screenDescription": "Set the mood: Back, STEP THREE OF FOUR, Set the, mood., Ivory, Blush, Emerald",
+      "requiredLabels": [
+        "Back",
+        "STEP THREE OF FOUR",
+        "Set the, mood.",
+        "Ivory",
+        "Blush",
+        "Emerald"
+      ],
+      "prompt": "A wedding made in minutes: pick the mood and watch the invitation become yours",
+      "screenshotTarget": "create-mood"
+    },
+    {
+      "label": "The Celebrations",
+      "screenDescription": "The Celebrations: crest, THE CELEBRATIONS, Schedule, Airplane Descending Toward Horizon, Welcome Fiesta, Airplane Ascending From Horizon",
+      "requiredLabels": [
+        "crest",
+        "THE CELEBRATIONS",
+        "Schedule",
+        "Airplane Descending Toward Horizon",
+        "Welcome Fiesta",
+        "Airplane Ascending From Horizon"
+      ],
+      "prompt": "Every celebration in one elegant sweep — never miss a moment",
+      "screenshotTarget": "schedule"
+    },
+    {
+      "label": "Where",
+      "screenDescription": "Where: Close, GOOD TO KNOW, Will the ceremony be outdoors?, WHERE, Oceanfront Lawn, AVA Resort Cancún, Puerto Morelos, Mexico",
+      "requiredLabels": [
+        "Close",
+        "GOOD TO KNOW",
+        "Will the ceremony be outdoors?",
+        "WHERE",
+        "Oceanfront Lawn",
+        "AVA Resort Cancún, Puerto Morelos, Mexico"
+      ],
+      "prompt": "Know exactly where to be — map, weather and directions in one place",
+      "setup": [
+        {
+          "action": "tap",
+          "label": "Wedding Ceremony",
+          "type": "StaticText"
+        },
+        {
+          "action": "scroll",
+          "direction": "down"
+        }
+      ],
+      "screenshotTarget": "event-where"
+    },
+    {
+      "label": "Announcements",
+      "screenDescription": "Announcements: Back to Chat, Announcements, From Abhi & Alisha, View Welcome Fiesta, — Abhi & Alisha, Earlier notice, Newer notice",
+      "requiredLabels": [
+        "Back to Chat",
+        "Announcements, From Abhi & Alisha",
+        "View Welcome Fiesta",
+        "— Abhi & Alisha",
+        "Earlier notice",
+        "Newer notice"
+      ],
+      "prompt": "News from the couple, the moment it matters",
+      "screenshotTarget": "announcements"
+    },
+    {
+      "label": "Questions and Chat",
+      "screenDescription": "Questions and Chat: THE WEDDING TABLE, Chat menu, Chat, FOR EVERY GUEST, THE FAMILY, New message",
+      "requiredLabels": [
+        "THE WEDDING TABLE",
+        "Chat menu",
+        "Chat",
+        "FOR EVERY GUEST",
+        "THE FAMILY",
+        "New message"
+      ],
+      "prompt": "Everyone who is coming, one conversation away",
+      "screenshotTarget": "chat"
+    },
+    {
+      "label": "The Gallery",
+      "screenDescription": "The Gallery: MEMORIES, Gallery, GALLERY, OUR FAMILY, OUR STORY, AS IT HAPPENED",
+      "requiredLabels": [
+        "MEMORIES",
+        "Gallery",
+        "GALLERY",
+        "OUR FAMILY",
+        "OUR STORY",
+        "AS IT HAPPENED"
+      ],
+      "prompt": "Every photograph of the week, kept beautifully",
+      "screenshotTarget": "gallery"
+    }
+  ]
+}

@@ -55,6 +55,9 @@ final class NotificationsStore {
 
     /// New announcements appear the moment they're sent.
     func startListening() {
+#if DEBUG && targetEnvironment(simulator)
+        if ScreenshotFixture.suspendNetwork { return }
+#endif
         let weddingID = ActiveWedding.id
         guard liveWeddingID != weddingID else { return }
         stopListening()
@@ -129,6 +132,9 @@ final class NotificationsStore {
 
     /// Fetches again a few times after a send, so the server's copy replaces ours quickly.
     func refreshAfterSend() async {
+#if DEBUG && targetEnvironment(simulator)
+        if ScreenshotFixture.suspendNetwork { return }
+#endif
         for delay in [0.8, 2.5, 6.0] {
             try? await Task.sleep(for: .seconds(delay))
             await refresh()
@@ -149,12 +155,18 @@ final class NotificationsStore {
 
     /// Refreshes at most every few seconds, so returning to the screen stays quiet.
     func refreshIfNeeded() async {
+#if DEBUG && targetEnvironment(simulator)
+        if ScreenshotFixture.suspendNetwork { return }
+#endif
         if let lastRefresh, Date().timeIntervalSince(lastRefresh) < 20 { return }
         await refresh()
     }
 
     /// Fetches the feed again right now — on pull-to-refresh, or when a new one arrives.
     func refresh() async {
+#if DEBUG && targetEnvironment(simulator)
+        if ScreenshotFixture.suspendNetwork { return }
+#endif
         guard !isRefreshing else { return }
         isRefreshing = true
         defer { isRefreshing = false }

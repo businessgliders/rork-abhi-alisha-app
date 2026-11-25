@@ -13,6 +13,9 @@ struct AbhiAlishaApp: App {
 
     init() {
         BrandFont.registerIfNeeded()
+#if DEBUG && targetEnvironment(simulator)
+        ScreenshotFixture.apply()
+#endif
     }
 
     var body: some Scene {

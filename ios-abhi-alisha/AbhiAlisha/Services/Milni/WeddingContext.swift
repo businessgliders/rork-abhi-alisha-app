@@ -138,6 +138,9 @@ final class WeddingContext {
     }
 
     func refreshGuestSettings() async {
+#if DEBUG && targetEnvironment(simulator)
+        if ScreenshotFixture.suspendNetwork { return }
+#endif
         guard !isSample, !weddingID.isEmpty else { return }
         let id = weddingID
         guard let response = try? await ChatBackend.client.from("weddings")
@@ -295,6 +298,15 @@ final class WeddingContext {
         withAnimation(.easeInOut(duration: 0.6)) { stage = .onboarding }
     }
 
+#if DEBUG && targetEnvironment(simulator)
+    /// Screenshot mode: opens the fixture wedding as if it had been saved on this
+    /// phone, and marks the launch bootstrapped so no refresh or sign-in check runs.
+    func adoptFixtureWedding(_ incoming: WeddingSnapshot, role: String?, status: String?) {
+        show(incoming, sample: false, role: role, status: status)
+        didBootstrap = true
+    }
+#endif
+
     /// Back out of onboarding to the wedding that was open, if there was one.
     func returnToWedding() {
         let hasWedding = isSample || defaults.string(forKey: Key.currentWeddingID) != nil
@@ -351,6 +363,9 @@ final class WeddingContext {
 
     /// Brings the open wedding's details, my role and my list of weddings up to date.
     func refreshCurrent() async {
+#if DEBUG && targetEnvironment(simulator)
+        if ScreenshotFixture.suspendNetwork { return }
+#endif
         guard !isSample else { return }
         if let fresh = try? await MilniAPI.shared.wedding(id: weddingID), !fresh.id.isEmpty {
             var snapshot = fresh.snapshot.keepingNames(from: self.snapshot)
@@ -373,6 +388,9 @@ final class WeddingContext {
     }
 
     func refreshMyWeddings() async {
+#if DEBUG && targetEnvironment(simulator)
+        if ScreenshotFixture.suspendNetwork { return }
+#endif
         guard (try? await ChatBackend.client.auth.session) != nil else { return }
         if let weddings = try? await MilniAPI.shared.myWeddings() {
             myWeddings = weddings
@@ -386,6 +404,9 @@ final class WeddingContext {
     }
 
     func refreshMembership() async {
+#if DEBUG && targetEnvironment(simulator)
+        if ScreenshotFixture.suspendNetwork { return }
+#endif
         guard !isSample else { return }
         var resolved = ChatSession.shared.userID?.lower
         if resolved == nil {

@@ -1,0 +1,34 @@
+{
+  "version": 2,
+  "platform": "ios",
+  "scrollDirection": "page",
+  "screenshotPrompts": [
+    {
+      "label": "THE CELEBRATIONS",
+      "screenDescription": "THE CELEBRATIONS: THE CELEBRATIONS, MAKE YOUR WEDDING FACE",
+      "requiredLabels": [
+        "THE CELEBRATIONS",
+        "MAKE YOUR WEDDING FACE"
+      ],
+      "prompt": "The whole wedding week on the wrist"
+    },
+    {
+      "label": "Welcome Party",
+      "screenDescription": "Welcome Party: Back, Welcome Party, WHEN, Sunny's Patio",
+      "requiredLabels": [
+        "Back",
+        "Welcome Party",
+        "WHEN",
+        "Sunny's Patio"
+      ],
+      "prompt": "Every event's time and place, right on the wrist",
+      "setup": [
+        {
+          "action": "tap",
+          "label": "Welcome Party, 7:00 PM",
+          "type": "Button"
+        }
+      ]
+    }
+  ]
+}

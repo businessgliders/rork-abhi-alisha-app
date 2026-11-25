@@ -275,6 +275,9 @@ final class ChatStore {
     /// Fetches the whole list again. Calls made while one is running are folded into
     /// a single follow-up, so a burst of live events never stacks up requests.
     func refreshAll() async {
+#if DEBUG && targetEnvironment(simulator)
+        if ScreenshotFixture.suspendNetwork { return }
+#endif
         guard let userID else { return }
         if isRefreshing {
             needsAnotherRefresh = true
@@ -389,6 +392,9 @@ final class ChatStore {
 
     /// Only the people list, after someone changes their own name.
     func refreshPeople() async {
+#if DEBUG && targetEnvironment(simulator)
+        if ScreenshotFixture.suspendNetwork { return }
+#endif
         guard let userID else { return }
         if let rows: [ChatProfile] = try? await client
             .from("profiles")
@@ -575,6 +581,9 @@ final class ChatStore {
     // MARK: - Live
 
     private func startInbox(for userID: UUID) {
+#if DEBUG && targetEnvironment(simulator)
+        if ScreenshotFixture.suspendNetwork { return }
+#endif
         guard inboxChannel == nil else { return }
         let channel = client.channel("inbox-\(userID.lower)")
         let joined = channel.postgresChange(
@@ -900,6 +909,9 @@ final class ChatStore {
     // MARK: - Admin
 
     func refreshAdmin() async {
+#if DEBUG && targetEnvironment(simulator)
+        if ScreenshotFixture.suspendNetwork { return }
+#endif
         do {
             // Name-only guests are never waiting for the family chat.
             let waiting: [ChatProfile] = try await client

@@ -109,6 +109,12 @@ final class ChatSession {
     func start() {
         guard !didStart else { return }
         didStart = true
+#if DEBUG && targetEnvironment(simulator)
+        if ScreenshotFixture.suspendNetwork {
+            adoptFixtureUser()
+            return
+        }
+#endif
         Task {
             for await change in ChatBackend.client.auth.authStateChanges {
                 await handle(change.event, session: change.session)
@@ -283,7 +289,30 @@ final class ChatSession {
     /// account is made, so the app only ever reads it. Straight after a first sign-in it
     /// can lag by a beat, so a missing row is read again a couple of times before waiting
     /// a little longer in the background.
+#if DEBUG && targetEnvironment(simulator)
+    /// Screenshot mode: a fixed, fictional person with an approved profile, so the chat
+    /// list renders from the fixture cache. Never called in release builds.
+    func adoptFixtureUser() {
+        let id = Self.fixtureUserID
+        userID = id
+        isAnonymous = false
+        phase = .approved
+        me = ChatProfile(
+            id: id, displayName: "Rohan", status: "approved", role: nil,
+            avatarURL: nil, createdAt: nil, isAnonymous: false
+        )
+        ChatStore.shared.activate(userID: id)
+    }
+
+    nonisolated static var fixtureUserID: UUID {
+        UUID(uuidString: "AA0A0A0A-0000-4000-8000-00000000A0A1")!
+    }
+#endif
+
     func refreshProfile() async {
+#if DEBUG && targetEnvironment(simulator)
+        if ScreenshotFixture.suspendNetwork { return }
+#endif
         guard let userID else { return }
         let delays: [Duration] = [.zero, .milliseconds(700), .milliseconds(1500)]
         do {

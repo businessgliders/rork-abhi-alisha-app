@@ -29,6 +29,11 @@ struct ExperienceView: View {
                     openSectionIfAsked(proxy)
                 }
                 .onAppear { openSectionIfAsked(proxy) }
+                .onAppear {
+#if DEBUG && targetEnvironment(simulator)
+                    if ScreenshotFixture.target == "toast" { isShowingToast = true }
+#endif
+                }
         }
         .fullScreenCover(isPresented: $isShowingOutfits) {
             MyOutfitsView()
@@ -45,6 +50,7 @@ struct ExperienceView: View {
             ToastWriterView()
                 .environment(schedule)
                 .environment(content)
+                .screenshotFixtureMarkers()
         }
         .fullScreenCover(isPresented: $isShowingPacking) {
             PackingListView()

@@ -62,6 +62,9 @@ final class ScheduleStore {
 
     /// Fetches quietly in the background. Failures keep the cached content on screen.
     func refresh() async {
+#if DEBUG && targetEnvironment(simulator)
+        if ScreenshotFixture.suspendNetwork { return }
+#endif
         guard !isRefreshing else { return }
         isRefreshing = true
         defer { isRefreshing = false }
