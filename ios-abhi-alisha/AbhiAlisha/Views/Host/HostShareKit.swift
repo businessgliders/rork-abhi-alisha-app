@@ -25,6 +25,8 @@ struct HostShareKit: View {
     @State private var share: HostSharePayload?
     @State private var confirmNewCode = false
     @State private var isRegenerating = false
+    @State private var codeFailed = false
+    @State private var isLoadingCode = false
     @State private var error: String?
 
     private let snapshot = WeddingContext.shared.snapshot
@@ -60,6 +62,25 @@ struct HostShareKit: View {
                                 .padding(14)
                                 .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(.white))
                                 .accessibilityLabel("QR code for the wedding link")
+                        } else if codeFailed {
+                            VStack(spacing: 10) {
+                                Image(systemName: "wifi.exclamationmark")
+                                    .font(.system(size: 26, weight: .medium))
+                                    .foregroundStyle(HostStyle.muted)
+                                Text("Couldn't load the code")
+                                    .font(Milni.inter(15, weight: 600))
+                                    .foregroundStyle(HostStyle.ink)
+                                Button {
+                                    BrandHaptics.tick()
+                                    Task { await loadCode() }
+                                } label: {
+                                    Label("Retry", systemImage: "arrow.clockwise")
+                                        .font(Milni.inter(14, weight: 600))
+                                }
+                                .buttonStyle(.milniTertiary)
+                            }
+                            .frame(width: 196, height: 196)
+                            .accessibilityElement(children: .combine)
                         } else {
                             ProgressView().frame(width: 196, height: 196)
                         }
@@ -124,7 +145,7 @@ struct HostShareKit: View {
         .tint(HostStyle.ink)
         .environment(\.colorScheme, .light)
         .task {
-            if code == nil { code = try? await HostAPI.shared.joinCode(weddingID: weddingID) }
+            if code == nil { await loadCode() }
         }
         .sheet(item: $share) { payload in
             HostShareSheet(items: payload.items)
@@ -134,6 +155,26 @@ struct HostShareKit: View {
             Button("Make a new code", role: .destructive) { Task { await regenerate() } }
         } message: {
             Text("The old code and link stop working. Anyone already in the wedding stays in.")
+        }
+    }
+
+    /// Reads the join code, offering a retry if it can't be loaded.
+    private func loadCode() async {
+        guard !isLoadingCode else { return }
+        isLoadingCode = true
+        defer { isLoadingCode = false }
+        withAnimation(.calm) { codeFailed = false }
+        do {
+            let loadedCode = try await HostAPI.shared.joinCode(weddingID: weddingID)
+            withAnimation(.calm) {
+                if let loadedCode {
+                    code = loadedCode
+                } else {
+                    codeFailed = true
+                }
+            }
+        } catch {
+            withAnimation(.calm) { codeFailed = true }
         }
     }
 

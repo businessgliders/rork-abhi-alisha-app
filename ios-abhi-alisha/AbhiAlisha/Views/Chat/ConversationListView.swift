@@ -13,8 +13,6 @@ struct ConversationListView: View {
     @State private var updates = NotificationsStore.shared
     @State private var isComposing = false
     @State private var isAskingName = false
-    @State private var isConfirmingSignOut = false
-    @State private var isConfirmingDelete = false
     @State private var isShowingOutfits = false
     @State private var isShowingFamilySignIn = false
 
@@ -64,7 +62,6 @@ struct ConversationListView: View {
         .sheet(isPresented: $isShowingFamilySignIn) {
             FamilySignInSheet()
         }
-        .chatAccountDialogs(isConfirmingSignOut: $isConfirmingSignOut, isConfirmingDelete: $isConfirmingDelete)
         .fullScreenCover(isPresented: $isShowingOutfits) {
             MyOutfitsView()
         }
@@ -98,11 +95,6 @@ struct ConversationListView: View {
                     } label: {
                         Label(approvalsTitle, systemImage: "person.badge.clock")
                     }
-                    Button {
-                        path.append(.reports)
-                    } label: {
-                        Label(reportsTitle, systemImage: "flag")
-                    }
                 }
             }
             Section {
@@ -115,27 +107,10 @@ struct ConversationListView: View {
             Section {
                 if session.phase != .blocked {
                     Button {
-                        path.append(.blocked)
-                    } label: {
-                        Label("Blocked people", systemImage: "hand.raised")
-                    }
-                    Button {
                         session.isNamePromptPresented = true
                     } label: {
                         Label("Change my name", systemImage: "pencil")
                     }
-                }
-            }
-            Section {
-                Button {
-                    isConfirmingSignOut = true
-                } label: {
-                    Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right")
-                }
-                Button(role: .destructive) {
-                    isConfirmingDelete = true
-                } label: {
-                    Label("Delete Account", systemImage: "trash")
                 }
             }
         } label: {
@@ -171,11 +146,6 @@ struct ConversationListView: View {
     private var approvalsTitle: String {
         let count = store.pendingPeople.count
         return count > 0 ? "Approvals (\(count))" : "Approvals"
-    }
-
-    private var reportsTitle: String {
-        let count = store.reports.count
-        return count > 0 ? "Reports (\(count))" : "Reports"
     }
 
     // MARK: - Admin banner

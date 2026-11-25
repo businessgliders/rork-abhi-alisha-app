@@ -109,6 +109,8 @@ final class ChatSession {
     func start() {
         guard !didStart else { return }
         didStart = true
+        // Keeps the session's token fresh so requests never ride an expired one.
+        ChatBackend.sessionUpkeep
 #if DEBUG && targetEnvironment(simulator)
         if ScreenshotFixture.suspendNetwork {
             adoptFixtureUser()
@@ -126,6 +128,7 @@ final class ChatSession {
     func applicationDidBecomeActive() {
         guard userID != nil else { return }
         Task {
+            await ChatBackend.ensureFreshSession()
             await refreshProfile()
             if phase == .approved || phase == .pending {
                 await ChatOutbox.shared.flush()
@@ -408,11 +411,14 @@ final class ChatSession {
     func saveName(_ name: String) async -> Bool {
         guard let userID, let clean = ChatJSON.clean(name) else { return false }
         do {
-            try await ChatBackend.client
+            let response = try await ChatBackend.client
                 .from("profiles")
                 .update(NameChange(display_name: clean), returning: .minimal)
                 .eq("id", value: userID.lower)
-                .execute()
+                .execute(options: FetchOptions(count: .exact))
+            // Zero rows means the profile write never landed, even though the server
+            // said the request was fine.
+            try ChatBackend.verifyAffected(response.count, "name save")
             if var profile = me {
                 profile.displayName = clean
                 me = profile

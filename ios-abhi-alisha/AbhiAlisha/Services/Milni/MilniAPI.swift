@@ -24,9 +24,19 @@ nonisolated struct WeddingSummary: Identifiable, Hashable, Sendable {
     var latitude: Double?
     var longitude: Double?
 
+    /// Never a bare "&" and never empty: a missing name falls back to the title,
+    /// then to a sane placeholder.
     var coupleNames: String {
-        if partnerOne.isEmpty || partnerTwo.isEmpty { return title }
-        return "\(partnerOne) & \(partnerTwo)"
+        let one = partnerOne.trimmingCharacters(in: .whitespacesAndNewlines)
+        let two = partnerTwo.trimmingCharacters(in: .whitespacesAndNewlines)
+        switch (!one.isEmpty, !two.isEmpty) {
+        case (true, true): return "\(one) & \(two)"
+        case (true, false): return one
+        case (false, true): return two
+        case (false, false):
+            let title = self.title.trimmingCharacters(in: .whitespacesAndNewlines)
+            return title.isEmpty ? "Our wedding" : title
+        }
     }
 
     var initials: String {

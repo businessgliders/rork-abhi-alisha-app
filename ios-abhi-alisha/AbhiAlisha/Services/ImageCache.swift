@@ -21,6 +21,12 @@ nonisolated private final class ImageMemory: @unchecked Sendable {
         defer { lock.unlock() }
         storage[key] = image
     }
+
+    func clear() {
+        lock.lock()
+        defer { lock.unlock() }
+        storage.removeAll()
+    }
 }
 
 /// Disk-and-memory cache for the couple's photographs.
@@ -41,6 +47,15 @@ actor ImageCache {
         try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         return folder
     }()
+
+    /// Forgets every photograph — memory and disk — e.g. when Settings clears the cache.
+    /// The folder is recreated empty, so prefetching keeps working straight away.
+    func clearAll() {
+        memory.clear()
+        guard let directory else { return }
+        try? FileManager.default.removeItem(at: directory)
+        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+    }
 
     /// The photograph if it is already decoded and in memory — answered immediately,
     /// with no await and no loading state.

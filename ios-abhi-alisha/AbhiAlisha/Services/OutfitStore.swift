@@ -229,7 +229,8 @@ final class OutfitStore {
                 .from("outfit_items")
                 .update(OutfitPathChange(photo_path: path), returning: .minimal)
                 .eq("id", value: item.id)
-                .execute()
+                .execute(options: FetchOptions(count: .exact))
+                .verify("outfit photo change")
 
             let oldPath = item.photoPath
             if let index = items.firstIndex(where: { $0.id == item.id }) {
@@ -254,7 +255,8 @@ final class OutfitStore {
                 .from("outfit_items")
                 .update(OutfitNoteChange(note: clean), returning: .minimal)
                 .eq("id", value: item.id)
-                .execute()
+                .execute(options: FetchOptions(count: .exact))
+                .verify("outfit note")
             if let index = items.firstIndex(where: { $0.id == item.id }) {
                 items[index].note = clean
             }
@@ -278,7 +280,8 @@ final class OutfitStore {
                 .from("outfit_items")
                 .delete(returning: .minimal)
                 .eq("id", value: item.id)
-                .execute()
+                .execute(options: FetchOptions(count: .exact))
+                .verify("outfit delete")
             withAnimation(.calm) { items.removeAll { $0.id == item.id } }
             persist()
             OutfitPhotoCache.shared.remove(item.photoPath)

@@ -293,12 +293,17 @@ final class HostAPI {
     }
 
     func delete(eventID: String) async throws {
-        try await client.from("events").delete().eq("id", value: eventID).execute()
+        let response = try await client.from("events").delete().eq("id", value: eventID)
+            .execute(options: FetchOptions(count: .exact))
+        try ChatBackend.verifyAffected(response.count, "event delete")
     }
 
     func reorder(_ events: [HostEvent]) async throws {
         for (index, event) in events.enumerated() where event.sort != index {
-            try await client.from("events").update(["sort": AnyJSON.integer(index)]).eq("id", value: event.id).execute()
+            let response = try await client.from("events").update(["sort": AnyJSON.integer(index)])
+                .eq("id", value: event.id)
+                .execute(options: FetchOptions(count: .exact))
+            try ChatBackend.verifyAffected(response.count, "event reorder")
         }
     }
 
@@ -349,28 +354,38 @@ final class HostAPI {
             let response = try await client.from("content_sections").insert(row, returning: .representation).execute()
             return MilniJSON.rows(response.data).first.flatMap { MilniJSON.string($0["id"]) } ?? ""
         }
-        try await client.from("content_sections").update(row).eq("id", value: section.id).execute()
+        let response = try await client.from("content_sections").update(row, returning: .representation)
+            .eq("id", value: section.id)
+            .execute()
+        guard MilniJSON.rows(response.data).first != nil else {
+            throw HostError.message("We couldn't save that. Please try again.")
+        }
         return section.id
     }
 
     /// Saves each row's position (its `sort`), only where it changed.
     func reorderSections(_ sections: [HostSection]) async throws {
         for section in sections where !section.isNew {
-            try await client.from("content_sections")
+            let response = try await client.from("content_sections")
                 .update(["sort": AnyJSON.integer(section.sort)])
                 .eq("id", value: section.id)
-                .execute()
+                .execute(options: FetchOptions(count: .exact))
+            try ChatBackend.verifyAffected(response.count, "section reorder")
         }
     }
 
     func delete(sectionID: String) async throws {
-        try await client.from("content_sections").delete().eq("id", value: sectionID).execute()
+        let response = try await client.from("content_sections").delete().eq("id", value: sectionID)
+            .execute(options: FetchOptions(count: .exact))
+        try ChatBackend.verifyAffected(response.count, "section delete")
     }
 
     // MARK: - Wedding row
 
     func updateWedding(weddingID: String, fields: [String: AnyJSON]) async throws {
-        try await client.from("weddings").update(fields).eq("id", value: weddingID).execute()
+        let response = try await client.from("weddings").update(fields).eq("id", value: weddingID)
+            .execute(options: FetchOptions(count: .exact))
+        try ChatBackend.verifyAffected(response.count, "wedding update")
     }
 
     func weddingRow(weddingID: String) async throws -> [String: Any] {

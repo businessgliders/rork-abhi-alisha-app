@@ -169,8 +169,22 @@ struct WeddingSwitcherSheet: View {
                     .buttonStyle(MilniButtonStyle(kind: .secondary, ink: BrandPalette.ink, paper: BrandPalette.background))
                 }
                 .padding(.top, 22)
-                .padding(.bottom, 24)
                 .plainRow()
+
+                // The host's area, without a swipe needed.
+                if let current = currentWedding, canManageCurrent {
+                    Button {
+                        openCoupleArea(current, route: nil)
+                    } label: {
+                        Label("Manage this wedding", systemImage: "key.horizontal")
+                            .font(Milni.inter(14, weight: 500))
+                            .foregroundStyle(BrandPalette.goldDeep)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 6)
+                    .padding(.bottom, 24)
+                    .plainRow()
+                }
             }
         }
         .listStyle(.plain)
@@ -204,6 +218,16 @@ struct WeddingSwitcherSheet: View {
     private func isHost(_ wedding: WeddingSummary) -> Bool { wedding.role?.lowercased() == "host" }
     private func isCohost(_ wedding: WeddingSummary) -> Bool { wedding.roleBadge == "Co-host" }
     private func isPending(_ wedding: WeddingSummary?) -> Bool { wedding?.status?.lowercased() == "pending" }
+
+    private var currentWedding: WeddingSummary? {
+        guard !context.isSample else { return nil }
+        return context.myWeddings.first { $0.id.lowercased() == context.weddingID.lowercased() }
+    }
+
+    private var canManageCurrent: Bool {
+        guard let wedding = currentWedding else { return false }
+        return (isHost(wedding) || isCohost(wedding)) && !isPending(wedding)
+    }
 
     private func badge(for wedding: WeddingSummary) -> RowBadge {
         if isPending(wedding) { return RowBadge(text: "Pending", muted: true) }

@@ -208,7 +208,13 @@ final class WeddingContext {
                 ? cached
                 : (stored.lowercased() == ActiveWedding.sampleID ? .sample : cached)
             show(snapshot, sample: false)
-            Task { await self.refreshCurrent() }
+            // The refresh below reads this wedding and my membership: make sure the
+            // session's token is fresh first, so those reads never go out unauthenticated.
+            ChatBackend.sessionUpkeep
+            Task {
+                await ChatBackend.ensureFreshSession()
+                await self.refreshCurrent()
+            }
             return
         }
 

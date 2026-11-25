@@ -16,8 +16,7 @@ struct ExperienceView: View {
     @State private var isShowingVenues = false
     @State private var isShowingToast = false
     @State private var isShowingPacking = false
-    @State private var isConfirmingSignOut = false
-    @State private var isConfirmingDelete = false
+    @State private var isShowingSettings = false
 
     private static let topAnchor = "experience.top"
     private static let resortAnchor = "experience.resort"
@@ -56,8 +55,9 @@ struct ExperienceView: View {
             PackingListView()
                 .environment(schedule)
         }
-        // The same confirmations behind Chat → … → Delete Account, reached from here.
-        .chatAccountDialogs(isConfirmingSignOut: $isConfirmingSignOut, isConfirmingDelete: $isConfirmingDelete)
+        .fullScreenCover(isPresented: $isShowingSettings) {
+            SettingsView()
+        }
     }
 
     private var hasVenues: Bool { VenueMapPlot.hasAnyVenue(in: schedule.events) }
@@ -89,17 +89,6 @@ struct ExperienceView: View {
             detail: String(localized: "Made from your events, dress codes and the forecast.")
         ) {
             isShowingPacking = true
-        }
-    }
-
-    /// Opens the same confirmation the Chat menu shows, then runs the same deletion.
-    private var deleteAccountLink: some View {
-        ExperienceRow(
-            symbol: "person.crop.circle",
-            title: String(localized: "Delete Account"),
-            detail: String(localized: "Removes your name and every chat message, permanently.")
-        ) {
-            isConfirmingDelete = true
         }
     }
 
@@ -145,16 +134,6 @@ struct ExperienceView: View {
                     toastLink
                     WalletPassButton()
                         .padding(.top, 4)
-                }
-                .padding(.horizontal, 22)
-                .padding(.top, 18)
-
-                SectionHeading(text: "Account")
-                    .padding(.horizontal, 22)
-                    .padding(.top, 42)
-
-                VStack(spacing: 12) {
-                    deleteAccountLink
                 }
                 .padding(.horizontal, 22)
                 .padding(.top, 18)
@@ -207,17 +186,33 @@ struct ExperienceView: View {
     }
 
     private var header: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Eyebrow(text: "Your wedding week")
+        HStack(alignment: .top, spacing: 12) {
+            VStack(alignment: .leading, spacing: 6) {
+                Eyebrow(text: "Your wedding week")
 
-            Text("My Experience")
-                .brandFont(.screenTitle)
-                .foregroundStyle(BrandPalette.ink)
+                Text("My Experience")
+                    .brandFont(.screenTitle)
+                    .foregroundStyle(BrandPalette.ink)
 
-            GoldRule(width: 58, alignment: .leading)
-                .padding(.top, 2)
+                GoldRule(width: 58, alignment: .leading)
+                    .padding(.top, 2)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            Button {
+                BrandHaptics.soft()
+                isShowingSettings = true
+            } label: {
+                Image(systemName: "gearshape")
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundStyle(BrandPalette.goldDeep)
+                    .frame(width: 36, height: 36)
+                    .background(Circle().fill(BrandPalette.card))
+                    .overlay(Circle().stroke(BrandPalette.hairline, lineWidth: 1))
+            }
+            .accessibilityLabel("Settings")
+            .padding(.top, 4)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var resortHeading: some View {

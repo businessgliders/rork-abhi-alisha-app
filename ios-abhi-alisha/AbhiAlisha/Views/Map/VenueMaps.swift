@@ -183,7 +183,7 @@ struct EventMapCard: View {
                 }
                 .annotationTitles(.hidden)
             }
-            .mapStyle(.standard(pointsOfInterest: .excludingAll))
+            .mapStyle(.hybrid(elevation: .realistic))
             .frame(height: 190)
             .accessibilityElement(children: .contain)
             .accessibilityLabel(Text("Map of \(event.locationName ?? event.title)"))
@@ -311,7 +311,7 @@ struct VenuesMapView: View {
                 .annotationTitles(.hidden)
             }
         }
-        .mapStyle(.standard(pointsOfInterest: .excludingAll))
+        .mapStyle(.hybrid(elevation: .realistic))
         .mapControls {
             MapCompass()
             MapScaleView()

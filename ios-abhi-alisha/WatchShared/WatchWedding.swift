@@ -1,7 +1,7 @@
 import Foundation
 
 /// The wedding the paired iPhone has open, as the watch remembers it. The phone sends it
-/// over WatchConnectivity; until it does, the watch shows Abhi & Alisha as before.
+/// over WatchConnectivity; until it does, the watch shows the app's own name.
 nonisolated struct WatchWedding: Sendable, Equatable {
     static let sampleID = "84faefbc-2e43-4c6c-ac61-fb38d4563679"
     private static let appGroup = "group.com.businessgliders.abhialisha"
@@ -14,11 +14,13 @@ nonisolated struct WatchWedding: Sendable, Equatable {
     var timezone: String
     var mainEventRef: String? = nil
 
+    /// What the watch shows before the phone sends anything: the app's own name, so a
+    /// wedding that isn't Abhi & Alisha never borrows their names.
     static let sample = WatchWedding(
         id: sampleID,
-        title: "Abhi & Alisha",
-        partnerOne: "Abhi",
-        partnerTwo: "Alisha",
+        title: "Milni",
+        partnerOne: "",
+        partnerTwo: "",
         timezone: "America/Cancun",
         mainEventRef: "69effcf9de6c7e34fc4616a4"
     )

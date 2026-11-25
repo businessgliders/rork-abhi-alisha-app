@@ -40,12 +40,19 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
     ) {
         let conversationID = DeepLinkRouter.conversationIDValue(in: notification.request.content.userInfo)
         let isChat = DeepLinkRouter.opensValue(in: notification.request.content.userInfo) == "chat"
+        let weddingID = DeepLinkRouter.weddingIDValue(in: notification.request.content.userInfo)
         let finish = PresentationCompletion(completionHandler)
         Self.onMainThread {
             // Anything that isn't a chat message is an announcement: fetch it so the
             // feed and its unread dot are current straight away.
             if !isChat, conversationID == nil {
                 Task { await NotificationsStore.shared.refresh() }
+            }
+            // A wedding muted on this phone keeps its quiet: the feed still refreshes,
+            // but nothing is shown over whatever is on screen.
+            if let weddingID, WeddingMute.isMuted(weddingID) {
+                finish.call([])
+                return
             }
             if let conversationID,
                let id = UUID(uuidString: conversationID),

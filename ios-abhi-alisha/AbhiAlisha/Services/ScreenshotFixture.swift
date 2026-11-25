@@ -589,6 +589,8 @@ struct ScreenshotFixtureSiriScreen: View {
 
 #else
 
+import SwiftUI
+
 // The marker modifier compiles to a no-op outside capture builds; nothing else in
 // this file exists in release.
 #if !(DEBUG && targetEnvironment(simulator))

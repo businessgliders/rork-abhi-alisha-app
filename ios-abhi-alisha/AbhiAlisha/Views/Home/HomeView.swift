@@ -22,6 +22,12 @@ struct HomeView: View {
     /// From noon on the day after the reception, Home becomes a thank-you.
     private var isThankYou: Bool { phase.isThankYou(at: store.now) }
 
+    /// Still waiting for the couple to approve this phone's request.
+    private var isPendingGuest: Bool {
+        !ActiveWedding.snapshot.isSampleWedding
+            && WeddingContext.shared.status?.lowercased() == "pending"
+    }
+
     var body: some View {
         GeometryReader { proxy in
             let heroHeight = HeroHeader.height(for: proxy.size.height + proxy.safeAreaInsets.top)
@@ -148,6 +154,11 @@ struct HomeView: View {
                 )
                 .transition(.opacity)
             } else {
+                if isPendingGuest {
+                    PendingInvitationCard()
+                        .transition(.opacity)
+                }
+
                 HappeningNowBanner(events: store.events)
 
                 if ActiveWedding.snapshot.isAbhiAlisha {
@@ -417,22 +428,38 @@ private struct HeroHeader: View {
     }
 
     // The names arrive letter by letter: Abhi, then the gold ampersand, then Alisha.
+    // A name that hasn't loaded never leaves a lone "&" on the hero: the wedding's
+    // title stands in until the row arrives.
+    @ViewBuilder
     private var names: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(alignment: .firstTextBaseline, spacing: 14) {
-                firstName
-                ampersand
-                secondName
-            }
+        if wedding.partnerOne.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            || wedding.partnerTwo.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            TypewriterText(
+                text: wedding.coupleNames,
+                spec: .heroNames,
+                color: Color(hex: 0xFDFAF3),
+                startDelay: 0.75,
+                shadow: Color.black.opacity(0.35)
+            )
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(wedding.coupleNamesSpoken)
+        } else {
+            ViewThatFits(in: .horizontal) {
+                HStack(alignment: .firstTextBaseline, spacing: 14) {
+                    firstName
+                    ampersand
+                    secondName
+                }
 
-            VStack(spacing: 0) {
-                firstName
-                ampersand
-                secondName
+                VStack(spacing: 0) {
+                    firstName
+                    ampersand
+                    secondName
+                }
             }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(wedding.coupleNamesSpoken)
         }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(wedding.coupleNamesSpoken)
     }
 
     private var firstName: some View {
@@ -462,6 +489,40 @@ private struct HeroHeader: View {
             .shadow(color: Color.black.opacity(0.3), radius: 10, y: 3)
             .accessibilityHidden(true)
             .calmFadeIn(delay: 1.4, duration: 0.85)
+    }
+}
+
+/// A guest whose request is still waiting: the wedding's names and a gentle note
+/// that the couple has yet to let them in.
+private struct PendingInvitationCard: View {
+    private var snapshot: WeddingSnapshot { ActiveWedding.snapshot }
+
+    var body: some View {
+        MatteCard(cornerRadius: 24) {
+            HStack(spacing: 18) {
+                MilniRings(color: BrandPalette.gold, lineWidth: 0.9, duration: 3.2, showsOuter: false, breathes: true, delay: 0.4)
+                    .frame(width: 52, height: 52)
+                    .accessibilityHidden(true)
+
+                VStack(alignment: .leading, spacing: 7) {
+                    Eyebrow(text: "You're invited")
+
+                    Text(snapshot.coupleNames)
+                        .brandFont(.eventTitleSmall)
+                        .foregroundStyle(BrandPalette.ink)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    Text("Waiting for the couple to let you in")
+                        .brandFont(.bodyText)
+                        .foregroundStyle(BrandPalette.body)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .padding(.horizontal, 22)
+            .padding(.vertical, 22)
+        }
+        .accessibilityElement(children: .combine)
     }
 }
 

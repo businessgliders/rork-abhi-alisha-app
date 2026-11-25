@@ -27,6 +27,7 @@ struct CoupleAreaView: View {
     @State private var members: [HostMember] = []
     @State private var eventCount: Int?
     @State private var code: String?
+    @State private var codeFailed = false
     @State private var settings: WeddingContext.GuestSettings
     @State private var savingSetting: String?
     @State private var busy: Set<String> = []
@@ -433,12 +434,35 @@ struct CoupleAreaView: View {
                 .frame(width: 22)
             VStack(alignment: .leading, spacing: 3) {
                 Eyebrow(text: "Join code", color: BrandPalette.body, size: 9)
-                Text(code ?? "· · · · · ·")
-                    .font(BrandLabel.font(size: 17, weight: .semibold))
-                    .tracking(4)
-                    .foregroundStyle(BrandPalette.ink)
-                    .textSelection(.enabled)
-                    .contentTransition(.numericText())
+                if let code {
+                    Text(code)
+                        .font(BrandLabel.font(size: 17, weight: .semibold))
+                        .tracking(4)
+                        .foregroundStyle(BrandPalette.ink)
+                        .textSelection(.enabled)
+                        .contentTransition(.numericText())
+                } else if codeFailed {
+                    Button {
+                        BrandHaptics.tick()
+                        Task { await loadCode() }
+                    } label: {
+                        HStack(spacing: 5) {
+                            Image(systemName: "arrow.clockwise")
+                                .font(.system(size: 11, weight: .semibold))
+                            Text("Couldn't load the code · Retry")
+                                .font(BrandLabel.font(size: 13, weight: .semibold))
+                        }
+                        .foregroundStyle(BrandPalette.goldDeep)
+                    }
+                    .buttonStyle(PressableStyle())
+                    .accessibilityLabel("Couldn't load the code. Retry.")
+                } else {
+                    Text("· · · · · ·")
+                        .font(BrandLabel.font(size: 17, weight: .semibold))
+                        .tracking(4)
+                        .foregroundStyle(BrandPalette.body)
+                        .accessibilityLabel("Join code is loading")
+                }
             }
             Spacer(minLength: 8)
             Button {
@@ -626,13 +650,37 @@ struct CoupleAreaView: View {
         } catch {
             withAnimation(fade) { self.error = error.hostMessage }
         }
-        if let loadedCode = try? await codeTask {
-            withAnimation(fade) { code = loadedCode }
+        if let loadedCode = try? await codeTask, loadedCode != nil {
+            withAnimation(fade) {
+                code = loadedCode
+                codeFailed = false
+            }
+        } else if code == nil {
+            // The server answered but no code exists yet, or the read failed — let the
+            // row offer a retry instead of dots that never fill in.
+            withAnimation(fade) { codeFailed = true }
         }
         let count = await events
         withAnimation(fade) { eventCount = count }
         _ = await settingsTask
         if savingSetting == nil { settings = context.guestSettings }
+    }
+
+    /// Reads the join code on its own, so the row can offer a retry when it fails.
+    private func loadCode() async {
+        do {
+            let loadedCode = try await HostAPI.shared.joinCode(weddingID: weddingID)
+            withAnimation(fade) {
+                if let loadedCode {
+                    code = loadedCode
+                    codeFailed = false
+                } else {
+                    codeFailed = true
+                }
+            }
+        } catch {
+            withAnimation(fade) { codeFailed = true }
+        }
     }
 
     private func setStatus(_ member: HostMember, _ status: String) async {

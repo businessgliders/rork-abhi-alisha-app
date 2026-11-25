@@ -57,12 +57,19 @@ nonisolated struct WeddingSnapshot: Codable, Equatable, Sendable {
     /// amenities, the crest and the RSVP lookup belong to it alone, never to other couples.
     var isAbhiAlisha: Bool { slug?.lowercased() == "abhi-alisha" || isSampleWedding }
 
-    /// "Abhi & Alisha".
+    /// "Abhi & Alisha" — never a bare "&", and never empty: a name that hasn't
+    /// loaded falls back to the title, then to a sane placeholder.
     var coupleNames: String {
         let one = partnerOne.trimmingCharacters(in: .whitespacesAndNewlines)
         let two = partnerTwo.trimmingCharacters(in: .whitespacesAndNewlines)
-        if one.isEmpty || two.isEmpty { return title }
-        return "\(one) & \(two)"
+        switch (!one.isEmpty, !two.isEmpty) {
+        case (true, true): return "\(one) & \(two)"
+        case (true, false): return one
+        case (false, true): return two
+        case (false, false):
+            let title = self.title.trimmingCharacters(in: .whitespacesAndNewlines)
+            return title.isEmpty ? "Our wedding" : title
+        }
     }
 
     /// "Abhi and Alisha", for VoiceOver.

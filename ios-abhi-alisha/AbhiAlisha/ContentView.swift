@@ -212,6 +212,9 @@ struct WeddingShell: View {
 struct ContentView: View {
     private let context = WeddingContext.shared
 
+    /// The look chosen in Settings, when the wedding's theme doesn't choose its own.
+    @AppStorage(AppearancePreference.key) private var appearanceRaw = "system"
+
     var body: some View {
         ZStack {
             switch context.stage {
@@ -224,7 +227,7 @@ struct ContentView: View {
             case .wedding:
                 WeddingShell()
                     .id(context.shellKey)
-                    .preferredColorScheme(context.colorScheme)
+                    .preferredColorScheme(resolvedScheme)
                     .transition(.opacity)
             }
 
@@ -266,6 +269,12 @@ struct ContentView: View {
             await context.bootstrap()
             ClipHandoff.openIfWaiting(in: context)
         }
+    }
+
+    /// A theme with its own look keeps it; otherwise Settings decides, falling back
+    /// to the phone itself.
+    private var resolvedScheme: ColorScheme? {
+        context.colorScheme ?? AppearancePreference.scheme(for: appearanceRaw)
     }
 }
 
