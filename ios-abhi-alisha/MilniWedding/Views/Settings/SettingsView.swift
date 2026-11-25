@@ -541,6 +541,9 @@ struct SettingsView: View {
                     .foregroundStyle(BrandPalette.body)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.horizontal, 6)
+
+                // The same quiet offer as on My Experience: keep the week across devices.
+                SaveYourSpotCard()
             }
 
             VStack(spacing: 10) {

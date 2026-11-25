@@ -276,11 +276,16 @@ struct EventDetailSheet: View {
             }
 
             if let coordinate = VenueMapPlot.coordinate(for: event) {
-                EventMapCard(
-                    event: event,
-                    number: VenueMapPlot.number(of: event, in: store.events),
-                    coordinate: coordinate
-                )
+                // The couple can tuck the map cards away; Directions always stays.
+                if WeddingContext.shared.guestSettings.showAppleMap {
+                    EventMapCard(
+                        event: event,
+                        number: VenueMapPlot.number(of: event, in: store.events),
+                        coordinate: coordinate
+                    )
+                } else {
+                    EventDirectionsRow(coordinate: coordinate, name: event.locationName ?? event.title)
+                }
             }
 
             if shownWeather != nil {

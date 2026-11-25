@@ -17,6 +17,9 @@ struct ExperienceView: View {
     @State private var isShowingToast = false
     @State private var isShowingPacking = false
     @State private var isShowingSettings = false
+    /// The two halves of the tab: the guest's own week, and where everyone is staying.
+    @State private var isStayTab = false
+    @State private var session = ChatSession.shared
 
     private static let topAnchor = "experience.top"
     private static let resortAnchor = "experience.resort"
@@ -101,8 +104,12 @@ struct ExperienceView: View {
             try? await Task.sleep(for: .milliseconds(350))
             switch section {
             case .top:
-                let anchor = showsResort ? Self.resortAnchor : Self.topAnchor
-                withAnimation(.calm) { proxy.scrollTo(anchor, anchor: .top) }
+                if showsResort {
+                    isStayTab = true
+                    withAnimation(.calm) { proxy.scrollTo(Self.resortAnchor, anchor: .top) }
+                } else {
+                    withAnimation(.calm) { proxy.scrollTo(Self.topAnchor, anchor: .top) }
+                }
             case .questions:
                 isShowingQuestions = true
             }
@@ -112,6 +119,12 @@ struct ExperienceView: View {
     /// "Where we're staying" is AVA Resort Cancún: Abhi & Alisha's wedding only.
     private var showsResort: Bool { content.stay != nil }
 
+    /// The all-venues Apple map, which the couple can tuck away.
+    private var showsVenuesMap: Bool { hasVenues && WeddingContext.shared.guestSettings.showAppleMap }
+
+    /// A name-only guest who hasn't waved the offer away.
+    private var showsSaveSpot: Bool { session.isAnonymous && !SaveYourSpotCard.isHidden }
+
     private var page: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
@@ -119,70 +132,146 @@ struct ExperienceView: View {
                     .padding(.horizontal, 22)
                     .id(Self.topAnchor)
 
-                SectionHeading(text: "Your week")
-                    .padding(.horizontal, 22)
-                    .padding(.top, 34)
-
-                VStack(spacing: 12) {
-                    MyOutfitsHomeCard { isShowingOutfits = true }
-                    ExperienceUpdatesCard()
-                    questionsLink
-                    if hasVenues && !showsResort {
-                        venuesLink
-                    }
-                    packingLink
-                    toastLink
-                    WalletPassButton()
-                        .padding(.top, 4)
-                }
-                .padding(.horizontal, 22)
-                .padding(.top, 18)
-
-                if let stay = content.stay {
-                    resortHeading
+                if showsResort {
+                    segmented
                         .padding(.horizontal, 22)
-                        .padding(.top, 46)
-                        .id(Self.resortAnchor)
-
-                    if hasVenues {
-                        venuesLink
-                            .padding(.horizontal, 22)
-                            .padding(.top, 18)
-                    }
-
-                    PhotosAndMaps(photos: content.resortPhotos, stay: stay)
-                        .padding(.top, 18)
-
-                    if !stay.amenities.isEmpty {
-                        SectionHeading(text: "Amenities")
-                            .padding(.horizontal, 22)
-                            .padding(.top, 42)
-
-                        AmenityRow(amenities: stay.resortAmenities)
-                            .padding(.top, 18)
-                    }
+                        .padding(.top, 22)
                 }
 
-                if !content.roomRates.isEmpty {
-                    SectionHeading(text: "Room rates")
-                        .padding(.horizontal, 22)
-                        .padding(.top, 42)
-
-                    RoomRatesList(rooms: content.roomRates)
-                        .padding(.horizontal, 22)
-                        .padding(.top, 18)
+                if isStayTab && showsResort {
+                    stayContent
+                } else {
+                    weekContent
                 }
             }
             .padding(.top, ScreenChrome.contentReserve)
             .padding(.bottom, FloatingTabBar.contentReserve + 24)
             .readableWidth()
-            .crestCorner()
         }
         .scrollIndicators(.hidden)
         .background(BrandPalette.background.ignoresSafeArea())
         .task {
             await content.refreshIfNeeded()
         }
+    }
+
+    // MARK: Your week
+
+    private var weekContent: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            if showsSaveSpot {
+                SaveYourSpotCard()
+                    .padding(.horizontal, 22)
+                    .padding(.top, 18)
+            }
+
+            ExperienceTiles(
+                onOutfits: { isShowingOutfits = true },
+                onQuestions: { isShowingQuestions = true },
+                onPacking: { isShowingPacking = true },
+                onToast: { isShowingToast = true }
+            )
+            .padding(.horizontal, 22)
+            .padding(.top, 18)
+
+            VStack(alignment: .leading, spacing: 14) {
+                SectionHeading(text: "Stay in the loop")
+                ExperienceUpdatesCard()
+            }
+            .padding(.horizontal, 22)
+            .padding(.top, 36)
+
+            if showsVenuesMap && !showsResort {
+                venuesLink
+                    .padding(.horizontal, 22)
+                    .padding(.top, 12)
+            }
+
+            WalletPassButton()
+                .padding(.horizontal, 22)
+                .padding(.top, 14)
+
+            if !showsResort && !content.roomRates.isEmpty {
+                SectionHeading(text: "Room rates")
+                    .padding(.horizontal, 22)
+                    .padding(.top, 42)
+
+                RoomRatesList(rooms: content.roomRates)
+                    .padding(.horizontal, 22)
+                    .padding(.top, 18)
+            }
+        }
+    }
+
+    // MARK: Our stay
+
+    @ViewBuilder
+    private var stayContent: some View {
+        if let stay = content.stay {
+            resortHeading
+                .padding(.horizontal, 22)
+                .padding(.top, 24)
+                .id(Self.resortAnchor)
+
+            if showsVenuesMap {
+                venuesLink
+                    .padding(.horizontal, 22)
+                    .padding(.top, 18)
+            }
+
+            PhotosAndMaps(photos: content.resortPhotos, stay: stay)
+                .padding(.top, 18)
+
+            if !stay.amenities.isEmpty {
+                SectionHeading(text: "Amenities")
+                    .padding(.horizontal, 22)
+                    .padding(.top, 42)
+
+                AmenityRow(amenities: stay.resortAmenities)
+                    .padding(.top, 18)
+            }
+
+            if !content.roomRates.isEmpty {
+                SectionHeading(text: "Room rates")
+                    .padding(.horizontal, 22)
+                    .padding(.top, 42)
+
+                RoomRatesList(rooms: content.roomRates)
+                    .padding(.horizontal, 22)
+                    .padding(.top, 18)
+            }
+        }
+    }
+
+    /// The tab's own two halves, as a small pill the thumb can find without looking.
+    private var segmented: some View {
+        HStack(spacing: 4) {
+            segmentButton("Your week", isOn: !isStayTab) {
+                isStayTab = false
+            }
+            segmentButton("Our stay", isOn: isStayTab) {
+                isStayTab = true
+            }
+        }
+        .padding(3)
+        .background(Capsule(style: .continuous).fill(BrandPalette.hairline.opacity(0.4)))
+    }
+
+    private func segmentButton(_ title: String, isOn: Bool, action: @escaping () -> Void) -> some View {
+        Button {
+            BrandHaptics.tick()
+            withAnimation(.calm) { action() }
+        } label: {
+            Text(title)
+                .brandFont(.bodySmall)
+                .fontWeight(isOn ? .semibold : .regular)
+                .foregroundStyle(isOn ? BrandPalette.background : BrandPalette.body)
+                .padding(.vertical, 8)
+                .frame(maxWidth: .infinity)
+                .background(Capsule().fill(isOn ? BrandPalette.ink : Color.clear))
+        }
+        .buttonStyle(PressableStyle())
+        .accessibilityAddTraits(isOn ? [.isSelected] : [])
     }
 
     private var header: some View {

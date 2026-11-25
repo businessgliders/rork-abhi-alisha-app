@@ -99,6 +99,22 @@ final class WeddingContext {
         var dms = true
         var uploads = true
         var autoApprove = true
+        /// The MapKit cards on event sheets and the all-venues map. The resort map,
+        /// "View full map" and Directions stay whatever this says.
+        var showAppleMap = true
+
+        init() {}
+
+        // Custom decoding, so a setting added later doesn't throw away the couple's
+        // other saved choices when an older cache is read.
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            chat = try container.decodeIfPresent(Bool.self, forKey: .chat) ?? true
+            dms = try container.decodeIfPresent(Bool.self, forKey: .dms) ?? true
+            uploads = try container.decodeIfPresent(Bool.self, forKey: .uploads) ?? true
+            autoApprove = try container.decodeIfPresent(Bool.self, forKey: .autoApprove) ?? true
+            showAppleMap = try container.decodeIfPresent(Bool.self, forKey: .showAppleMap) ?? true
+        }
     }
 
     private(set) var guestSettings = GuestSettings()
@@ -154,14 +170,15 @@ final class WeddingContext {
     }
 
     static func guestSettings(from row: [String: Any]) -> GuestSettings {
-        let settings = row["settings"] as? [String: Any] ?? [:]
-        func flag(_ key: String) -> Bool { (settings[key] as? Bool) ?? true }
-        return GuestSettings(
-            chat: flag("guest_chat"),
-            dms: flag("guest_dms"),
-            uploads: flag("guest_photo_uploads"),
-            autoApprove: (row["auto_approve"] as? Bool) ?? true
-        )
+        let saved = row["settings"] as? [String: Any] ?? [:]
+        func flag(_ key: String) -> Bool { (saved[key] as? Bool) ?? true }
+        var settings = GuestSettings()
+        settings.chat = flag("guest_chat")
+        settings.dms = flag("guest_dms")
+        settings.uploads = flag("guest_photo_uploads")
+        settings.autoApprove = (row["auto_approve"] as? Bool) ?? true
+        settings.showAppleMap = flag("show_apple_map")
+        return settings
     }
 
     /// After leaving or deleting the open wedding: go to another one, or start over.

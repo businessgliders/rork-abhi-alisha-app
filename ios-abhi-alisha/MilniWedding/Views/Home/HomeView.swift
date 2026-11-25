@@ -106,7 +106,7 @@ struct HomeView: View {
         let place = Text(ActiveWedding.snapshot.placeWithCountry ?? "")
             .brandFont(.bodySmall)
             .tracking(0.4)
-        if VenueMapPlot.hasAnyVenue(in: store.events) {
+        if VenueMapPlot.hasAnyVenue(in: store.events) && WeddingContext.shared.guestSettings.showAppleMap {
             Button {
                 BrandHaptics.tick()
                 isShowingVenues = true

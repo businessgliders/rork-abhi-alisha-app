@@ -46,6 +46,8 @@ final class ChatSession {
 
     private(set) var isSigningIn = false
     var signInError: String?
+    /// A quiet word after linking: what carried over, and what didn't.
+    var linkNotice: String?
 
 
     private var currentNonce: String?
@@ -227,18 +229,24 @@ final class ChatSession {
 
     /// A name-only guest signing in with Apple: the Apple identity joins their existing
     /// account, so their name and Questions & Chat history stay theirs. If that Apple ID
-    /// already has its own account, they're signed in to that one instead.
+    /// already has its own account, they're signed in to that one instead, and the
+    /// server is asked to move their guest history across.
     private func linkApple(_ credentials: OpenIDConnectCredentials) async {
+        // Taken before Apple replaces the session: this is what the server needs to
+        // find this phone's guest account and hand its work to the Apple one.
+        let guestToken = ChatBackend.client.auth.currentSession?.accessToken
         do {
             _ = try await ChatBackend.client.auth.linkIdentityWithIdToken(credentials: credentials)
             currentNonce = nil
             withAnimation(.calm) { isAnonymous = false }
             await refreshProfile()
+            linkNotice = "Saved. Your week now follows your Apple ID."
         } catch let error as AuthError where error.errorCode == .identityAlreadyExists {
             print("[Chat] Apple ID already has an account, signing in to it")
             do {
                 _ = try await ChatBackend.client.auth.signInWithIdToken(credentials: credentials)
                 currentNonce = nil
+                await moveGuestHistory(guestToken: guestToken)
             } catch {
                 signInError = "This Apple ID already has a family chat account. Sign out of the guest chat, then sign in with Apple."
             }
@@ -246,6 +254,35 @@ final class ChatSession {
             print("[Chat] Apple identity could not be linked")
             signInError = "We couldn't sign you in just now. Please try again."
         }
+    }
+
+    /// The Apple ID already had its own account, so this phone just signed in to it.
+    /// Asks `merge-guest` to move what the guest did under a name — chat messages,
+    /// outfit ticks, their RSVP match — to the account they'll keep.
+    private func moveGuestHistory(guestToken: String?) async {
+        guard let guestToken,
+              let session = try? await ChatBackend.client.auth.session else { return }
+        var request = URLRequest(url: ChatBackend.url.appending(path: "functions/v1/merge-guest"))
+        request.httpMethod = "POST"
+        request.timeoutInterval = 20
+        request.setValue("Bearer \(session.accessToken)", forHTTPHeaderField: "Authorization")
+        request.setValue(ChatBackend.publishableKey, forHTTPHeaderField: "apikey")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try? JSONSerialization.data(withJSONObject: ["guest_token": guestToken])
+
+        guard let (_, response) = try? await URLSession.shared.data(for: request),
+              let http = response as? HTTPURLResponse else {
+            linkNotice = "Your earlier guest activity on this phone couldn't be moved."
+            return
+        }
+        // The server may also answer 410 when the guest account has already been
+        // merged or has since expired: the sign-in itself still worked.
+        linkNotice = (200..<300).contains(http.statusCode)
+            ? "Saved. Your week now follows your Apple ID."
+            : "Your earlier guest activity on this phone couldn't be moved."
+        await refreshProfile()
+        await MainActor.run { WeddingContext.shared.sessionDidChange() }
+        Task { await WeddingContext.shared.refreshMyWeddings() }
     }
 
     // MARK: - Name-only guests

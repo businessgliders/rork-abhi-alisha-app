@@ -373,6 +373,15 @@ struct CoupleAreaView: View {
                             update(key: "guest_photo_uploads") { $0.uploads = newValue }
                         })
                     )
+                    divider
+                    settingToggle(
+                        "Show Apple Maps on events",
+                        detail: "The map cards with directions and Look Around on every celebration.",
+                        key: "show_apple_map",
+                        isOn: Binding(get: { settings.showAppleMap }, set: { newValue in
+                            update(key: "show_apple_map") { $0.showAppleMap = newValue }
+                        })
+                    )
                 }
             }
             Text("Hosts and co-hosts can always do everything.")
@@ -729,6 +738,7 @@ struct CoupleAreaView: View {
                     switch key {
                     case "guest_chat": value = next.chat
                     case "guest_dms": value = next.dms
+                    case "show_apple_map": value = next.showAppleMap
                     default: value = next.uploads
                     }
                     merged[key] = .bool(value)

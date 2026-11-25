@@ -76,7 +76,6 @@ struct StoryView: View {
             .padding(.top, ScreenChrome.contentReserve)
             .padding(.bottom, FloatingTabBar.contentReserve + 24)
             .readableWidth()
-            .crestCorner()
         }
         .scrollIndicators(.hidden)
         .background(BrandPalette.background.ignoresSafeArea())

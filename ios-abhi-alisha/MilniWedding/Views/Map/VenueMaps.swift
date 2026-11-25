@@ -265,6 +265,45 @@ struct EventMapCard: View {
     }
 }
 
+/// The map card without the map: the couple's "Show Apple Maps on events" is off, so
+/// this hands straight to Apple Maps from the venue's coordinates.
+struct EventDirectionsRow: View {
+    let coordinate: CLLocationCoordinate2D
+    let name: String
+
+    var body: some View {
+        Button {
+            BrandHaptics.soft()
+            VenueMapPlot.openDirections(to: coordinate, name: name)
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: "figure.walk")
+                    .font(.system(size: 13, weight: .regular))
+                Text("Directions")
+                    .font(BrandLabel.font(size: 11, weight: .semibold))
+                    .tracking(1.5)
+                    .textCase(.uppercase)
+                Spacer(minLength: 0)
+                Image(systemName: "arrow.up.right")
+                    .font(.system(size: 10, weight: .semibold))
+            }
+            .foregroundStyle(BrandPalette.goldDeep)
+            .padding(.horizontal, 18)
+            .frame(minHeight: 50)
+            .background(
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .fill(BrandPalette.card)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .stroke(BrandPalette.gold.opacity(0.3), lineWidth: 0.75)
+            )
+        }
+        .buttonStyle(PressableStyle())
+        .accessibilityLabel(Text("Walking directions in Maps to \(name)"))
+    }
+}
+
 // MARK: - Venues map
 
 /// Every venue of the week on one map, numbered as in the schedule. Tap a pin for the

@@ -9,7 +9,8 @@ struct OnboardingFlow: View {
         case choose
         case code(prefill: String?)
         case invitation(WeddingSummary, code: String)
-        case name(WeddingSummary, code: String)
+        case who(WeddingSummary, code: String)
+        case rsvp(WeddingSummary, code: String, firstName: String, matches: [RSVPRecord])
         case welcome(WeddingSummary, firstName: String)
         case coupleSignIn
         case coupleNames
@@ -27,8 +28,9 @@ struct OnboardingFlow: View {
             case .choose: return 2
             case .code: return 3
             case .invitation: return 4
-            case .name: return 5
-            case .welcome: return 6
+            case .who: return 5
+            case .rsvp: return 6
+            case .welcome: return 7
             case .coupleSignIn: return 3
             case .coupleNames: return 4
             case .coupleDates: return 5
@@ -172,13 +174,26 @@ struct OnboardingFlow: View {
                 go(.invitation(summary, code: code))
             }
         case .invitation(let summary, let code):
-            MilniInvitationView(summary: summary, back: { go(.code(prefill: code)) }) {
+            MilniInvitationView(summary: summary, progress: 0, back: { go(.code(prefill: code)) }) {
                 accept(summary, code: code)
             }
-        case .name(let summary, let code):
-            MilniNameView(summary: summary, back: { go(.invitation(summary, code: code)) }) { name in
-                try await joinAsGuest(name: name, summary: summary, code: code)
+        case .who(let summary, let code):
+            MilniWhoView(summary: summary, progress: 1, back: { go(.invitation(summary, code: code)) }) { name in
+                try await joinAs(name: name, summary: summary, code: code)
             }
+        case .rsvp(let summary, let code, let firstName, let matches):
+            MilniRSVPView(
+                summary: summary,
+                firstName: firstName,
+                matches: matches,
+                progress: 2,
+                back: { go(.who(summary, code: code)) },
+                skip: { go(.welcome(summary, firstName: firstName)) },
+                confirm: { record in
+                    await RSVPService.shared.confirm(record, weddingID: summary.id)
+                    go(.welcome(summary, firstName: firstName))
+                }
+            )
         case .welcome(let summary, let firstName):
             MilniWelcomeView(summary: summary, firstName: firstName) {
                 finish()
@@ -223,28 +238,28 @@ struct OnboardingFlow: View {
             close?()
             return
         }
-        if session.isSignedIn {
-            Task {
-                do {
-                    try await context.join(code: code, preview: summary)
-                    go(.welcome(context.pendingSummary ?? summary, firstName: firstName(session.me?.displayName)))
-                } catch {
-                    go(.name(summary, code: code))
-                }
-            }
-        } else {
-            go(.name(summary, code: code))
-        }
+        go(.who(summary, code: code))
     }
 
-    private func joinAsGuest(name: String, summary: WeddingSummary, code: String) async throws {
-        if !session.isSignedIn {
-            guard await session.joinAsGuest(name: name) else { throw MilniError.failed }
-        } else {
+    /// Joins under the name given — as a guest with just a name, or under the Apple
+    /// identity already signed in. Then offers the RSVP match, quietly skipped when
+    /// the lookup has nothing (or isn't set up).
+    private func joinAs(name: String, summary: WeddingSummary, code: String) async throws {
+        if session.isSignedIn {
+            // Signed in with Apple (or already a name guest): keep the name they typed.
             _ = await session.saveName(name)
+        } else {
+            guard await session.joinAsGuest(name: name) else { throw MilniError.failed }
         }
         try await context.join(code: code, preview: summary)
-        go(.welcome(context.pendingSummary ?? summary, firstName: firstName(name)))
+
+        let first = firstName(name)
+        let matches = await RSVPService.shared.search(name: name, weddingID: summary.id)
+        if matches.isEmpty {
+            go(.welcome(context.pendingSummary ?? summary, firstName: first))
+        } else {
+            go(.rsvp(context.pendingSummary ?? summary, code: code, firstName: first, matches: matches))
+        }
     }
 
     private func firstName(_ name: String?) -> String {

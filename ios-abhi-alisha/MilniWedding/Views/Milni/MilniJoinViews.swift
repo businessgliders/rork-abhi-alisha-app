@@ -1,3 +1,4 @@
+import AuthenticationServices
 import SwiftUI
 import UIKit
 
@@ -233,6 +234,7 @@ private struct MilniSmallLabelStyle: LabelStyle {
 
 struct MilniInvitationView: View {
     let summary: WeddingSummary
+    var progress: Int = 0
     let back: () -> Void
     let accept: () -> Void
 
@@ -244,7 +246,10 @@ struct MilniInvitationView: View {
         VStack(spacing: 0) {
             HStack {
                 MilniBackButton(action: back).padding(.leading, -12)
-                Spacer()
+                Spacer(minLength: 0)
+                MilniProgressTrack(index: progress)
+                    .frame(width: 88)
+                    .padding(.trailing, 4)
             }
             .milniSides()
 
@@ -306,52 +311,98 @@ struct MilniInvitationView: View {
 
 }
 
-// MARK: - Your name
+// MARK: - Who's joining
 
-struct MilniNameView: View {
+/// The four steps a guest walks, from the invitation to the welcome: a thin gold
+/// track under the back link so it's always clear where they are.
+struct MilniProgressTrack: View {
+    /// Zero-based step; the last of four is the welcome.
+    var index: Int
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        HStack(spacing: 8) {
+            ForEach(0..<4, id: \.self) { item in
+                Capsule()
+                    .fill(item <= index ? Milni.gold : Milni.hairline)
+                    .frame(height: 2)
+                    .frame(maxWidth: .infinity)
+            }
+        }
+        .animation(
+            reduceMotion ? .easeInOut(duration: 0.3) : .spring(response: 0.5, dampingFraction: 0.9),
+            value: index
+        )
+        .accessibilityElement()
+        .accessibilityLabel(Text("Step \(index + 1) of 4"))
+    }
+}
+
+/// Step two of four: who's joining. Guests type their name; family and wedding party
+/// sign in with Apple instead — an offer, never a wall.
+struct MilniWhoView: View {
     let summary: WeddingSummary
+    var progress: Int
     let back: () -> Void
     let submit: (String) async throws -> Void
 
-    @State private var name = ChatSession.shared.suggestedName
+    @State private var firstName = ""
+    @State private var lastName = ""
     @State private var working = false
     @State private var error: String?
+    @State private var appleSignedIn = false
+
+    private let session = ChatSession.shared
+
+    private var fullName: String {
+        [firstName, lastName]
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+            .joined(separator: " ")
+    }
+
+    private var isReady: Bool { fullName.count >= 2 }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            MilniBackButton(action: back).padding(.leading, -12)
+            HStack {
+                MilniBackButton(action: back).padding(.leading, -12)
+                Spacer(minLength: 0)
+                MilniProgressTrack(index: progress)
+                    .frame(width: 88)
+                    .padding(.trailing, 4)
+            }
 
             MilniLabel(summary.coupleNames)
-                .padding(.top, 24)
+                .padding(.top, 20)
                 .milniEntrance(0)
-            MilniHeadline(first: "How should the", second: "family know you?", size: 42)
+            MilniHeadline(first: "Who's", second: "joining?", size: 42)
                 .padding(.top, 12)
                 .milniEntrance(1)
 
-            MilniUnderlineField(label: "Your name", text: $name, placeholder: "First and last name", contentType: .name) {
-                go()
+            if appleSignedIn {
+                signedInChip
+                    .padding(.top, 30)
+                    .milniEntrance(2)
+            } else {
+                nameFields
+                    .padding(.top, 34)
+                    .milniEntrance(2)
             }
-            .padding(.top, 44)
-            .milniEntrance(2)
-
-            HStack(alignment: .top, spacing: 10) {
-                Image(systemName: "lock")
-                    .font(.system(size: 12))
-                    .foregroundStyle(Milni.goldText)
-                    .padding(.top, 2)
-                Text("The couple approves guests before the family chat opens.")
-                    .font(Milni.inter(13))
-                    .foregroundStyle(Milni.muted)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            .padding(.top, 18)
-            .milniEntrance(3)
 
             if let error {
                 Text(error)
                     .font(Milni.inter(14))
                     .foregroundStyle(Color(hex: 0x9A3B2E))
                     .padding(.top, 16)
+                    .transition(.opacity)
+            }
+            if let notice = session.linkNotice {
+                Text(notice)
+                    .font(Milni.inter(14))
+                    .foregroundStyle(Milni.found)
+                    .padding(.top, 12)
                     .transition(.opacity)
             }
 
@@ -363,27 +414,122 @@ struct MilniNameView: View {
                 if working {
                     ProgressView().tint(Milni.ivory)
                 } else {
-                    Text("Join the wedding")
+                    Text(appleSignedIn ? "Continue" : "Join as a guest")
                 }
             }
             .buttonStyle(.milniPrimary)
-            .disabled(name.trimmingCharacters(in: .whitespaces).count < 2 || working)
-            .padding(.bottom, 8)
+            .disabled(!isReady || working)
+            .padding(.bottom, 10)
+
+            if !appleSignedIn {
+                familyCard
+                    .padding(.bottom, 8)
+            }
         }
         .milniSides()
         .background(Milni.ivory.ignoresSafeArea())
         .animation(.easeInOut(duration: 0.25), value: error)
+        .animation(.easeInOut(duration: 0.3), value: appleSignedIn)
+        .onAppear(perform: fillFromSession)
+        .onChange(of: session.isSignedIn && !session.isAnonymous) { _, signedIn in
+            if signedIn {
+                appleSignedIn = true
+                fillFromSession()
+            }
+        }
+        .onChange(of: session.linkNotice) { _, notice in
+            // The Apple ID already had an account and the guest history moved: say so,
+            // then carry on as the signed-in person.
+            if notice != nil, session.isSignedIn {
+                appleSignedIn = true
+            }
+        }
+    }
+
+    private var nameFields: some View {
+        VStack(spacing: 26) {
+            MilniUnderlineField(label: "First name", text: $firstName, placeholder: "Your first name", contentType: .givenName) {
+                go()
+            }
+            MilniUnderlineField(label: "Last name", text: $lastName, placeholder: "Optional", contentType: .familyName) {
+                go()
+            }
+            HStack(alignment: .top, spacing: 10) {
+                Image(systemName: "lock")
+                    .font(.system(size: 12))
+                    .foregroundStyle(Milni.goldText)
+                    .padding(.top, 2)
+                Text("The couple approves guests before the family chat opens.")
+                    .font(Milni.inter(13))
+                    .foregroundStyle(Milni.muted)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+
+    /// Family and wedding party sign in with Apple: their week follows them across
+    /// devices. A quiet card on midnight, with the compact white-outline control.
+    private var familyCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Family or wedding party?")
+                .font(Milni.cormorant(24, weight: 600))
+                .foregroundStyle(Milni.ivory)
+            Text("Sign in with Apple and your week follows you to every device.")
+                .font(Milni.inter(13))
+                .foregroundStyle(Milni.ivory.opacity(0.75))
+                .fixedSize(horizontal: false, vertical: true)
+
+            SignInWithAppleButton(.signIn) { request in
+                session.prepare(request)
+            } onCompletion: { result in
+                Task { await session.complete(result) }
+            }
+            .signInWithAppleButtonStyle(.whiteOutline)
+            .frame(height: 44)
+            .clipShape(Capsule())
+            .opacity(session.isSigningIn ? 0.5 : 1)
+            .disabled(session.isSigningIn)
+            .padding(.top, 2)
+        }
+        .padding(18)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: 22, style: .continuous).fill(Milni.midnight))
+        .accessibilityElement(children: .contain)
+    }
+
+    private var signedInChip: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "checkmark.circle.fill")
+                .font(.system(size: 14, weight: .semibold))
+            Text("Signed in with Apple")
+                .font(Milni.inter(14, weight: 500))
+        }
+        .foregroundStyle(Milni.found)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .background(Capsule().fill(Milni.found.opacity(0.1)))
+        .accessibilityElement(children: .combine)
+    }
+
+    private func fillFromSession() {
+        if firstName.isEmpty, let suggested = ChatJSON.clean(session.suggestedName) {
+            let parts = suggested.split(separator: " ").map(String.init)
+            firstName = parts.first ?? ""
+            if parts.count > 1 { lastName = parts.dropFirst().joined(separator: " ") }
+        }
+        if session.isSignedIn && !session.isAnonymous {
+            appleSignedIn = true
+        }
     }
 
     private func go() {
-        let clean = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard clean.count >= 2, !working else { return }
+        guard isReady, !working else { return }
         BrandHaptics.soft()
         working = true
         error = nil
         Task {
             do {
-                try await submit(clean)
+                try await submit(fullName)
             } catch {
                 self.error = (error as? MilniError) == .notFound
                     ? "We couldn't find that code."
@@ -394,6 +540,133 @@ struct MilniNameView: View {
     }
 }
 
+// MARK: - RSVP match
+
+/// Step three of four: the party found for the name typed. Offered only when the
+/// lookup answered; a quiet skip otherwise.
+struct MilniRSVPView: View {
+    let summary: WeddingSummary
+    let firstName: String
+    let matches: [RSVPRecord]
+    var progress: Int
+    let back: () -> Void
+    let skip: () -> Void
+    let confirm: (RSVPRecord) async -> Void
+
+    @State private var picked: RSVPRecord?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack {
+                MilniBackButton(action: back).padding(.leading, -12)
+                Spacer(minLength: 0)
+                MilniProgressTrack(index: progress)
+                    .frame(width: 88)
+                    .padding(.trailing, 4)
+            }
+
+            ScrollView(showsIndicators: false) {
+                VStack(alignment: .leading, spacing: 0) {
+                    MilniLabel(summary.coupleNames)
+                        .padding(.top, 20)
+                        .milniEntrance(0)
+                    MilniHeadline(first: "Is this", second: "you, \(firstName)?", size: 42)
+                        .padding(.top, 12)
+                        .milniEntrance(1)
+                    MilniBody("Found on \(summary.coupleNames)'s guest list. Pick your reply so the week can greet you by name.")
+                        .padding(.top, 14)
+                        .milniEntrance(2)
+
+                    VStack(spacing: 12) {
+                        ForEach(matches) { record in
+                            matchCard(record)
+                        }
+                    }
+                    .padding(.top, 26)
+                    .milniEntrance(3)
+                }
+                .padding(.bottom, 24)
+            }
+
+            Button("None of these", action: skip)
+                .buttonStyle(.milniTertiary)
+                .padding(.bottom, 8)
+        }
+        .milniSides()
+        .background(Milni.ivory.ignoresSafeArea())
+    }
+
+    private func matchCard(_ record: RSVPRecord) -> some View {
+        Button {
+            guard picked == nil else { return }
+            BrandHaptics.soft()
+            picked = record
+            Task { await confirm(record) }
+        } label: {
+            MatteCard(cornerRadius: 22) {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack(spacing: 10) {
+                        Text(record.displayName ?? "")
+                            .font(Milni.cormorant(24, weight: 600))
+                            .foregroundStyle(Milni.ink)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.7)
+                        Spacer(minLength: 8)
+                        if let attending = record.isAttending {
+                            Text(attending ? "Coming" : "Can't come")
+                                .font(Milni.inter(11, weight: 600))
+                                .tracking(0.8)
+                                .textCase(.uppercase)
+                                .foregroundStyle(attending ? Milni.found : Milni.muted)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 5)
+                                .background(Capsule().fill((attending ? Milni.found : Milni.muted).opacity(0.1)))
+                        }
+                    }
+
+                    if let party = record.partyLine {
+                        Text(party)
+                            .font(Milni.inter(13))
+                            .foregroundStyle(Milni.muted)
+                    }
+
+                    if let events = record.events?.filter({ !$0.isEmpty }), !events.isEmpty {
+                        HStack(spacing: 6) {
+                            ForEach(events.prefix(3), id: \.self) { event in
+                                Text(event)
+                                    .font(Milni.inter(11, weight: 500))
+                                    .foregroundStyle(Milni.goldText)
+                                    .padding(.horizontal, 9)
+                                    .padding(.vertical, 4)
+                                    .background(Capsule().stroke(Milni.gold.opacity(0.5), lineWidth: 0.8))
+                                    .lineLimit(1)
+                            }
+                            if events.count > 3 {
+                                Text("+\(events.count - 3)")
+                                    .font(Milni.inter(11, weight: 500))
+                                    .foregroundStyle(Milni.muted)
+                            }
+                        }
+                    }
+                }
+                .padding(18)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+        .buttonStyle(PressableStyle())
+        .opacity(picked == nil || picked?.id == record.id ? 1 : 0.5)
+        .accessibilityLabel(Text("\(record.displayName ?? "A party") on the guest list"))
+        .accessibilityHint(attendingHint(for: record))
+    }
+
+    private func attendingHint(for record: RSVPRecord) -> String {
+        if let attending = record.isAttending {
+            return attending ? "Confirms this is you" : "This reply says you can't come"
+        }
+        return "Confirms this is you"
+    }
+}
+
 // MARK: - Welcome
 
 struct MilniWelcomeView: View {
@@ -401,6 +674,7 @@ struct MilniWelcomeView: View {
     let firstName: String
     let enter: () -> Void
 
+    @State private var push = PushRegistrar.shared
     @State private var open = false
     @State private var showText = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -449,11 +723,27 @@ struct MilniWelcomeView: View {
 
                     Spacer()
 
-                    Button("Enter the wedding") {
-                        BrandHaptics.soft()
-                        enter()
+                    VStack(spacing: 10) {
+                        if push.isEnabled {
+                            Button("Enter the wedding") {
+                                BrandHaptics.soft()
+                                enter()
+                            }
+                            .buttonStyle(.milniPrimary)
+                        } else {
+                            Button {
+                                BrandHaptics.soft()
+                                push.markOffered()
+                                push.isExplainerPresented = true
+                            } label: {
+                                Label("Turn on updates", systemImage: "bell")
+                            }
+                            .buttonStyle(.milniPrimary)
+
+                            Button("Not now", action: enter)
+                                .buttonStyle(.milniTertiary)
+                        }
                     }
-                    .buttonStyle(.milniPrimary)
                     .milniSides()
                     .padding(.bottom, 8)
                     .opacity(showText ? 1 : 0)
