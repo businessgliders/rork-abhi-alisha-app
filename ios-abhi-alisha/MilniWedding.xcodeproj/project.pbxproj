@@ -786,7 +786,7 @@
 				INFOPLIST_KEY_NSCalendarsWriteOnlyAccessUsageDescription = "Add wedding celebrations to your own calendar so you never miss one.";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Photograph your outfits for each celebration, or, for the couple, take Wedding Week photos that are shared with every guest.";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Face ID keeps the couple’s area private on this phone.";
-				INFOPLIST_KEY_CFBundleDisplayName = "Milni Wedding";
+				INFOPLIST_KEY_CFBundleDisplayName = Milni;
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Save wedding week photos to your photo library.";
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_NSSupportsLiveActivitiesFrequentUpdates = YES;
@@ -829,7 +829,7 @@
 				INFOPLIST_KEY_NSCalendarsWriteOnlyAccessUsageDescription = "Add wedding celebrations to your own calendar so you never miss one.";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Photograph your outfits for each celebration, or, for the couple, take Wedding Week photos that are shared with every guest.";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Face ID keeps the couple’s area private on this phone.";
-				INFOPLIST_KEY_CFBundleDisplayName = "Milni Wedding";
+				INFOPLIST_KEY_CFBundleDisplayName = Milni;
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Save wedding week photos to your photo library.";
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_NSSupportsLiveActivitiesFrequentUpdates = YES;
