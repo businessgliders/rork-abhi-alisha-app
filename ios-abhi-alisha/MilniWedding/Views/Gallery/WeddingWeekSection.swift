@@ -304,7 +304,7 @@ struct WeddingPhotoTile: View {
         .accessibilityLabel(photo.caption ?? "Wedding week photograph")
         .accessibilityHint(
             session.isAdmin ? "Hold for Edit caption, Move, Make cover or Delete"
-                : (photo.isMine ? "Hold to delete your photo" : "Opens the photograph")
+                : (photo.isMine ? "Hold to delete your photo" : "Opens the photograph. Hold to report it.")
         )
     }
 }

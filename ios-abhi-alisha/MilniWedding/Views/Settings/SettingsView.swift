@@ -37,6 +37,7 @@ struct SettingsView: View {
     @State private var isShowingWeddings = false
     @State private var isShowingBlocked = false
     @State private var isShowingReports = false
+    @State private var photoReports = PhotoReportStore.shared
 
     @State private var isConfirmingSignOut = false
     @State private var isConfirmingDelete = false
@@ -409,10 +410,17 @@ struct SettingsView: View {
                     ExperienceRow(
                         symbol: "flag",
                         title: "Reports",
-                        detail: "Messages reported in the family chat."
+                        detail: "Messages and photos reported in this wedding."
                     ) {
                         isShowingReports = true
+                    } trailing: {
+                        if photoReports.openCount > 0 {
+                            OpenReportsBadge(count: photoReports.openCount)
+                        } else {
+                            ExperienceChevron()
+                        }
                     }
+                    .task { await photoReports.refresh() }
                 }
             }
         }
@@ -577,25 +585,7 @@ struct SettingsView: View {
     private func performReset() async {
         isResetting = true
         defer { isResetting = false }
-
-        // Clears the keychain session, the chat caches and Spotlight.
-        await ChatSession.shared.signOut()
-
-        // Every saved answer on the phone, in one go: packing lists, toast drafts,
-        // the open wedding, notification choices, everything.
-        if let bundleID = Bundle.main.bundleIdentifier {
-            UserDefaults.standard.removePersistentDomain(forName: bundleID)
-        }
-        UserDefaults(suiteName: WeddingGroup.identifier)?
-            .removePersistentDomain(forName: WeddingGroup.identifier)
-
-        // Files: the shared wedding snapshot, the widget's copies and every cache.
-        if let group = WeddingGroup.containerURL { SettingsCache.removeContents(of: group) }
-        if let caches = SettingsCache.cachesDirectory() { SettingsCache.removeContents(of: caches) }
-        URLCache.shared.removeAllCachedResponses()
-
-        // Back to the welcome screen.
-        context.goToOnboarding(.splash)
+        await AccountDeletion.shared.wipePhoneState()
     }
 
     // MARK: - Footer

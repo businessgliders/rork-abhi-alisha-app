@@ -238,6 +238,7 @@ struct ContentView: View {
         }
         .animation(.easeInOut(duration: 0.7), value: context.stage)
         .animation(.easeInOut(duration: 0.7), value: context.shellKey)
+        .overlay(alignment: .top) { AccountDeletionToast() }
         .fullScreenCover(item: Bindable(context).flowRequest) { request in
             OnboardingFlow(entry: request.entry) {
                 context.closeFlow()

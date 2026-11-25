@@ -28,6 +28,11 @@ final class WeddingPhotoStore {
     private(set) var busyIDs: Set<String> = []
     var notice: String?
 
+    /// Photos this person has reported: hidden on this phone only, straight away,
+    /// until the couple looks at the report. Kept in plain defaults, not the wedding disk.
+    private static let hiddenKey = "weddingWeek.hiddenPhotoIDs"
+    private(set) var hiddenPhotoIDs: Set<String>
+
     /// One attempt's ceiling, so a stalled request can never hold the percentage still.
     static let attemptTimeout: Duration = .seconds(90)
 
@@ -40,6 +45,7 @@ final class WeddingPhotoStore {
     private var client: SupabaseClient { ChatBackend.client }
 
     private init() {
+        hiddenPhotoIDs = Set(UserDefaults.standard.stringArray(forKey: Self.hiddenKey) ?? [])
         photos = WeddingPhotoDisk.loadPhotos() ?? []
         queue = WeddingPhotoDisk.loadQueue() ?? []
         runTotal = queue.count
@@ -49,7 +55,7 @@ final class WeddingPhotoStore {
     // MARK: - Reading
 
     func photos(for eventID: String) -> [WeddingPhoto] {
-        let all = photos.filter { $0.eventID == eventID }
+        let all = photos.filter { $0.eventID == eventID && !hiddenPhotoIDs.contains($0.id) }
             .sorted { $0.sortDate < $1.sortDate }
         guard let cover = all.first(where: \.isCover) else { return all }
         return [cover] + all.filter { $0.id != cover.id }
@@ -64,6 +70,13 @@ final class WeddingPhotoStore {
     /// True while anything should stay on screen: sending, waiting, or failed.
     var hasPendingWork: Bool { !queue.isEmpty }
     var uploadedInRun: Int { max(runTotal - queue.count, 0) }
+
+    /// Hides a photo on this phone the moment it's reported. The disk copy stays,
+    /// so an undo would be instant — but nothing reported is shown again anywhere.
+    func hideLocally(_ id: String) {
+        withAnimation(.calm) { _ = hiddenPhotoIDs.insert(id) }
+        UserDefaults.standard.set(Array(hiddenPhotoIDs), forKey: Self.hiddenKey)
+    }
 
     // MARK: - Refresh and live updates
 

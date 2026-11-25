@@ -726,6 +726,16 @@ private struct WeddingPhotoActions: ViewModifier {
                 }
         } else {
             content
+                .contextMenu {
+                    Button("Report photo", systemImage: "flag") {
+                        isReporting = true
+                    }
+                }
+                .sheet(isPresented: $isReporting) {
+                    PhotoReportSheet(photo: photo)
+                }
         }
     }
+
+    @State private var isReporting = false
 }

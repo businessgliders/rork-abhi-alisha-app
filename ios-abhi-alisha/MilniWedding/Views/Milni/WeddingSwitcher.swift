@@ -70,6 +70,7 @@ struct WeddingSwitcherSheet: View {
     @State private var busyID: String?
     @State private var share: HostSharePayload?
     @State private var error: String?
+    @State private var photoReports = PhotoReportStore.shared
 
     private var weddings: [WeddingSummary] {
         context.myWeddings.filter { !gone.contains($0.id.lowercased()) }
@@ -176,14 +177,20 @@ struct WeddingSwitcherSheet: View {
                     Button {
                         openCoupleArea(current, route: nil)
                     } label: {
-                        Label("Manage this wedding", systemImage: "key.horizontal")
-                            .font(Milni.inter(14, weight: 500))
-                            .foregroundStyle(BrandPalette.goldDeep)
+                        HStack(spacing: 8) {
+                            Label("Manage this wedding", systemImage: "key.horizontal")
+                                .font(Milni.inter(14, weight: 500))
+                                .foregroundStyle(BrandPalette.goldDeep)
+                            if photoReports.openCount > 0 {
+                                OpenReportsBadge(count: photoReports.openCount)
+                            }
+                        }
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.top, 6)
                     .padding(.bottom, 24)
                     .plainRow()
+                    .task { await photoReports.refresh() }
                 }
             }
         }

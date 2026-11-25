@@ -37,6 +37,8 @@ struct WeddingPhotoViewer: View {
     @State private var toast: String?
     @State private var isSaving = false
     @State private var isShowingSettingsHint = false
+    @State private var isReporting = false
+    @State private var session = ChatSession.shared
 
     init(photos: [WeddingPhoto], startIndex: Int) {
         self.photos = photos
@@ -62,6 +64,7 @@ struct WeddingPhotoViewer: View {
         }
         .overlay(alignment: .bottom) { bottomBar }
         .overlay(alignment: .topTrailing) { closeButton }
+        .overlay(alignment: .topLeading) { moreMenu }
         .overlay(alignment: .top) { topLine }
         .statusBarHidden()
         .animation(.softFade, value: toast)
@@ -74,6 +77,36 @@ struct WeddingPhotoViewer: View {
             Button("Not now", role: .cancel) {}
         } message: {
             Text("To save wedding photos, allow this app to add to your Photos in Settings.")
+        }
+        .sheet(isPresented: $isReporting) {
+            if let photo = current {
+                PhotoReportSheet(photo: photo) {
+                    // The photo is now hidden on this phone: leave the viewer with it.
+                    dismiss()
+                }
+            }
+        }
+    }
+
+    /// "…" for guests: report the photo they're looking at.
+    @ViewBuilder
+    private var moreMenu: some View {
+        if !session.isAdmin, current != nil {
+            Menu {
+                Button("Report photo", systemImage: "flag") {
+                    isReporting = true
+                }
+            } label: {
+                Image(systemName: "ellipsis")
+                    .font(.system(size: 14, weight: .light))
+                    .foregroundStyle(Color.white)
+                    .frame(width: 44, height: 44)
+                    .background(Circle().fill(Color.white.opacity(0.16)))
+                    .contentShape(Circle())
+            }
+            .accessibilityLabel("More, including reporting the photo")
+            .padding(.leading, 18)
+            .padding(.top, 14)
         }
     }
 

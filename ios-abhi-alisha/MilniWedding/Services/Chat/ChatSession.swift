@@ -47,8 +47,6 @@ final class ChatSession {
     private(set) var isSigningIn = false
     var signInError: String?
 
-    private(set) var isDeletingAccount = false
-    var didDeleteFail = false
 
     private var currentNonce: String?
     private var didStart = false
@@ -493,41 +491,6 @@ final class ChatSession {
     func signOut() async {
         try? await ChatBackend.client.auth.signOut(scope: .local)
         await becomeSignedOut()
-    }
-
-    /// Permanently deletes this account on the server, then signs out. Returns false,
-    /// with nothing deleted, if the server couldn't be reached or said no.
-    @discardableResult
-    func deleteAccount() async -> Bool {
-        guard !isDeletingAccount else { return false }
-        isDeletingAccount = true
-        defer { isDeletingAccount = false }
-
-        do {
-            let session = try await ChatBackend.client.auth.session
-            var request = URLRequest(url: ChatBackend.url.appending(path: "functions/v1/delete-account"))
-            request.httpMethod = "POST"
-            request.setValue("Bearer \(session.accessToken)", forHTTPHeaderField: "Authorization")
-            request.setValue(ChatBackend.publishableKey, forHTTPHeaderField: "apikey")
-            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-            request.httpBody = Data("{}".utf8)
-            request.timeoutInterval = 30
-
-            let (data, response) = try await URLSession.shared.data(for: request)
-            guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode),
-                  let payload = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                  payload["ok"] as? Bool == true else {
-                print("[Chat] account deletion was refused")
-                didDeleteFail = true
-                return false
-            }
-            await signOut()
-            return true
-        } catch {
-            print("[Chat] account deletion could not reach the server")
-            didDeleteFail = true
-            return false
-        }
     }
 
     private func becomeSignedOut() async {
